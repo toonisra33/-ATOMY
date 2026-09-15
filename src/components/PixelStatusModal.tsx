@@ -49,40 +49,40 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-800 relative my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-xl w-full shadow-2xl border border-slate-800 relative my-auto max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20">
-            <Activity className="w-5 h-5" />
+        <div className="flex items-center gap-3 pr-8">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>สถานะการเก็บข้อมูล Pixel & Conversion</span>
+            <h3 className="text-base sm:text-xl font-bold text-white flex flex-wrap items-center gap-1.5 leading-snug">
+              <span>สถานะการเก็บข้อมูล Pixel</span>
               <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Live Status
               </span>
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400">
               ตรวจสอบการทำงานของ Meta Pixel, TikTok Pixel และ Google Analytics
             </p>
           </div>
         </div>
 
         {/* Pixel Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mt-5 sm:mt-6">
           {/* Meta Pixel */}
-          <div className={`p-3.5 rounded-2xl border ${hasFb ? 'bg-blue-950/40 border-blue-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center justify-between mb-1.5">
+          <div className={`p-3 rounded-xl sm:rounded-2xl border ${hasFb ? 'bg-blue-950/40 border-blue-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
+            <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-blue-400">Meta (Facebook)</span>
               {hasFb ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -96,8 +96,8 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
           </div>
 
           {/* TikTok Pixel */}
-          <div className={`p-3.5 rounded-2xl border ${hasTikTok ? 'bg-pink-950/40 border-pink-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center justify-between mb-1.5">
+          <div className={`p-3 rounded-xl sm:rounded-2xl border ${hasTikTok ? 'bg-pink-950/40 border-pink-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
+            <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-pink-400">TikTok Pixel</span>
               {hasTikTok ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -111,8 +111,8 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
           </div>
 
           {/* Google Analytics */}
-          <div className={`p-3.5 rounded-2xl border ${hasGoogle ? 'bg-amber-950/40 border-amber-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
-            <div className="flex items-center justify-between mb-1.5">
+          <div className={`p-3 rounded-xl sm:rounded-2xl border ${hasGoogle ? 'bg-amber-950/40 border-amber-500/40' : 'bg-slate-800/40 border-slate-700/50'}`}>
+            <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-semibold text-amber-400">Google GA4</span>
               {hasGoogle ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -128,36 +128,36 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
 
         {/* Warning if none configured */}
         {!anyConfigured && (
-          <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-start gap-2">
+          <div className="mt-3.5 sm:mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <div>
+            <div className="leading-relaxed text-pretty">
               ยังไม่ได้ระบุ Pixel ID ในสปอนเซอร์นี้ สามารถกด <strong>"สร้างเว็บพ่วง"</strong> เพื่อกรอก Pixel ID ของคุณได้ทันที หรือส่งผ่าน URL เช่น <code>?fbp=123456789</code>
             </div>
           </div>
         )}
 
         {/* Live Event Stream */}
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>บันทึก Event ที่ถูกส่งออกไปล่าสุด (Live Event Log):</span>
+              <span>บันทึก Event ล่าสุด (Live Log):</span>
             </span>
             <span className="text-[11px] text-slate-500 font-mono">
               {logs.length} events
             </span>
           </div>
 
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 max-h-48 overflow-y-auto space-y-2 font-mono text-xs">
+          <div className="bg-slate-950 border border-slate-800 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 max-h-44 overflow-y-auto space-y-2 font-mono text-xs">
             {logs.length === 0 ? (
-              <div className="text-center py-6 text-slate-600">
+              <div className="text-center py-5 text-slate-600 text-xs">
                 ยังไม่มีประวัติ Event ถูกยิงออกไป (ลองกดปุ่มทดสอบด้านล่าง)
               </div>
             ) : (
               logs.map((log) => (
-                <div key={log.id} className="flex items-start justify-between p-2 rounded-lg bg-slate-900/80 border border-slate-800/80">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                <div key={log.id} className="flex items-start justify-between p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
                       log.platform === 'Facebook' ? 'bg-blue-600/30 text-blue-300' :
                       log.platform === 'TikTok' ? 'bg-pink-600/30 text-pink-300' :
                       log.platform === 'Google' ? 'bg-amber-600/30 text-amber-300' : 'bg-slate-700 text-slate-300'
@@ -166,7 +166,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                     </span>
                     <span className="text-slate-200 font-bold">{log.eventName}</span>
                     {log.details && (
-                      <span className="text-slate-500 text-[10px] truncate max-w-[150px]">
+                      <span className="text-slate-500 text-[10px] truncate max-w-[120px] sm:max-w-[150px]">
                         {JSON.stringify(log.details)}
                       </span>
                     )}
@@ -179,20 +179,20 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
         </div>
 
         {/* Action Testing Bar */}
-        <div className="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-5 pt-3.5 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleTestLeadEvent}
-              className="px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow"
+              className="flex-1 sm:flex-initial px-2.5 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow active:scale-95"
             >
               <Play className="w-3.5 h-3.5" />
-              <span>ทดสอบยิง Event 'Lead'</span>
+              <span>ทดสอบ 'Lead'</span>
             </button>
             <button
               type="button"
               onClick={handleTestContactEvent}
-              className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow"
+              className="flex-1 sm:flex-initial px-2.5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow active:scale-95"
             >
               <Play className="w-3.5 h-3.5" />
               <span>ทดสอบ 'Contact'</span>
@@ -200,7 +200,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
           </div>
 
           {testSent && (
-            <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+            <span className="text-xs text-emerald-400 font-semibold flex items-center justify-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{testSent}</span>
             </span>
@@ -209,7 +209,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 text-xs text-slate-400 hover:text-white rounded-xl bg-slate-800 cursor-pointer ml-auto"
+            className="px-4 py-2 text-xs text-slate-400 hover:text-white rounded-xl bg-slate-800 cursor-pointer sm:ml-auto text-center"
           >
             ปิดหน้าต่าง
           </button>

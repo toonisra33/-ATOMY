@@ -83,31 +83,32 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
   };
 
   return (
-    <section id="video-15min" className="py-14 sm:py-20 bg-slate-900 text-white relative overflow-hidden">
+    <section id="video-15min" className="py-10 sm:py-20 bg-slate-900 text-white relative overflow-hidden">
       {/* Background Decorative Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(#1e3a8a_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
       <div className="absolute top-1/3 -right-40 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-900/60 border border-blue-700/50 text-sky-400 text-xs sm:text-sm font-medium mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-900/60 border border-blue-700/50 text-sky-400 text-xs sm:text-sm font-medium mb-3">
             <Clock className="w-3.5 h-3.5 animate-spin" />
             <span>วิดีโอเจาะลึก 15 นาทีเปลี่ยนชีวิต</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-            ทำความรู้จักธุรกิจ อะโทมี่ (Atomy) <span className="text-sky-400">ใน 15 นาที</span>
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-snug">
+            <span className="inline-block">ทำความรู้จักธุรกิจ อะโทมี่ (Atomy)</span>{' '}
+            <span className="text-sky-400 inline-block">ใน 15 นาที</span>
           </h2>
-          <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="mt-2.5 sm:mt-3 text-slate-300 text-xs sm:text-base leading-relaxed text-pretty">
             รับชมวิดีโอนี้เพื่อทำความเข้าใจโมเดลธุรกิจ แหล่งที่มาของรายได้ และความมั่นคงของบริษัทระดับโลก ก่อนตัดสินใจเริ่มต้นร่วมทีม
           </p>
         </div>
 
         {/* Video Selector Tabs (Hidden when single video) */}
         {VIDEO_PRESETS.length > 1 && (
-          <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+          <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
             {VIDEO_PRESETS.map((vid) => {
               const isCurrent = vid.id === selectedVideo.id;
               return (
@@ -117,14 +118,14 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                     setSelectedVideo(vid);
                     setVideoTimestamp(0);
                   }}
-                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
                     isCurrent
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 border border-blue-400'
                       : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 border border-slate-700/80'
                   }`}
                 >
-                  <span>{vid.title.length > 28 ? vid.title.slice(0, 28) + '...' : vid.title}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-sky-300">
+                  <span className="truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">{vid.title}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-sky-300 shrink-0">
                     {vid.durationLabel}
                   </span>
                 </button>
@@ -134,12 +135,12 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
         )}
 
         {/* Main Video & Chapters Grid */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
           
           {/* Left / Center: Video Player + 15-Minute Countdown Bar */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
+          <div className="lg:col-span-8 flex flex-col gap-3.5 sm:gap-4">
             {/* The Video Container with 16:9 ratio */}
-            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-slate-700/80 group">
+            <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-2xl border border-slate-700/80 group">
               <iframe
                 key={`${selectedVideo.youtubeId}-${videoTimestamp}`}
                 className="w-full h-full"
@@ -151,59 +152,70 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
             </div>
 
             {/* 15-Minute Live Interactive Tracker Bar */}
-            <div className="bg-slate-800/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-700 shadow-xl">
+            <div className="bg-slate-800/90 backdrop-blur-md rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-700 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer ${
-                      isPlaying
-                        ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                        : 'bg-blue-600 hover:bg-blue-500 text-white'
-                    }`}
-                    title={isPlaying ? 'หยุดชั่วคราว' : 'เริ่มเล่น / นับเวลา'}
-                  >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5 fill-white" />}
-                  </button>
+                <div className="flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer shrink-0 ${
+                        isPlaying
+                          ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                          : 'bg-blue-600 hover:bg-blue-500 text-white'
+                      }`}
+                      title={isPlaying ? 'หยุดชั่วคราว' : 'เริ่มเล่น / นับเวลา'}
+                    >
+                      {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-white" />}
+                    </button>
 
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-400">เวลารับชมปัจจุบัน:</span>
-                      <span className="font-mono text-lg font-bold text-sky-400">
-                        {formatTime(secondsElapsed)}
-                      </span>
-                      <span className="text-slate-500 text-xs font-mono">/ 15:00 นาที</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="font-mono text-base sm:text-lg font-bold text-sky-400">
+                          {formatTime(secondsElapsed)}
+                        </span>
+                        <span className="text-slate-400 text-xs font-mono">/ 15:00 น.</span>
+                      </div>
+                      <p className="text-[11px] sm:text-xs text-slate-300 flex items-center gap-1 truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
+                        <BookmarkCheck className="w-3 h-3 text-blue-400 shrink-0" />
+                        <span className="truncate">{activeChapter.title}</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-300 mt-0.5 flex items-center gap-1">
-                      <BookmarkCheck className="w-3.5 h-3.5 text-blue-400" />
-                      <span>{activeChapter.title}</span>
-                    </p>
                   </div>
-                </div>
 
-                {/* Fast Action Buttons */}
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                  {/* Reset button next to time on mobile */}
                   <button
                     onClick={handleResetTimer}
-                    className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors text-xs flex items-center gap-1 cursor-pointer"
+                    className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors text-xs flex items-center gap-1 cursor-pointer sm:hidden shrink-0"
                     title="เริ่มนับเวลาใหม่"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">รีเซ็ต</span>
+                  </button>
+                </div>
+
+                {/* Fast Action Buttons */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={handleResetTimer}
+                    className="hidden sm:flex p-2 text-slate-400 hover:text-white rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors text-xs items-center gap-1 cursor-pointer"
+                    title="เริ่มนับเวลาใหม่"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>รีเซ็ต</span>
                   </button>
 
                   {!isCompleted ? (
                     <button
                       id="btn-fast-forward-video"
                       onClick={handleFastForwardComplete}
-                      className="px-3 py-1.5 bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
+                      className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>ฉันดูจบแล้ว (ปลดล็อกขั้นตอนถัดไป)</span>
+                      <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span className="hidden sm:inline">ฉันดูจบแล้ว (ปลดล็อกขั้นตอนถัดไป)</span>
+                      <span className="sm:hidden">ฉันดูจบแล้ว (ปลดล็อกสิทธิ์)</span>
                     </button>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700 px-2.5 py-1 rounded-lg">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="w-full sm:w-auto inline-flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700 px-2.5 py-1.5 rounded-lg">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span>ดูครบ 15 นาทีแล้ว</span>
                     </span>
                   )}
@@ -211,12 +223,12 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
               </div>
 
               {/* Progress Percentage Bar */}
-              <div className="mt-4">
+              <div className="mt-3 sm:mt-4">
                 <div className="flex justify-between text-xs text-slate-400 mb-1 font-mono">
                   <span>ความคืบหน้า: {progressPercent}%</span>
                   <span>{15 - Math.floor(secondsElapsed / 60)} นาทีคงเหลือ</span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                <div className="w-full h-2 sm:h-2.5 bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 via-sky-400 to-emerald-400 transition-all duration-500 rounded-full"
                     style={{ width: `${progressPercent}%` }}
@@ -227,15 +239,15 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
 
             {/* UNLOCKED SUCCESS BANNER (Appears when 15 mins finished or completed) */}
             {isCompleted && (
-              <div className="bg-gradient-to-r from-emerald-900/90 via-slate-800 to-emerald-900/90 border-2 border-emerald-500/70 rounded-2xl p-5 sm:p-6 shadow-2xl text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
-                <div className="flex items-center gap-4">
-                  <div className="w-13 h-13 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40 shrink-0">
-                    <Trophy className="w-7 h-7" />
+              <div className="bg-gradient-to-r from-emerald-900/90 via-slate-800 to-emerald-900/90 border-2 border-emerald-500/70 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
+                  <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40 shrink-0">
+                    <Trophy className="w-6 h-6 sm:w-7 sm:h-7" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-white flex items-center gap-2 justify-center sm:justify-start">
+                    <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-1.5 justify-center sm:justify-start">
                       <span>ยินดีด้วย! คุณรับชมข้อมูลครบ 15 นาทีแล้ว</span>
-                      <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
                     </h4>
                     <p className="text-xs sm:text-sm text-emerald-200 mt-1">
                       ปลดล็อกสิทธิพิเศษ: รับรหัสสปอนเซอร์ และคู่มือเริ่มต้นธุรกิจฟรีกับคุณ {sponsor.sponsorName}
@@ -247,9 +259,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                   href={sponsor.lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#06C755] hover:bg-[#05b34c] text-white font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-emerald-600/40 transition-all hover:scale-105 active:scale-95 shrink-0"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 bg-[#06C755] hover:bg-[#05b34c] text-white font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-emerald-600/40 transition-all active:scale-95 shrink-0"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-white shrink-0" />
                   <span>แอด LINE รับสิทธิ์ทันที</span>
                 </a>
               </div>
@@ -258,18 +270,18 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
 
           {/* Right Column: 15-Minute Chapters & Highlights */}
           <div className="lg:col-span-4 flex flex-col gap-4">
-            <div className="bg-slate-800/80 backdrop-blur-md rounded-2xl p-5 border border-slate-700 shadow-xl">
+            <div className="bg-slate-800/80 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-slate-700 shadow-xl">
               <div className="flex items-center justify-between pb-3 border-b border-slate-700">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                   <span>หัวข้อบรรยาย 15 นาที</span>
                 </h3>
-                <span className="text-[11px] text-sky-400 bg-sky-950/80 px-2 py-0.5 rounded border border-sky-800">
-                  คลิกเพื่อข้ามไปยังหัวข้อ
+                <span className="text-[10px] sm:text-[11px] text-sky-400 bg-sky-950/80 px-2 py-0.5 rounded border border-sky-800">
+                  คลิกเพื่อข้ามหัวข้อ
                 </span>
               </div>
 
               {/* Chapters List */}
-              <div className="mt-3 space-y-2.5">
+              <div className="mt-3 space-y-2 sm:space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
                 {VIDEO_CHAPTERS.map((ch) => {
                   const isSelected = activeChapter.id === ch.id;
                   return (

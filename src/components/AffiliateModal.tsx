@@ -148,35 +148,35 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl relative my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-2xl w-full shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+          className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-            <Share2 className="w-5 h-5" />
+        <div className="flex items-center gap-3 pr-8">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+            <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">
-              สร้างเว็บพ่วงของคุณ (Satellite & Affiliate Link)
+            <h3 className="text-base sm:text-xl font-bold text-slate-900 leading-snug">
+              สร้างเว็บพ่วงของคุณ (Satellite Link)
             </h3>
-            <p className="text-xs text-slate-500">
-              ระบบขยายเครือข่ายสำหรับนักธุรกิจ Atomy: ใส่ข้อมูลเพื่อรับลิงก์เว็บพ่วงในชื่อของคุณ
+            <p className="text-[11px] sm:text-xs text-slate-500 text-pretty">
+              ระบบขยายสายงาน Atomy: ใส่ข้อมูลเพื่อรับลิงก์เว็บพ่วงในชื่อและรูปภาพของคุณ
             </p>
           </div>
         </div>
 
         {/* Form Inputs */}
-        <form onSubmit={handleApplyAndPreview} className="mt-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleApplyAndPreview} className="mt-5 sm:mt-6 space-y-3.5 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -188,7 +188,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.sponsorId}
                 onChange={(e) => setFormData({ ...formData, sponsorId: e.target.value })}
                 placeholder="เช่น TH3892011"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -202,7 +202,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.sponsorName}
                 onChange={(e) => setFormData({ ...formData, sponsorName: e.target.value })}
                 placeholder="เช่น คุณสมชาย อะโทมี่ลีดเดอร์"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -223,7 +223,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                   });
                 }}
                 placeholder="เช่น @atomyteam หรือ somchai_atomy"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -236,7 +236,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.lineUrl}
                 onChange={(e) => setFormData({ ...formData, lineUrl: e.target.value })}
                 placeholder="https://line.me/ti/p/~..."
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -249,7 +249,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.phoneNumber}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                 placeholder="เช่น 089-123-4567"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -262,7 +262,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.sponsorPosition}
                 onChange={(e) => setFormData({ ...formData, sponsorPosition: e.target.value })}
                 placeholder="เช่น Sales Master / ที่ปรึกษาธุรกิจ"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
@@ -275,12 +275,12 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 value={formData.teamName}
                 onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
                 placeholder="Atomy Thailand Team freedomlife"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 
             {/* Avatar / Real Photo Upload */}
-            <div className="sm:col-span-2 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="sm:col-span-2 p-3 sm:p-4 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200">
               <label className="block text-xs font-semibold text-slate-800 mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <ImageIcon className="w-4 h-4 text-blue-600" />
@@ -288,18 +288,18 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 </span>
                 {formData.avatarUrl && (
                   <span className="text-[10px] text-emerald-600 font-medium">
-                    ✓ มีรูปภาพโปรไฟล์แล้ว
+                    ✓ มีรูปแล้ว
                   </span>
                 )}
               </label>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 {/* Image Preview */}
                 <div className="relative shrink-0">
                   <img
                     src={formData.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
                     alt="Preview"
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-slate-200"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-slate-200"
                   />
                   {formData.avatarUrl && (
                     <button
@@ -315,7 +315,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
                 {/* Upload & URL Input Options */}
                 <div className="flex-1 w-full space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -326,25 +326,25 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
+                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
                     >
                       <Upload className="w-3.5 h-3.5" />
-                      <span>อัพโหลดรูปภาพจากเครื่อง</span>
+                      <span>อัพโหลดรูปจากเครื่อง</span>
                     </button>
-                    <span className="text-[11px] text-slate-400">
-                      รองรับ JPG, PNG, WebP, JFIF
+                    <span className="text-[10px] text-slate-400">
+                      รองรับ JPG, PNG, WebP
                     </span>
                   </div>
 
                   {/* Or image URL */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400 shrink-0">หรือใส่ URL รูป:</span>
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 shrink-0">หรือใส่ URL:</span>
                     <input
                       type="url"
                       value={formData.avatarUrl?.startsWith('data:') ? '' : formData.avatarUrl || ''}
                       onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                       placeholder="https://..."
-                      className="flex-1 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 transition-all"
+                      className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -354,38 +354,38 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           </div>
 
           {/* Ad & Pixel Tracking Accordion */}
-          <div className="border border-purple-200/80 bg-gradient-to-r from-purple-50/50 via-pink-50/30 to-blue-50/40 rounded-2xl p-4 transition-all">
-            <div className="flex items-center justify-between">
+          <div className="border border-purple-200/80 bg-gradient-to-r from-purple-50/50 via-pink-50/30 to-blue-50/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all">
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => setShowPixelSettings(!showPixelSettings)}
-                className="flex items-center gap-2 text-left cursor-pointer group"
+                className="flex items-center gap-2 text-left cursor-pointer group min-w-0 flex-1"
               >
-                <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs">
+                <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs shrink-0">
                   <Target className="w-4 h-4" />
                 </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-purple-700 flex items-center gap-1.5">
-                    <span>ตั้งค่า Pixel สำหรับยิงแอดโฆษณา (Facebook / TikTok / GA4)</span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-purple-700 flex flex-wrap items-center gap-1">
+                    <span>ตั้งค่า Pixel สำหรับยิงแอด</span>
                     <span className="text-[10px] px-1.5 py-0.2 bg-purple-200/60 text-purple-800 rounded font-medium">
                       Tracking
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-500">
-                    ใส่ Pixel ID เพื่อให้ระบบยิง Conversion (PageView, Lead, Contact) เข้าบัญชีโฆษณาของคุณโดยตรง
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 truncate">
+                    ใส่ Pixel ID ยิง Conversion เข้าบัญชีของคุณโดยตรง
                   </p>
                 </div>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {onOpenPixelStatus && (
                   <button
                     type="button"
                     onClick={onOpenPixelStatus}
-                    className="text-[11px] text-purple-700 hover:text-purple-900 bg-white border border-purple-300 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 cursor-pointer shadow-2xs hover:bg-purple-50 transition-colors"
+                    className="text-[10px] sm:text-[11px] text-purple-700 hover:text-purple-900 bg-white border border-purple-300 px-2 py-1 rounded-lg font-medium flex items-center gap-1 cursor-pointer shadow-2xs hover:bg-purple-50 transition-colors"
                   >
                     <Activity className="w-3 h-3" />
-                    <span>เช็คสถานะ Pixel</span>
+                    <span className="hidden xs:inline">เช็ค Pixel</span>
                   </button>
                 )}
                 <button
@@ -399,19 +399,19 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
             </div>
 
             {showPixelSettings && (
-              <div className="mt-4 pt-4 border-t border-purple-200/60 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-200">
+              <div className="mt-3 pt-3 border-t border-purple-200/60 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 animate-in fade-in duration-200">
                 {/* Meta Pixel */}
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-blue-600" />
-                    <span>Meta (Facebook) Pixel ID</span>
+                    <span>Meta Pixel ID</span>
                   </label>
                   <input
                     type="text"
                     value={formData.fbPixelId || ''}
                     onChange={(e) => setFormData({ ...formData, fbPixelId: e.target.value })}
                     placeholder="เช่น 123456789012345"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
                   />
                   <span className="text-[10px] text-slate-400 block mt-0.5">ตัวเลข 15-16 หลัก</span>
                 </div>
@@ -427,23 +427,23 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                     value={formData.tiktokPixelId || ''}
                     onChange={(e) => setFormData({ ...formData, tiktokPixelId: e.target.value })}
                     placeholder="เช่น C78AB90CDE1234"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
                   />
-                  <span className="text-[10px] text-slate-400 block mt-0.5">จาก TikTok Ads Manager</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">จาก Ads Manager</span>
                 </div>
 
                 {/* Google Tag */}
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Google GA4 Tag ID</span>
+                    <span>Google Tag ID</span>
                   </label>
                   <input
                     type="text"
                     value={formData.googleTagId || ''}
                     onChange={(e) => setFormData({ ...formData, googleTagId: e.target.value })}
                     placeholder="เช่น G-XXXXXXXXXX"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
                   />
                   <span className="text-[10px] text-slate-400 block mt-0.5">Measurement ID</span>
                 </div>
@@ -452,47 +452,47 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           </div>
 
           {/* Generated Satellite URL Preview Box */}
-          <div className="mt-5 p-4 bg-slate-900 text-white rounded-2xl border border-slate-800">
+          <div className="mt-4 p-3.5 sm:p-4 bg-slate-900 text-white rounded-xl sm:rounded-2xl border border-slate-800">
             <div className="flex items-center justify-between gap-2 mb-2">
               <span className="text-xs font-semibold text-sky-400 flex items-center gap-1.5">
-                <LinkIcon className="w-3.5 h-3.5" />
-                <span>ลิงก์เว็บพ่วงส่วนตัวของคุณ (พร้อมใช้งาน):</span>
+                <LinkIcon className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">ลิงก์เว็บพ่วงส่วนตัวของคุณ:</span>
               </span>
               <button
                 type="button"
                 onClick={() => setShowQr(!showQr)}
-                className="text-[11px] text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-md cursor-pointer border border-slate-700"
+                className="text-[11px] text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-md cursor-pointer border border-slate-700 shrink-0"
               >
                 <QrCode className="w-3 h-3" />
-                <span>{showQr ? 'ซ่อน QR' : 'ดู QR Code'}</span>
+                <span>{showQr ? 'ซ่อน' : 'QR Code'}</span>
               </button>
             </div>
 
-            <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-xs text-sky-200 break-all select-all">
+            <div className="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800 font-mono text-[11px] sm:text-xs text-sky-200 break-all select-all">
               {generatedAffiliateUrl}
             </div>
 
             {/* QR Code Expansion */}
             {showQr && (
-              <div className="mt-4 p-4 bg-white rounded-xl text-center inline-block w-full">
+              <div className="mt-3 p-3 bg-white rounded-xl text-center inline-block w-full">
                 <img
                   src={qrCodeUrl}
                   alt="Generated Satellite QR"
-                  className="w-40 h-40 mx-auto rounded-lg"
+                  className="w-36 h-36 mx-auto rounded-lg"
                 />
-                <p className="text-[11px] text-slate-600 mt-2 font-sans font-medium">
-                  สแกนหรือบันทึกภาพ QR Code นี้ไปใส่ในป้ายประชาสัมพันธ์ / นามบัตร ได้ทันที
+                <p className="text-[10px] sm:text-[11px] text-slate-600 mt-2 font-sans font-medium">
+                  สแกนหรือบันทึกภาพ QR Code นี้ไปใส่ในป้ายประชาสัมพันธ์ได้ทันที
                 </p>
               </div>
             )}
 
             {/* Action Bar inside Box */}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-3">
               <button
                 type="button"
                 id="btn-copy-affiliate-url"
                 onClick={handleCopyLink}
-                className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
               >
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedLink ? 'คัดลอกลิงก์สำเร็จแล้ว!' : 'คัดลอกลิงก์เว็บพ่วงนี้'}</span>
@@ -501,26 +501,26 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           </div>
 
           {/* Strategy Tip */}
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-900 flex items-start gap-2">
+          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[11px] sm:text-xs text-blue-900 flex items-start gap-2">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-            <div>
-              <strong>แนวทางใช้งานเว็บพ่วง (Satellite Strategy):</strong> นำลิงก์นี้ไปใส่ใน Bio TikTok, โพสต์ลง Facebook, ส่งในแชตให้ผู้สนใจ หรือนำไปยิงโฆษณา เมื่อผู้มุ่งหวังดูวิดีโอ 15 นาทีจบ จะมีปุ่มทักเข้า LINE Official ของคุณโดยตรงพร้อมระบุรหัสสปอนเซอร์ของคุณ!
+            <div className="leading-relaxed text-pretty">
+              <strong>แนวทางใช้งานเว็บพ่วง:</strong> นำลิงก์นี้ไปใส่ใน Bio TikTok, Facebook หรือส่งให้ผู้สนใจ เมื่อผู้มุ่งหวังดูวิดีโอจบ จะมีปุ่มทักเข้า LINE Official ของคุณโดยตรงพร้อมระบุรหัสสปอนเซอร์ของคุณ!
             </div>
           </div>
 
           {/* Modal Actions */}
-          <div className="pt-3 flex items-center justify-end gap-3">
+          <div className="pt-2 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer text-center"
             >
               ปิด
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 active:scale-95"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : null}
               <span>{isSaving ? 'กำลังบันทึก...' : 'บันทึก & ทดลองดูหน้าเว็บพ่วงนี้'}</span>
