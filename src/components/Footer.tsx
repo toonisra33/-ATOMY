@@ -4,7 +4,7 @@ import { ShieldCheck, Share2, ExternalLink, Heart } from 'lucide-react';
 
 interface FooterProps {
   sponsor: SponsorProfile;
-  onOpenAffiliateModal: () => void;
+  onOpenAffiliateModal?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal }) => {
@@ -24,7 +24,7 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
             <p className="text-slate-400 leading-relaxed max-w-md text-xs sm:text-sm text-pretty">
               ระบบเว็บพ่วงและกรวยสปอนเซอร์ผู้มุ่งหวัง (Affiliate & Satellite Funnel) สำหรับส่งต่อทราฟฟิกและผู้สนใจเข้าสู่ธุรกิจ อะโทมี่ (Atomy) ผ่านสื่อวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official
             </p>
-            <div className="mt-4 flex items-center gap-3">
+            {onOpenAffiliateModal && <div className="mt-4 flex items-center gap-3">
               <button
                 onClick={onOpenAffiliateModal}
                 className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 text-xs transition-colors cursor-pointer active:scale-95"
@@ -32,7 +32,7 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
                 <Share2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 <span>คัดลอก / สร้างเว็บพ่วงสำหรับสายงานคุณ</span>
               </button>
-            </div>
+            </div>}
           </div>
 
           {/* Sponsor Credentials */}
@@ -98,7 +98,8 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
           <p className="leading-relaxed text-pretty">
             © {new Date().getFullYear()} Atomy Satellite Network • จัดทำโดยนักธุรกิจอิสระอะโทมี่เพื่อประโยชน์ในการขยายสายงานและแนะนำผู้มุ่งหวัง
           </p>
-          <p className="flex items-center justify-center gap-1 shrink-0">
+          <p className="flex items-center justify-center gap-3 shrink-0">
+            <a href="/privacy" className="text-blue-400 hover:underline">นโยบายความเป็นส่วนตัว</a>
             <span>ส่งเสริมการทำธุรกิจอย่างมีคุณธรรมและโปร่งใส</span>
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
           </p>

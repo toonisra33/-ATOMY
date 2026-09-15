@@ -1,4 +1,8 @@
 {
+  "firestore": {
+    "database": "ai-studio-atomysatellitefu-2e7af57f-c75f-4374-9cd1-f638571d9f9d",
+    "rules": "firestore.rules"
+  },
   "hosting": {
     "target": "atomy",
     "public": "dist",

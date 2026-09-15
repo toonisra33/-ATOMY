@@ -1,0 +1,41 @@
+name: Manage Firebase user role
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: Firebase Authentication email
+        required: true
+        type: string
+      role:
+        description: Access role
+        required: true
+        type: choice
+        options:
+          - partner
+          - admin
+      sponsor_id:
+        description: Existing sponsor ID to assign (optional)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  assign_role:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
+      - run: node scripts/set-user-role.mjs
+        env:
+          ROLE_EMAIL: '${{ inputs.email }}'
+          ROLE: '${{ inputs.role }}'
+          SPONSOR_ID: '${{ inputs.sponsor_id }}'
