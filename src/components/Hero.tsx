@@ -1,14 +1,16 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Play, MessageCircle, ShieldCheck, CheckCircle2, Award, Users2, ChevronRight, Phone } from 'lucide-react';
+import { Play, MessageCircle, ShieldCheck, CheckCircle2, Award, Users2, ChevronRight, Phone, Camera } from 'lucide-react';
+import { trackContactEvent } from '../lib/pixel';
 
 interface HeroProps {
   sponsor: SponsorProfile;
   onScrollToVideo: () => void;
   onOpenLineModal: () => void;
+  onOpenAffiliateModal?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLineModal }) => {
+export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLineModal, onOpenAffiliateModal }) => {
   return (
     <section id="hero" className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-slate-50 pt-10 pb-16 sm:pt-16 sm:pb-24 border-b border-slate-200">
       {/* Subtle Background Glow Elements */}
@@ -54,6 +56,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
                 href={sponsor.lineUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackContactEvent('line', sponsor.sponsorId)}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-base font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-xl shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95"
               >
                 <MessageCircle className="w-5 h-5 fill-white" />
@@ -94,13 +97,24 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
 
               {/* Sponsor Profile Section */}
               <div className="mt-5 flex items-start gap-4">
-                <div className="relative">
+                <div className="relative group">
                   <img
-                    src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'}
+                    src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
                     alt={sponsor.sponsorName}
-                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-white shadow-md shadow-slate-300"
+                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-white shadow-md shadow-slate-300 transition-opacity group-hover:opacity-90"
                   />
                   <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white" title="พร้อมให้คำปรึกษา" />
+                  {onOpenAffiliateModal && (
+                    <button
+                      type="button"
+                      onClick={onOpenAffiliateModal}
+                      title="เปลี่ยนรูปภาพ / แก้ไขข้อมูลสปอนเซอร์"
+                      className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer text-[10px]"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>เปลี่ยนรูป</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">

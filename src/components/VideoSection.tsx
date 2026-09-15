@@ -105,31 +105,33 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
           </p>
         </div>
 
-        {/* Video Selector Tabs */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-          {VIDEO_PRESETS.map((vid) => {
-            const isCurrent = vid.id === selectedVideo.id;
-            return (
-              <button
-                key={vid.id}
-                onClick={() => {
-                  setSelectedVideo(vid);
-                  setVideoTimestamp(0);
-                }}
-                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
-                  isCurrent
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 border border-blue-400'
-                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 border border-slate-700/80'
-                }`}
-              >
-                <span>{vid.title.length > 28 ? vid.title.slice(0, 28) + '...' : vid.title}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-sky-300">
-                  {vid.durationLabel}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Video Selector Tabs (Hidden when single video) */}
+        {VIDEO_PRESETS.length > 1 && (
+          <div className="mt-8 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+            {VIDEO_PRESETS.map((vid) => {
+              const isCurrent = vid.id === selectedVideo.id;
+              return (
+                <button
+                  key={vid.id}
+                  onClick={() => {
+                    setSelectedVideo(vid);
+                    setVideoTimestamp(0);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
+                    isCurrent
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 border border-blue-400'
+                      : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 border border-slate-700/80'
+                  }`}
+                >
+                  <span>{vid.title.length > 28 ? vid.title.slice(0, 28) + '...' : vid.title}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-sky-300">
+                    {vid.durationLabel}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Main Video & Chapters Grid */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

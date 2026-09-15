@@ -8,6 +8,9 @@ export interface SponsorProfile {
   teamName: string;
   welcomeNote?: string;
   avatarUrl?: string;
+  fbPixelId?: string;
+  tiktokPixelId?: string;
+  googleTagId?: string;
 }
 
 export interface VideoChapter {

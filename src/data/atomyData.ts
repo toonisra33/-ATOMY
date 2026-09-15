@@ -1,15 +1,15 @@
 import { SponsorProfile, VideoChapter, VideoPreset, BenefitItem, FaqItem } from '../types';
 
 export const DEFAULT_SPONSOR: SponsorProfile = {
-  sponsorId: 'TH3892011',
-  sponsorName: 'คุณภัทร อะโทมี่ โกลบอลลีดเดอร์',
-  sponsorPosition: 'Diamond Master / ผู้นำสายงานไทย',
-  lineId: '@atomythailand',
-  lineUrl: 'https://line.me/ti/p/~@atomythailand',
-  phoneNumber: '089-123-4567',
-  teamName: 'Atomy One Global Success Team',
+  sponsorId: '39823016',
+  sponsorName: 'อิศราวัฒน์ ปวินทกานต์ (คุณทูน)',
+  sponsorPosition: 'ที่ปรึกษาธุรกิจ Atomy Thailand',
+  lineId: 'sj7FVdJ',
+  lineUrl: 'https://lin.ee/sj7FVdJ',
+  phoneNumber: '093-065-2881',
+  teamName: 'Atomy Thailand Team freedomlife',
   welcomeNote: 'ยินดีต้อนรับทุกท่านที่กำลังมองหาโอกาสธุรกิจระดับโลก สมัครฟรี ไม่มีค่าใช้จ่าย พร้อมที่ปรึกษามืออาชีพดูแลตลอด 24 ชม.',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
 };
 
 export const VIDEO_PRESETS: VideoPreset[] = [
@@ -18,30 +18,10 @@ export const VIDEO_PRESETS: VideoPreset[] = [
     title: 'เจาะลึกธุรกิจ Atomy ใน 15 นาที: แผนการตลาด และโมเดล Masstige',
     subtitle: 'คลิปบรรยายพิเศษฉบับกระชับสำหรับผู้มุ่งหวังและผู้สนใจเริ่มต้นธุรกิจ',
     durationLabel: '15 นาที',
-    youtubeId: '3rI5qj6zF_c', // Atomy Official Vision & Introduction (embeddable)
+    youtubeId: 'h9eRrJ0V5N8', // https://www.youtube.com/watch?v=h9eRrJ0V5N8
     thumbnailUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80',
-    speaker: 'บรรยายโดยทีมวิทยากร Atomy Thailand',
+    speaker: 'บรรยายโดย อิศราวัฒน์ ปวินทกานต์ (คุณทูน)',
     description: 'ภาพรวมของธุรกิจอะโทมี่ แหล่งที่มาของรายได้ ระบบไบนารีระดับโลก และความมั่นคงของบริษัทระดับโลกจากเกาหลีใต้',
-  },
-  {
-    id: 'atomy-compensation-plan',
-    title: 'แผนการจ่ายผลตอบแทน Atomy Compensation Plan ฉบับเข้าใจง่าย',
-    subtitle: 'เข้าใจระบบไบนารี การสะสมคะแนน PV ตลอดชีพ และโบนัสตำแหน่ง',
-    durationLabel: '14 นาที',
-    youtubeId: 'pUj2J3hZ-18', 
-    thumbnailUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
-    speaker: 'Atomy Success Academy',
-    description: 'เรียนรู้ระบบ PV ส่วนตัวไม่มีวันหมดอายุ และการนับยอด PV ขาซ้าย-ขวาเพื่อรับคอมมิชชั่นแบบรายวัน',
-  },
-  {
-    id: 'atomy-masstige-products',
-    title: 'สุดยอดสินค้าคุณภาพพรีเมียมในราคาจับต้องได้ (Masstige Strategy)',
-    subtitle: 'ทำไมผู้บริโภคถึงซื้อซ้ำอย่างเป็นธรรมชาติ โดยไม่ต้องถูกบังคับ',
-    durationLabel: '12 นาที',
-    youtubeId: 'j8e89rD5W8Q',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=800&auto=format&fit=crop&q=80',
-    speaker: 'ทีมแนะนำผลิตภัณฑ์ Atomy Global',
-    description: 'สัมผัสตำนานสินค้า HemoHIM, ชุดบำรุงผิว Absolute CellActive และสินค้าอุปโภคบริโภคที่จำเป็นในชีวิตประจำวัน',
   },
 ];
 

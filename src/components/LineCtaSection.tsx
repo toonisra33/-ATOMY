@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SponsorProfile } from '../types';
 import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2 } from 'lucide-react';
 import { submitLead } from '../lib/firebase';
+import { trackLeadEvent, trackContactEvent } from '../lib/pixel';
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
@@ -27,9 +28,11 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
     navigator.clipboard.writeText(text);
     if (type === 'line') {
       setCopiedLineId(true);
+      trackContactEvent('line', sponsor.sponsorId);
       setTimeout(() => setCopiedLineId(false), 2000);
     } else if (type === 'sponsor') {
       setCopiedSponsorId(true);
+      trackContactEvent('line', sponsor.sponsorId);
       setTimeout(() => setCopiedSponsorId(false), 2000);
     } else if (type === 'message') {
       setCopiedMessage(true);
@@ -54,6 +57,14 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
       });
+
+      // Fire Pixel Lead Conversion Event across Meta, TikTok, and Google
+      trackLeadEvent({
+        fullName: fullName.trim(),
+        sponsorId: sponsor.sponsorId,
+        sponsorName: sponsor.sponsorName,
+      });
+
       setSubmitSuccess(true);
       setFullName('');
       setPhone('');
@@ -96,7 +107,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
           <div className="mt-8 p-4 sm:p-5 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 text-center sm:text-left">
               <img
-                src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'}
+                src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
                 alt={sponsor.sponsorName}
                 className="w-14 h-14 rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/20"
               />
@@ -138,6 +149,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
               href={sponsor.lineUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackContactEvent('line', sponsor.sponsorId)}
               className="flex-1 inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#06C755] hover:bg-[#05b34c] text-white text-base sm:text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-95 text-center"
             >
               <MessageCircle className="w-6 h-6 fill-white shrink-0" />
