@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyRound, Loader2, LockKeyhole, Mail, X } from 'lucide-react';
-import { loginWithEmail, resetPassword } from '../lib/auth';
+import { loginWithEmail, loginWithGoogle, resetPassword } from '../lib/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -42,6 +42,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      await loginWithGoogle();
+      onClose();
+    } catch {
+      setMessage('เข้าสู่ระบบด้วย Google ไม่สำเร็จ หรือบัญชียังไม่ได้รับสิทธิ์');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative w-full max-w-md rounded-3xl bg-white p-6 sm:p-8 shadow-2xl">
@@ -55,7 +68,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <p className="text-xs text-slate-500">ข้อมูล Lead เปิดได้เฉพาะบัญชีที่ได้รับอนุญาต</p>
           </div>
         </div>
-        <form onSubmit={handleLogin} className="mt-6 space-y-4">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white font-semibold text-slate-800 hover:bg-slate-50 disabled:text-slate-400"
+        >
+          <span className="text-lg font-bold text-blue-600">G</span>
+          เข้าสู่ระบบด้วย Google
+        </button>
+        <div className="my-4 flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />หรือใช้อีเมล<span className="h-px flex-1 bg-slate-200" />
+        </div>
+        <form onSubmit={handleLogin} className="space-y-4">
           <label className="block text-sm font-semibold text-slate-700">
             อีเมล
             <span className="mt-1 flex items-center gap-2 rounded-xl border border-slate-300 px-3">
