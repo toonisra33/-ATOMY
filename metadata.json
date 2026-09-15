@@ -1,0 +1,7 @@
+{
+  "name": "Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง",
+  "description": "เว็บลูกข่ายพ่วงทราฟฟิกและสปอนเซอร์ผู้มุ่งหวังเข้าสู่ธุรกิจอะโทมี่ พร้อมระบบดูวิดีโอ 15 นาที ลิงก์ LINE Official และระบบขยายเครือข่ายทีมงาน",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
