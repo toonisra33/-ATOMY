@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { LeadSubmission, fetchLeads, updateLeadStatus } from '../lib/firebase';
 import { SponsorProfile } from '../types';
+import { DEFAULT_SPONSOR } from '../data/atomyData';
 
 interface LeadsInboxModalProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   };
 
   const myLeadsCount = leads.filter(
-    (l) => l.sponsorId === sponsor.sponsorId || (sponsor.sponsorId === '36528859' && (!l.sponsorId || l.sponsorId === '36528859'))
+    (l) => l.sponsorId === sponsor.sponsorId || (sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (!l.sponsorId || l.sponsorId === DEFAULT_SPONSOR.sponsorId))
   ).length;
 
   const filteredLeads = leads.filter((item) => {
@@ -78,7 +79,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     if (scopeFilter === 'current') {
       const isMine =
         item.sponsorId === sponsor.sponsorId ||
-        (sponsor.sponsorId === '36528859' && (!item.sponsorId || item.sponsorId === '36528859'));
+        (sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (!item.sponsorId || item.sponsorId === DEFAULT_SPONSOR.sponsorId));
       if (!isMine) return false;
     }
 
@@ -285,7 +286,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                         <span>•</span>
                         <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 flex-wrap">
                           <span>สปอนเซอร์: {item.sponsorName} ({item.sponsorId})</span>
-                          {(item.sponsorId === sponsor.sponsorId || (sponsor.sponsorId === '36528859' && (!item.sponsorId || item.sponsorId === '36528859'))) && (
+                          {(item.sponsorId === sponsor.sponsorId || (sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (!item.sponsorId || item.sponsorId === DEFAULT_SPONSOR.sponsorId))) && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/25 text-blue-300 font-sans font-medium rounded border border-blue-500/30">
                               เว็บลูกนี้
                             </span>

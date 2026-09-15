@@ -13,7 +13,7 @@ service cloud.firestore {
 
     match /leads/{leadId} {
       allow create: if isValidLead(request.resource.data);
-      allow read, update: if true;
+      allow read, update, delete: if true;
     }
 
     match /sponsors/{sponsorId} {
