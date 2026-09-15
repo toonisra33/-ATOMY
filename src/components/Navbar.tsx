@@ -1,13 +1,14 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
+import { Share2, MessageCircle, ExternalLink, ShieldCheck, Sparkles, CloudUpload } from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
   onOpenAffiliateModal: () => void;
+  onOpenDeployGuide?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal }) => {
+export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, onOpenDeployGuide }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
       {/* Top Affiliate Notification Ribbon */}
@@ -60,6 +61,19 @@ export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal })
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Deploy Firebase Guide Button */}
+            {onOpenDeployGuide && (
+              <button
+                id="btn-deploy-guide"
+                onClick={onOpenDeployGuide}
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer shadow-2xs"
+                title="อัพเดตโค้ดขึ้น Firebase Hosting (localhub-atomy.web.app)"
+              >
+                <CloudUpload className="w-3.5 h-3.5 text-amber-600" />
+                <span>อัพเดต Firebase</span>
+              </button>
+            )}
+
             {/* Distributor Affiliate Generator Button */}
             <button
               id="btn-replicate-affiliate"

@@ -17,6 +17,7 @@ import { Footer } from './components/Footer';
 import { StickyBottomBar } from './components/StickyBottomBar';
 import { AffiliateModal } from './components/AffiliateModal';
 import { PixelStatusModal } from './components/PixelStatusModal';
+import { DeployGuideModal } from './components/DeployGuideModal';
 import { setupAllPixels } from './lib/pixel';
 import { loadSponsorProfile } from './lib/firebase';
 import { Target } from 'lucide-react';
@@ -37,6 +38,7 @@ export default function App() {
   });
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState<boolean>(false);
   const [isPixelModalOpen, setIsPixelModalOpen] = useState<boolean>(false);
+  const [isDeployGuideOpen, setIsDeployGuideOpen] = useState<boolean>(false);
 
   // Parse URL query parameters to support dynamic satellite replication & Pixel IDs
   useEffect(() => {
@@ -114,6 +116,7 @@ export default function App() {
       <Navbar
         sponsor={sponsor}
         onOpenAffiliateModal={() => setIsAffiliateModalOpen(true)}
+        onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
       />
 
       <main className="flex-grow">
@@ -176,6 +179,12 @@ export default function App() {
         isOpen={isPixelModalOpen}
         onClose={() => setIsPixelModalOpen(false)}
         sponsor={sponsor}
+      />
+
+      {/* Firebase Hosting Deploy Guide Modal */}
+      <DeployGuideModal
+        isOpen={isDeployGuideOpen}
+        onClose={() => setIsDeployGuideOpen(false)}
       />
 
       {/* Floating Pixel & Tracking Quick Badge */}
