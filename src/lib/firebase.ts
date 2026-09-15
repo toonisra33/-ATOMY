@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDocFromServer, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, getDocFromServer, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import firebaseConfigData from '../../firebase-applet-config.json';
 import { SponsorProfile } from '../types';
 
@@ -67,6 +67,20 @@ export async function saveSponsorProfile(sponsor: SponsorProfile) {
   } catch (error) {
     console.error('Error saving sponsor to Firebase:', error);
     return { success: false, error };
+  }
+}
+
+export async function loadSponsorProfile(sponsorId: string): Promise<SponsorProfile | null> {
+  try {
+    const sponsorRef = doc(db, 'sponsors', sponsorId || 'default');
+    const snap = await getDoc(sponsorRef);
+    if (snap.exists()) {
+      return snap.data() as SponsorProfile;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Could not load sponsor from Firebase:', error);
+    return null;
   }
 }
 

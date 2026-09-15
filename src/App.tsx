@@ -18,10 +18,23 @@ import { StickyBottomBar } from './components/StickyBottomBar';
 import { AffiliateModal } from './components/AffiliateModal';
 import { PixelStatusModal } from './components/PixelStatusModal';
 import { setupAllPixels } from './lib/pixel';
+import { loadSponsorProfile } from './lib/firebase';
 import { Target } from 'lucide-react';
 
 export default function App() {
-  const [sponsor, setSponsor] = useState<SponsorProfile>(DEFAULT_SPONSOR);
+  const [sponsor, setSponsor] = useState<SponsorProfile>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('atomy_custom_sponsor');
+        if (saved) {
+          return { ...DEFAULT_SPONSOR, ...JSON.parse(saved) };
+        }
+      } catch (err) {
+        console.warn('Could not read cached sponsor:', err);
+      }
+    }
+    return DEFAULT_SPONSOR;
+  });
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState<boolean>(false);
   const [isPixelModalOpen, setIsPixelModalOpen] = useState<boolean>(false);
 
@@ -61,6 +74,13 @@ export default function App() {
           };
           return updated;
         });
+      } else {
+        // If no URL param, attempt to check Firebase for saved sponsor config
+        loadSponsorProfile(DEFAULT_SPONSOR.sponsorId).then((cloudProfile) => {
+          if (cloudProfile && cloudProfile.avatarUrl) {
+            setSponsor((prev) => ({ ...prev, ...cloudProfile }));
+          }
+        }).catch(() => {});
       }
     }
   }, []);

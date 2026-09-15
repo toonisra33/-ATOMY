@@ -101,18 +101,17 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
                   <img
                     src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
                     alt={sponsor.sponsorName}
-                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-white shadow-md shadow-slate-300 transition-opacity group-hover:opacity-90"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-slate-300"
                   />
                   <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white" title="พร้อมให้คำปรึกษา" />
                   {onOpenAffiliateModal && (
                     <button
                       type="button"
                       onClick={onOpenAffiliateModal}
-                      title="เปลี่ยนรูปภาพ / แก้ไขข้อมูลสปอนเซอร์"
-                      className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer text-[10px]"
+                      title="กดเพื่อเปลี่ยนรูปภาพของคุณ / แก้ไขข้อมูลสปอนเซอร์"
+                      className="absolute -top-1.5 -right-1.5 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md border-2 border-white cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
                     >
-                      <Camera className="w-4 h-4" />
-                      <span>เปลี่ยนรูป</span>
+                      <Camera className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>

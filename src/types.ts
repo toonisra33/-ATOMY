@@ -38,6 +38,9 @@ export interface BenefitItem {
   title: string;
   description: string;
   tag: string;
+  imageUrl?: string;
+  keyHighlight?: string;
+  statLabel?: string;
 }
 
 export interface FaqItem {

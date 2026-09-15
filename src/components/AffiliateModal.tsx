@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { SponsorProfile } from '../types';
-import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
 
@@ -22,25 +22,64 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [formData, setFormData] = useState<SponsorProfile>({ ...currentSponsor });
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [showPixelSettings, setShowPixelSettings] = useState<boolean>(
     Boolean(currentSponsor.fbPixelId || currentSponsor.tiktokPixelId || currentSponsor.googleTagId)
   );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('ขนาดไฟล์รูปภาพเกิน 2MB กรุณาเลือกรูปขนาดเล็กลง');
-        return;
-      }
+  // Compress uploaded photo to fit smoothly in localStorage and Firestore
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (typeof event.target?.result === 'string') {
-          setFormData((prev) => ({ ...prev, avatarUrl: event.target?.result as string }));
-        }
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 400;
+          const MAX_HEIGHT = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Convert to efficient JPEG
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            resolve(compressedDataUrl);
+          } else {
+            resolve(event.target?.result as string);
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressedBase64 = await compressImage(file);
+        setFormData((prev) => ({ ...prev, avatarUrl: compressedBase64 }));
+      } catch (error) {
+        console.error('Error compressing image:', error);
+      }
     }
   };
 
@@ -74,20 +113,38 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  const handleApplyAndPreview = (e: React.FormEvent) => {
+  const handleApplyAndPreview = async (e: React.FormEvent) => {
     e.preventDefault();
-    onApplySponsor(formData);
-    // Push state to browser URL without reload
-    window.history.pushState({}, '', generatedAffiliateUrl);
-    // Initialize & fire pixels immediately
-    setupAllPixels({
-      fbPixelId: formData.fbPixelId,
-      tiktokPixelId: formData.tiktokPixelId,
-      googleTagId: formData.googleTagId,
-    });
-    // Save to Firebase Firestore
-    saveSponsorProfile(formData).catch((err) => console.warn('Could not sync sponsor to Firebase:', err));
-    onClose();
+    setIsSaving(true);
+    try {
+      // 1. Update React state in parent App
+      onApplySponsor(formData);
+
+      // 2. Persist to localStorage permanently so page refreshes retain user's photo
+      try {
+        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(formData));
+      } catch (lsErr) {
+        console.warn('LocalStorage save error:', lsErr);
+      }
+
+      // 3. Push state to browser URL without reload
+      window.history.pushState({}, '', generatedAffiliateUrl);
+
+      // 4. Initialize & fire pixels immediately
+      setupAllPixels({
+        fbPixelId: formData.fbPixelId,
+        tiktokPixelId: formData.tiktokPixelId,
+        googleTagId: formData.googleTagId,
+      });
+
+      // 5. Save to Firebase Firestore
+      await saveSponsorProfile(formData);
+    } catch (err) {
+      console.warn('Sync error:', err);
+    } finally {
+      setIsSaving(false);
+      onClose();
+    }
   };
 
   return (
@@ -262,7 +319,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                     <input
                       type="file"
                       ref={fileInputRef}
-                      accept="image/*"
+                      accept="image/*,.jfif,.jpg,.jpeg,.png,.webp"
                       onChange={handleFileChange}
                       className="hidden"
                     />
@@ -275,7 +332,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                       <span>อัพโหลดรูปภาพจากเครื่อง</span>
                     </button>
                     <span className="text-[11px] text-slate-400">
-                      รองรับ JPG, PNG, WebP
+                      รองรับ JPG, PNG, WebP, JFIF
                     </span>
                   </div>
 
@@ -462,9 +519,11 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
+              disabled={isSaving}
+              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
             >
-              <span>บันทึก & ทดลองดูหน้าเว็บพ่วงนี้</span>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : null}
+              <span>{isSaving ? 'กำลังบันทึก...' : 'บันทึก & ทดลองดูหน้าเว็บพ่วงนี้'}</span>
             </button>
           </div>
         </form>
