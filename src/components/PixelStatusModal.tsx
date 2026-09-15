@@ -30,6 +30,7 @@ interface PixelStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   sponsor: SponsorProfile;
+  ownerUid: string;
   onUpdatePixels?: (pixels: { fbPixelId: string; tiktokPixelId: string; googleTagId: string }) => void;
 }
 
@@ -37,6 +38,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
   isOpen,
   onClose,
   sponsor,
+  ownerUid,
   onUpdatePixels,
 }) => {
   const [activeTab, setActiveTab] = useState<'install' | 'logs' | 'guide'>('install');
@@ -49,6 +51,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
   const [logs, setLogs] = useState<PixelEventLog[]>([]);
   const [testSent, setTestSent] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Sync inputs if sponsor changes
@@ -79,6 +82,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
     if (e) e.preventDefault();
     setIsSaving(true);
     setSaveSuccess(false);
+    setSaveError('');
 
     const cleanFb = fbPixelId.trim();
     const cleanTikTok = tiktokPixelId.trim();
@@ -100,28 +104,19 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
       });
     }
 
-    // 3. Save to localStorage
-    try {
-      const current = localStorage.getItem('atomy_custom_sponsor');
-      const parsed = current ? JSON.parse(current) : { ...sponsor };
-      parsed.fbPixelId = cleanFb;
-      parsed.tiktokPixelId = cleanTikTok;
-      parsed.googleTagId = cleanGoogle;
-      localStorage.setItem('atomy_custom_sponsor', JSON.stringify(parsed));
-    } catch (err) {
-      console.warn('LocalStorage save error:', err);
-    }
-
-    // 4. Save to Firebase Firestore
+    // 3. Save to the authenticated sponsor profile.
     try {
       await saveSponsorProfile({
         ...sponsor,
         fbPixelId: cleanFb,
         tiktokPixelId: cleanTikTok,
         googleTagId: cleanGoogle,
-      });
+      }, ownerUid);
     } catch (err) {
       console.warn('Firebase save warning:', err);
+      setSaveError('บันทึก Pixel ไม่สำเร็จ โปรดตรวจสอบสิทธิ์ของบัญชี');
+      setIsSaving(false);
+      return;
     }
 
     setIsSaving(false);
@@ -233,6 +228,11 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
               <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>บันทึกและเปิดใช้งาน Pixel สำเร็จแล้ว! ระบบเริ่มยิง PageView ทันที</span>
+              </div>
+            )}
+            {saveError && (
+              <div className="p-3 bg-rose-500/15 border border-rose-500/30 rounded-xl text-rose-300 text-xs">
+                {saveError}
               </div>
             )}
 
@@ -446,7 +446,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                   <span>บันทึกเมื่อผู้มุ่งหวังกดปุ่ม "แอด LINE", โทรศัพท์ หรือกดลิ้งก์เว็บหลัก Atomy</span>
                 </li>
                 <li className="flex items-start gap-1.5">
-                  <span className="font-mono text-purple-400 font-bold shrink-0">4. Lead (SubmitForm):</span>
+                  <span className="font-mono text-purple-400 font-bold shrink-0">4. Lead:</span>
                   <span>บันทึกเมื่อผู้มุ่งหวังกรอกชื่อ-เบอร์โทรส่งฟอร์มขอรับคำปรึกษา</span>
                 </li>
               </ul>
@@ -478,4 +478,3 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
     </div>
   );
 };
-

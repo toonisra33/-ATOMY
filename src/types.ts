@@ -11,6 +11,27 @@ export interface SponsorProfile {
   fbPixelId?: string;
   tiktokPixelId?: string;
   googleTagId?: string;
+  ownerUid?: string;
+  isActive?: boolean;
+}
+
+export interface AuthSession {
+  uid: string;
+  email: string;
+  isAdmin: boolean;
+  role: 'admin' | 'partner';
+}
+
+export interface LeadAttribution {
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+  ttclid?: string;
+  landingPage: string;
+  referrer?: string;
+  eventId: string;
 }
 
 export interface VideoChapter {

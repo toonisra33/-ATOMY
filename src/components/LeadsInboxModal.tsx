@@ -22,12 +22,14 @@ interface LeadsInboxModalProps {
   isOpen: boolean;
   onClose: () => void;
   sponsor: SponsorProfile;
+  isAdmin: boolean;
 }
 
 export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   isOpen,
   onClose,
   sponsor,
+  isAdmin,
 }) => {
   const [leads, setLeads] = useState<LeadSubmission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,7 +41,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchLeads();
+      const data = await fetchLeads({ isAdmin, sponsorId: sponsor.sponsorId });
       setLeads(data);
     } catch (err) {
       console.error('Failed to load leads:', err);
@@ -52,7 +54,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     if (isOpen) {
       loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, isAdmin, sponsor.sponsorId]);
 
   if (!isOpen) return null;
 
@@ -205,7 +207,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
             >
               เฉพาะเว็บลูกนี้ ({myLeadsCount})
             </button>
-            <button
+            {isAdmin && <button
               type="button"
               onClick={() => setScopeFilter('all')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
@@ -215,7 +217,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
               }`}
             >
               รวมทั้งระบบ ({leads.length})
-            </button>
+            </button>}
           </div>
         </div>
 

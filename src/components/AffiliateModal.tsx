@@ -9,6 +9,7 @@ interface AffiliateModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentSponsor: SponsorProfile;
+  ownerUid: string;
   onApplySponsor: (newSponsor: SponsorProfile) => void;
   onOpenPixelStatus?: () => void;
 }
@@ -17,6 +18,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   isOpen,
   onClose,
   currentSponsor,
+  ownerUid,
   onApplySponsor,
   onOpenPixelStatus,
 }) => {
@@ -24,6 +26,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string>('');
   const [showPixelSettings, setShowPixelSettings] = useState<boolean>(
     Boolean(currentSponsor.fbPixelId || currentSponsor.tiktokPixelId || currentSponsor.googleTagId)
   );
@@ -87,23 +90,10 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   if (!isOpen) return null;
 
   // Build the generated affiliate URL based on window.location
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://example.com';
+  const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://example.com/';
   const queryParams = new URLSearchParams({
     ref: formData.sponsorId.trim() || 'ATOMY888',
-    name: formData.sponsorName.trim() || 'ที่ปรึกษาอะโทมี่',
-    pos: formData.sponsorPosition.trim() || 'สมาชิกนักธุรกิจ',
-    line: formData.lineId.trim() || '@atomy',
-    lineUrl: formData.lineUrl.trim() || `https://line.me/ti/p/~${formData.lineId.trim()}`,
-    phone: formData.phoneNumber.trim() || '',
-    team: formData.teamName.trim() || 'Atomy Thailand Team freedomlife',
   });
-
-  if (formData.avatarUrl?.trim() && !formData.avatarUrl.startsWith('data:')) {
-    queryParams.set('img', formData.avatarUrl.trim());
-  }
-  if (formData.fbPixelId?.trim()) queryParams.set('fbp', formData.fbPixelId.trim());
-  if (formData.tiktokPixelId?.trim()) queryParams.set('ttp', formData.tiktokPixelId.trim());
-  if (formData.googleTagId?.trim()) queryParams.set('ga', formData.googleTagId.trim());
 
   const generatedAffiliateUrl = `${baseUrl}?${queryParams.toString()}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(generatedAffiliateUrl)}`;
@@ -117,34 +107,28 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const handleApplyAndPreview = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveError('');
     try {
-      // 1. Update React state in parent App
-      onApplySponsor(formData);
+      // 1. Save first so the UI never previews an unverified profile.
+      await saveSponsorProfile(formData, ownerUid);
 
-      // 2. Persist to localStorage permanently so page refreshes retain user's photo
-      try {
-        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(formData));
-      } catch (lsErr) {
-        console.warn('LocalStorage save error:', lsErr);
-      }
-
-      // 3. Push state to browser URL without reload
+      // 2. Update React state and keep only the verified reference in the URL.
+      onApplySponsor({ ...formData, ownerUid, isActive: true });
       window.history.pushState({}, '', generatedAffiliateUrl);
 
-      // 4. Initialize & fire pixels immediately
+      // 3. Initialize pixels saved on the verified sponsor profile.
       setupAllPixels({
         fbPixelId: formData.fbPixelId,
         tiktokPixelId: formData.tiktokPixelId,
         googleTagId: formData.googleTagId,
       });
 
-      // 5. Save to Firebase Firestore
-      await saveSponsorProfile(formData);
+      onClose();
     } catch (err) {
       console.warn('Sync error:', err);
+      setSaveError('บันทึกไม่สำเร็จ บัญชีนี้อาจไม่ได้เป็นเจ้าของรหัสสปอนเซอร์ดังกล่าว');
     } finally {
       setIsSaving(false);
-      onClose();
     }
   };
 
@@ -177,6 +161,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
         {/* Form Inputs */}
         <form onSubmit={handleApplyAndPreview} className="mt-5 sm:mt-6 space-y-3.5 sm:space-y-4">
+          {saveError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{saveError}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             <div>

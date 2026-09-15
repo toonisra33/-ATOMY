@@ -1,10 +1,15 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, ExternalLink, ShieldCheck, Sparkles, CloudUpload, Target, Users } from 'lucide-react';
+import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
-  onOpenAffiliateModal: () => void;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  accountEmail?: string;
+  onOpenLogin: () => void;
+  onLogout: () => void;
+  onOpenAffiliateModal?: () => void;
   onOpenDeployGuide?: () => void;
   onOpenPixelModal?: () => void;
   onOpenLeadsModal?: () => void;
@@ -12,6 +17,11 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   sponsor,
+  isAuthenticated,
+  isAdmin,
+  accountEmail,
+  onOpenLogin,
+  onLogout,
   onOpenAffiliateModal,
   onOpenDeployGuide,
   onOpenPixelModal,
@@ -74,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Leads Inbox Button */}
-            {onOpenLeadsModal && (
+            {isAuthenticated && onOpenLeadsModal && (
               <button
                 id="nav-btn-leads-inbox"
                 onClick={onOpenLeadsModal}
@@ -87,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Install / Check Pixel Button */}
-            {onOpenPixelModal && (
+            {isAuthenticated && onOpenPixelModal && (
               <button
                 id="nav-btn-pixel-modal"
                 onClick={onOpenPixelModal}
@@ -103,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Deploy Firebase Guide Button */}
-            {onOpenDeployGuide && (
+            {isAdmin && onOpenDeployGuide && (
               <button
                 id="btn-deploy-guide"
                 onClick={onOpenDeployGuide}
@@ -116,15 +126,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Distributor Affiliate Generator Button */}
-            <button
-              id="btn-replicate-affiliate"
-              onClick={onOpenAffiliateModal}
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/80 cursor-pointer shadow-2xs"
-              title="สำหรับสมาชิกทีมงาน: สร้างลิงก์เว็บพ่วงในชื่อของคุณ"
-            >
-              <Share2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span className="hidden sm:inline">เว็บพ่วง</span>
-            </button>
+            {isAuthenticated && onOpenAffiliateModal && (
+              <button
+                id="btn-replicate-affiliate"
+                onClick={onOpenAffiliateModal}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/80 cursor-pointer shadow-2xs"
+                title="สำหรับสมาชิกทีมงาน: สร้างลิงก์เว็บพ่วงในชื่อของคุณ"
+              >
+                <Share2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="hidden sm:inline">เว็บพ่วง</span>
+              </button>
+            )}
+
+            {isAuthenticated ? (
+              <button onClick={onLogout} className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600" title={accountEmail || 'ออกจากระบบ'}>
+                <LogOut className="h-3.5 w-3.5" /><span className="hidden lg:inline">ออกจากระบบ</span>
+              </button>
+            ) : (
+              <button onClick={onOpenLogin} className="inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:text-blue-900">
+                <LogIn className="h-3.5 w-3.5" /><span className="hidden lg:inline">Partner Login</span>
+              </button>
+            )}
 
             {/* Direct Line Official CTA */}
             <a
