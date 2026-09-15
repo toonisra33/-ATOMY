@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getAuth } from 'firebase/auth';
 import {
   getFirestore,
@@ -29,6 +30,18 @@ const firebaseConfig = {
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+const recaptchaKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || firebaseConfigData.recaptchaSiteKey;
+if (recaptchaKey && typeof window !== 'undefined') {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+      isTokenAutoRefreshEnabled: true
+    });
+  } catch (e) {
+    console.warn('Failed to initialize App Check', e);
+  }
+}
 
 export const db = firebaseConfigData.firestoreDatabaseId
   ? getFirestore(app, firebaseConfigData.firestoreDatabaseId)
