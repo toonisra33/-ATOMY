@@ -19,11 +19,21 @@ import { AffiliateModal } from './components/AffiliateModal';
 import { PixelStatusModal } from './components/PixelStatusModal';
 import { DeployGuideModal } from './components/DeployGuideModal';
 import { LeadsInboxModal } from './components/LeadsInboxModal';
+import { LoginModal } from './components/LoginModal';
 import { setupAllPixels } from './lib/pixel';
 import { loadSponsorProfile } from './lib/firebase';
+import { watchAuthSession, logout } from './lib/auth';
 import { Target } from 'lucide-react';
+import { AuthSession } from './types';
 
 export default function App() {
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  useEffect(() => {
+    return watchAuthSession(setSession);
+  }, []);
+
   const [sponsor, setSponsor] = useState<SponsorProfile>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -145,6 +155,11 @@ export default function App() {
       {/* Top Navigation & Sponsor Ribbon */}
       <Navbar
         sponsor={sponsor}
+        isAuthenticated={!!session}
+        isAdmin={session?.isAdmin ?? false}
+        accountEmail={session?.email}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+        onLogout={logout}
         onOpenAffiliateModal={() => setIsAffiliateModalOpen(true)}
         onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
         onOpenPixelModal={() => setIsPixelModalOpen(true)}
@@ -203,6 +218,7 @@ export default function App() {
         isOpen={isAffiliateModalOpen}
         onClose={() => setIsAffiliateModalOpen(false)}
         currentSponsor={sponsor}
+        ownerUid={session?.uid || ''}
         onApplySponsor={(newSponsor) => setSponsor(newSponsor)}
         onOpenPixelStatus={() => setIsPixelModalOpen(true)}
       />
@@ -212,6 +228,7 @@ export default function App() {
         isOpen={isPixelModalOpen}
         onClose={() => setIsPixelModalOpen(false)}
         sponsor={sponsor}
+        ownerUid={session?.uid || ''}
         onUpdatePixels={(pixels) => {
           setSponsor((prev) => ({ ...prev, ...pixels }));
         }}
@@ -229,6 +246,8 @@ export default function App() {
         isOpen={isDeployGuideOpen}
         onClose={() => setIsDeployGuideOpen(false)}
       />
+
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
 
       {/* Floating Pixel & Tracking Quick Badge */}
       <button

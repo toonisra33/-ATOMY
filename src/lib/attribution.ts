@@ -9,13 +9,13 @@ function clean(value: string | null, maxLength = 180) {
 export function captureAttribution(): LeadAttribution {
   const params = new URLSearchParams(window.location.search);
   const current: LeadAttribution = {
-    utmSource: clean(params.get('utm_source')),
-    utmMedium: clean(params.get('utm_medium')),
-    utmCampaign: clean(params.get('utm_campaign')),
-    utmContent: clean(params.get('utm_content')),
-    utmTerm: clean(params.get('utm_term')),
+    utm_source: clean(params.get('utm_source')),
+    utm_medium: clean(params.get('utm_medium')),
+    utm_campaign: clean(params.get('utm_campaign')),
+    utm_content: clean(params.get('utm_content')),
+    utm_term: clean(params.get('utm_term')),
     ttclid: clean(params.get('ttclid'), 220),
-    landingPage: `${window.location.origin}${window.location.pathname}`,
+    landing_page: `${window.location.origin}${window.location.pathname}`,
     referrer: clean(document.referrer, 300),
     eventId: crypto.randomUUID(),
   };

@@ -41,6 +41,13 @@ export interface PartnerSession {
   authenticatedAt: string;
 }
 
+export interface AuthSession {
+  uid: string;
+  email: string;
+  isAdmin: boolean;
+  role: 'admin' | 'partner';
+}
+
 export interface VideoChapter {
   id: number;
   timeSeconds: number;

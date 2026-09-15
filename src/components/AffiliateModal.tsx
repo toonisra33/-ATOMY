@@ -9,6 +9,7 @@ interface AffiliateModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentSponsor: SponsorProfile;
+  ownerUid: string;
   onApplySponsor: (newSponsor: SponsorProfile) => void;
   onOpenPixelStatus?: () => void;
 }
@@ -17,6 +18,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   isOpen,
   onClose,
   currentSponsor,
+  ownerUid,
   onApplySponsor,
   onOpenPixelStatus,
 }) => {
@@ -128,7 +130,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
       });
 
       // 5. Save to Firebase Firestore
-      await saveSponsorProfile(formData);
+      await saveSponsorProfile(formData, ownerUid);
     } catch (err) {
       console.warn('Sync error:', err);
     } finally {

@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import {
   getFirestore,
   doc,
@@ -32,6 +33,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const db = firebaseConfigData.firestoreDatabaseId
   ? getFirestore(app, firebaseConfigData.firestoreDatabaseId)
   : getFirestore(app);
+export const auth = getAuth(app);
 
 // Test connection on boot per Firebase skill guidelines
 async function testConnection() {
@@ -153,17 +155,21 @@ export async function updateLeadStatus(leadId: string, status: 'new' | 'contacte
   }
 }
 
-export async function saveSponsorProfile(sponsor: SponsorProfile) {
+export async function saveSponsorProfile(sponsor: SponsorProfile, ownerUid?: string) {
   try {
     const sponsorRef = doc(db, 'sponsors', sponsor.sponsorId || 'default');
-    await setDoc(sponsorRef, {
+    const data: any = {
       ...sponsor,
       updatedAt: new Date().toISOString(),
-    }, { merge: true });
+    };
+    if (ownerUid) {
+      data.ownerUid = ownerUid;
+    }
+    await setDoc(sponsorRef, data, { merge: true });
     return { success: true };
   } catch (error) {
     console.error('Error saving sponsor to Firebase:', error);
-    return { success: false, error };
+    throw error; // Changed from returning { success: false } to match PixelStatusModal's try-catch expectations
   }
 }
 
