@@ -1,5 +1,20 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, getDocFromServer, collection, addDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  getDocFromServer,
+  collection,
+  addDoc,
+  setDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  updateDoc,
+  where
+} from 'firebase/firestore';
 import firebaseConfigData from '../../firebase-applet-config.json';
 import { SponsorProfile } from '../types';
 
@@ -32,11 +47,14 @@ async function testConnection() {
 testConnection();
 
 export interface LeadSubmission {
+  id?: string;
   fullName: string;
   phoneNumber: string;
   lineId?: string;
   sponsorId: string;
   sponsorName: string;
+  status?: 'new' | 'contacted' | 'completed';
+  createdAt?: string;
   notes?: string;
 }
 
@@ -53,6 +71,50 @@ export async function submitLead(lead: LeadSubmission) {
   } catch (error) {
     console.error('Error submitting lead to Firebase:', error);
     throw error;
+  }
+}
+
+export async function fetchLeads(sponsorId?: string): Promise<LeadSubmission[]> {
+  try {
+    const leadsCol = collection(db, 'leads');
+    let q = query(leadsCol, orderBy('createdAt', 'desc'), limit(50));
+    
+    // If sponsorId filter is provided
+    if (sponsorId) {
+      q = query(leadsCol, where('sponsorId', '==', sponsorId), limit(50));
+    }
+
+    const snap = await getDocs(q);
+    const leads: LeadSubmission[] = [];
+    snap.forEach((d) => {
+      leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
+    });
+    return leads;
+  } catch (error) {
+    console.warn('Error fetching leads, falling back to simple query:', error);
+    try {
+      const leadsCol = collection(db, 'leads');
+      const snap = await getDocs(leadsCol);
+      const leads: LeadSubmission[] = [];
+      snap.forEach((d) => {
+        leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
+      });
+      return leads.reverse();
+    } catch (fallbackError) {
+      console.error('Error in fallback fetchLeads:', fallbackError);
+      return [];
+    }
+  }
+}
+
+export async function updateLeadStatus(leadId: string, status: 'new' | 'contacted' | 'completed') {
+  try {
+    const leadRef = doc(db, 'leads', leadId);
+    await updateDoc(leadRef, { status });
+    return true;
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+    return false;
   }
 }
 

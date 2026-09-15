@@ -1,14 +1,24 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, ExternalLink, ShieldCheck, Sparkles, CloudUpload } from 'lucide-react';
+import { Share2, MessageCircle, ExternalLink, ShieldCheck, Sparkles, CloudUpload, Target, Users } from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
   onOpenAffiliateModal: () => void;
   onOpenDeployGuide?: () => void;
+  onOpenPixelModal?: () => void;
+  onOpenLeadsModal?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, onOpenDeployGuide }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  sponsor,
+  onOpenAffiliateModal,
+  onOpenDeployGuide,
+  onOpenPixelModal,
+  onOpenLeadsModal,
+}) => {
+  const hasPixel = Boolean(sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId);
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
       {/* Top Affiliate Notification Ribbon */}
@@ -53,8 +63,8 @@ export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, o
             <a href="#highlights" className="hover:text-blue-600 transition-colors">
               จุดเด่นธุรกิจ
             </a>
-            <a href="#atomy-portal" className="hover:text-blue-600 transition-colors">
-              เว็บหลัก Atomy
+            <a href="#line-official" className="hover:text-blue-600 transition-colors">
+              ติดต่อ / ฝากข้อมูล
             </a>
             <a href="#faq" className="hover:text-blue-600 transition-colors">
               คำถามที่พบบ่อย
@@ -62,17 +72,46 @@ export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, o
           </nav>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Leads Inbox Button */}
+            {onOpenLeadsModal && (
+              <button
+                id="nav-btn-leads-inbox"
+                onClick={onOpenLeadsModal}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
+                title="ดูรายชื่อผู้มุ่งหวังที่กรอกฟอร์มเข้ามา (Leads Inbox)"
+              >
+                <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="hidden md:inline">รายชื่อ Lead</span>
+              </button>
+            )}
+
+            {/* Install / Check Pixel Button */}
+            {onOpenPixelModal && (
+              <button
+                id="nav-btn-pixel-modal"
+                onClick={onOpenPixelModal}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200 cursor-pointer shadow-2xs"
+                title="ติดตั้ง Pixel (Meta / TikTok / Google GA4)"
+              >
+                <Target className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <span className="hidden sm:inline">Pixel</span>
+                {hasPixel && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                )}
+              </button>
+            )}
+
             {/* Deploy Firebase Guide Button */}
             {onOpenDeployGuide && (
               <button
                 id="btn-deploy-guide"
                 onClick={onOpenDeployGuide}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer shadow-2xs"
+                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer shadow-2xs"
                 title="อัพเดตโค้ดขึ้น Firebase Hosting (localhub-atomy.web.app)"
               >
                 <CloudUpload className="w-3.5 h-3.5 text-amber-600" />
-                <span>อัพเดต Firebase</span>
+                <span>อัพเดต</span>
               </button>
             )}
 
@@ -80,12 +119,11 @@ export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, o
             <button
               id="btn-replicate-affiliate"
               onClick={onOpenAffiliateModal}
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/80 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/80 cursor-pointer shadow-2xs"
               title="สำหรับสมาชิกทีมงาน: สร้างลิงก์เว็บพ่วงในชื่อของคุณ"
             >
               <Share2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span className="hidden sm:inline">สร้างเว็บพ่วง</span>
-              <span className="sm:hidden text-[11px]">เว็บพ่วง</span>
+              <span className="hidden sm:inline">เว็บพ่วง</span>
             </button>
 
             {/* Direct Line Official CTA */}
@@ -94,11 +132,10 @@ export const Navbar: React.FC<NavbarProps> = ({ sponsor, onOpenAffiliateModal, o
               href={sponsor.lineUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-lg transition-all shadow-md shadow-emerald-600/20 active:scale-95 shrink-0"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-lg transition-all shadow-md shadow-emerald-600/20 active:scale-95 shrink-0"
             >
               <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white shrink-0" />
-              <span className="hidden xs:inline">แอด LINE สปอนเซอร์</span>
-              <span className="xs:hidden">แอด LINE</span>
+              <span className="hidden xs:inline">แอด LINE</span>
             </a>
           </div>
         </div>

@@ -18,6 +18,7 @@ import { StickyBottomBar } from './components/StickyBottomBar';
 import { AffiliateModal } from './components/AffiliateModal';
 import { PixelStatusModal } from './components/PixelStatusModal';
 import { DeployGuideModal } from './components/DeployGuideModal';
+import { LeadsInboxModal } from './components/LeadsInboxModal';
 import { setupAllPixels } from './lib/pixel';
 import { loadSponsorProfile } from './lib/firebase';
 import { Target } from 'lucide-react';
@@ -39,6 +40,7 @@ export default function App() {
   const [isAffiliateModalOpen, setIsAffiliateModalOpen] = useState<boolean>(false);
   const [isPixelModalOpen, setIsPixelModalOpen] = useState<boolean>(false);
   const [isDeployGuideOpen, setIsDeployGuideOpen] = useState<boolean>(false);
+  const [isLeadsModalOpen, setIsLeadsModalOpen] = useState<boolean>(false);
 
   // Parse URL query parameters to support dynamic satellite replication & Pixel IDs
   useEffect(() => {
@@ -117,6 +119,8 @@ export default function App() {
         sponsor={sponsor}
         onOpenAffiliateModal={() => setIsAffiliateModalOpen(true)}
         onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
+        onOpenPixelModal={() => setIsPixelModalOpen(true)}
+        onOpenLeadsModal={() => setIsLeadsModalOpen(true)}
       />
 
       <main className="flex-grow">
@@ -137,6 +141,7 @@ export default function App() {
         {/* Primary Line Official CTA Section */}
         <LineCtaSection
           sponsor={sponsor}
+          onOpenLeadsModal={() => setIsLeadsModalOpen(true)}
         />
 
         {/* Business Highlights (Why Atomy) */}
@@ -179,6 +184,16 @@ export default function App() {
         isOpen={isPixelModalOpen}
         onClose={() => setIsPixelModalOpen(false)}
         sponsor={sponsor}
+        onUpdatePixels={(pixels) => {
+          setSponsor((prev) => ({ ...prev, ...pixels }));
+        }}
+      />
+
+      {/* Leads Inbox Modal */}
+      <LeadsInboxModal
+        isOpen={isLeadsModalOpen}
+        onClose={() => setIsLeadsModalOpen(false)}
+        sponsor={sponsor}
       />
 
       {/* Firebase Hosting Deploy Guide Modal */}
@@ -192,17 +207,17 @@ export default function App() {
         type="button"
         id="btn-floating-pixel-status"
         onClick={() => setIsPixelModalOpen(true)}
-        className="fixed bottom-20 left-4 z-40 bg-slate-950/90 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full border border-slate-800 shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer hover:border-purple-500/60 transition-all group"
-        title="เช็คการทำงานของ Facebook / TikTok Pixel"
+        className="fixed bottom-20 left-4 z-40 bg-slate-950/95 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full border border-purple-500/30 hover:border-purple-400 shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition-all group active:scale-95"
+        title="คลิกเพื่อติดตั้งหรือตรวจสอบ Pixel (Facebook / TikTok / GA4)"
       >
         <span className={`w-2 h-2 rounded-full ${
           sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId
             ? 'bg-emerald-400 animate-pulse'
-            : 'bg-slate-500'
+            : 'bg-amber-400'
         }`} />
         <Target className="w-3.5 h-3.5 text-purple-400 group-hover:rotate-45 transition-transform" />
-        <span className="font-medium text-[11px] text-slate-200">
-          {sponsor.fbPixelId || sponsor.tiktokPixelId ? 'Pixel กำลังทำงาน' : 'สถานะ Pixel'}
+        <span className="font-semibold text-[11px] text-slate-200">
+          {sponsor.fbPixelId || sponsor.tiktokPixelId ? 'Pixel ทำงานอยู่' : 'ติดตั้ง Pixel'}
         </span>
       </button>
     </div>

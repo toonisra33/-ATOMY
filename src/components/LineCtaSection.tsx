@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { SponsorProfile } from '../types';
-import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2 } from 'lucide-react';
+import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2, Users } from 'lucide-react';
 import { submitLead } from '../lib/firebase';
 import { trackLeadEvent, trackContactEvent } from '../lib/pixel';
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
+  onOpenLeadsModal?: () => void;
 }
 
-export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
+export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenLeadsModal }) => {
   const [copiedLineId, setCopiedLineId] = useState<boolean>(false);
   const [copiedSponsorId, setCopiedSponsorId] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<boolean>(false);
@@ -227,14 +228,27 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
 
           {/* Quick Consultation Request Form (Firebase Firestore Integration) */}
           <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-slate-50/90 rounded-xl sm:rounded-2xl border border-slate-200 text-left">
-            <div className="flex items-center gap-2 mb-1.5">
-              <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
-              <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                หรือฝากข้อมูลให้ {sponsor.sponsorName} ติดต่อกลับ
-              </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  หรือฝากข้อมูลให้ {sponsor.sponsorName} ติดต่อกลับ
+                </h3>
+              </div>
+              {onOpenLeadsModal && (
+                <button
+                  type="button"
+                  onClick={onOpenLeadsModal}
+                  className="self-start sm:self-auto inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 shadow-2xs transition-colors cursor-pointer"
+                  title="ดูรายชื่อที่กรอกเข้ามาในระบบ"
+                >
+                  <Users className="w-3.5 h-3.5 text-blue-600" />
+                  <span>เปิดดูกล่องรายชื่อ (Leads Inbox)</span>
+                </button>
+              )}
             </div>
             <p className="text-xs text-slate-500 mb-3.5 leading-relaxed text-pretty">
-              ข้อมูลจะถูกส่งเข้าสู่ระบบฐานข้อมูลของทีมอย่างปลอดภัย เพื่อให้ที่ปรึกษาติดต่อแนะนำการสมัครสมาชิกฟรี
+              ข้อมูลจะถูกบันทึกเข้า Cloud Firestore และส่งสัญญาณ Pixel ทันที เพื่อให้ที่ปรึกษาติดต่อแนะนำการสมัครสมาชิกฟรี
             </p>
 
             {submitSuccess ? (
