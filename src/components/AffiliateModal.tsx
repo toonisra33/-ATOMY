@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SponsorProfile } from '../types';
-import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon } from 'lucide-react';
+import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, CloudCheck } from 'lucide-react';
+import { saveSponsorProfile } from '../lib/firebase';
 
 interface AffiliateModalProps {
   isOpen: boolean;
@@ -47,6 +48,8 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
     onApplySponsor(formData);
     // Push state to browser URL without reload
     window.history.pushState({}, '', generatedAffiliateUrl);
+    // Save to Firebase Firestore
+    saveSponsorProfile(formData).catch((err) => console.warn('Could not sync sponsor to Firebase:', err));
     onClose();
   };
 

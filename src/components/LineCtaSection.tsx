@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SponsorProfile } from '../types';
-import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, PhoneCall } from 'lucide-react';
+import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2 } from 'lucide-react';
+import { submitLead } from '../lib/firebase';
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
@@ -11,6 +12,14 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
   const [copiedSponsorId, setCopiedSponsorId] = useState<boolean>(false);
   const [copiedMessage, setCopiedMessage] = useState<boolean>(false);
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
+
+  // Firestore Lead Form state
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [prospectLineId, setProspectLineId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const prefilledMessage = `สวัสดีครับ/ค่ะ สนใจสมัครสมาชิก Atomy รับรหัสสปอนเซอร์ ${sponsor.sponsorId} ดูคลิปบรรยาย 15 นาทีเรียบร้อยแล้ว ต้องการคำแนะนำเปิดรหัสสมาชิกฟรีครับ/ค่ะ`;
 
@@ -25,6 +34,35 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
     } else if (type === 'message') {
       setCopiedMessage(true);
       setTimeout(() => setCopiedMessage(false), 2000);
+    }
+  };
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !phone.trim()) {
+      setErrorMessage('กรุณาระบุชื่อและเบอร์โทรศัพท์');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+    try {
+      await submitLead({
+        fullName: fullName.trim(),
+        phoneNumber: phone.trim(),
+        lineId: prospectLineId.trim() || '',
+        sponsorId: sponsor.sponsorId,
+        sponsorName: sponsor.sponsorName,
+      });
+      setSubmitSuccess(true);
+      setFullName('');
+      setPhone('');
+      setProspectLineId('');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อทาง LINE โดยตรง');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -171,6 +209,96 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor }) => {
             <p className="text-xs sm:text-sm text-emerald-950 bg-white/90 p-3 rounded-xl border border-emerald-200/60 font-mono">
               "{prefilledMessage}"
             </p>
+          </div>
+
+          {/* Quick Consultation Request Form (Firebase Firestore Integration) */}
+          <div className="mt-8 p-5 sm:p-6 bg-slate-50/90 rounded-2xl border border-slate-200 text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <UserCheck className="w-5 h-5 text-blue-600" />
+              <h3 className="text-base font-bold text-slate-900">
+                หรือฝากข้อมูลให้ {sponsor.sponsorName} ติดต่อกลับโดยตรง
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">
+              ข้อมูลจะถูกส่งเข้าสู่ระบบฐานข้อมูล Firebase ของทีมอย่างปลอดภัย เพื่อให้ที่ปรึกษาติดต่อแนะนำการสมัครสมาชิกฟรี
+            </p>
+
+            {submitSuccess ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-sm flex items-center gap-3">
+                <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <div className="font-bold">ส่งข้อมูลสำเร็จเรียบร้อยแล้ว!</div>
+                  <div className="text-xs text-emerald-700 mt-0.5">
+                    {sponsor.sponsorName} จะติดต่อกลับเพื่อให้ข้อมูลและแนะนำการเปิดรหัสสมาชิกโดยเร็วที่สุด
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleLeadSubmit} className="space-y-3">
+                {errorMessage && (
+                  <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-lg">
+                    {errorMessage}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      ชื่อ-นามสกุล *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="เช่น สมชาย ใจดี"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      เบอร์โทรศัพท์ติดต่อ *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="เช่น 0812345678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      LINE ID (ถ้ามี)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="เช่น somchai.line"
+                      value={prospectLineId}
+                      onChange={(e) => setProspectLineId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>กำลังส่งข้อมูล...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>ส่งข้อมูลเพื่อขอคำแนะนำ</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Guarantees */}

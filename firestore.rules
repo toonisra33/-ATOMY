@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isValidLead(data) {
+      return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
+        && data.phoneNumber is string && data.phoneNumber.size() >= 8 && data.phoneNumber.size() <= 20
+        && data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
+        && data.createdAt is string
+        && data.status in ['new', 'contacted', 'completed'];
+    }
+
+    match /leads/{leadId} {
+      allow create: if isValidLead(request.resource.data);
+      allow read, update: if true;
+    }
+
+    match /sponsors/{sponsorId} {
+      allow read: if true;
+      allow write: if request.resource.data.sponsorId is string;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

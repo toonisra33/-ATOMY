@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "A prospect registration or contact request for Atomy business mentorship.",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the prospect"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Contact phone number"
+        },
+        "lineId": {
+          "type": "string",
+          "description": "LINE ID of the prospect"
+        },
+        "sponsorId": {
+          "type": "string",
+          "description": "Sponsor ID the lead is inquiring under"
+        },
+        "sponsorName": {
+          "type": "string",
+          "description": "Sponsor name"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["new", "contacted", "completed"],
+          "description": "Current status of the lead"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes or message from the prospect"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp when the lead was submitted"
+        }
+      },
+      "required": ["fullName", "phoneNumber", "sponsorId", "createdAt", "status"]
+    },
+    "SponsorProfile": {
+      "title": "SponsorProfile",
+      "description": "Saved sponsor profile and affiliate link settings.",
+      "type": "object",
+      "properties": {
+        "sponsorId": {
+          "type": "string",
+          "description": "Unique Atomy member/sponsor ID"
+        },
+        "sponsorName": {
+          "type": "string",
+          "description": "Sponsor display name"
+        },
+        "sponsorPosition": {
+          "type": "string",
+          "description": "Sponsor rank or position title"
+        },
+        "lineId": {
+          "type": "string",
+          "description": "Sponsor LINE ID"
+        },
+        "lineUrl": {
+          "type": "string",
+          "description": "Sponsor LINE Official or personal add link"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Sponsor phone number"
+        },
+        "teamName": {
+          "type": "string",
+          "description": "Team name"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Avatar image URL"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["sponsorId", "sponsorName", "lineId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Collection of prospect leads and registration inquiries"
+    },
+    "/sponsors/{sponsorId}": {
+      "schema": "SponsorProfile",
+      "description": "Collection of sponsor landing profiles"
+    }
+  }
+}
