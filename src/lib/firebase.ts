@@ -73,9 +73,14 @@ export async function submitLead(lead: LeadSubmission) {
       where('phoneNumber', '==', lead.phoneNumber),
       limit(1)
     );
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      throw new Error('DUPLICATE_LEAD');
+    try {
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        throw new Error('DUPLICATE_LEAD');
+      }
+    } catch (readError) {
+      // If we can't read due to permissions or offline, proceed with addDoc (blind insert)
+      console.warn('Could not read existing leads to check for duplicates:', readError);
     }
 
     const docRef = await addDoc(leadsCol, {
