@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SponsorProfile } from '../types';
+import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2, Users } from 'lucide-react';
 import { submitLead } from '../lib/firebase';
 import { trackLeadEvent, trackContactEvent } from '../lib/pixel';
@@ -110,7 +111,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenL
           <div className="mt-6 sm:mt-8 p-3.5 sm:p-5 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3.5 sm:gap-4">
             <div className="flex items-center gap-3 text-left w-full sm:w-auto">
               <img
-                src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
+                src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                 alt={sponsor.sponsorName}
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/20 shrink-0"
               />

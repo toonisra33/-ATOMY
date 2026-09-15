@@ -1,5 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
+import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { Play, MessageCircle, ShieldCheck, CheckCircle2, Award, Users2, ChevronRight, Phone, Camera } from 'lucide-react';
 import { trackContactEvent } from '../lib/pixel';
 
@@ -102,7 +103,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
               <div className="mt-4 sm:mt-5 flex items-start gap-3 sm:gap-4">
                 <div className="relative group shrink-0">
                   <img
-                    src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
+                    src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                     alt={sponsor.sponsorName}
                     className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-slate-300"
                   />

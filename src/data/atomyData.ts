@@ -1,4 +1,6 @@
 import { SponsorProfile, VideoChapter, VideoPreset, BenefitItem, FaqItem } from '../types';
+import toonProfileImg from '../assets/profile.jpg';
+import atomyMasstigeImg from '../assets/atomy-masstige-products.png';
 
 export const DEFAULT_SPONSOR: SponsorProfile = {
   sponsorId: '39823016',
@@ -9,7 +11,10 @@ export const DEFAULT_SPONSOR: SponsorProfile = {
   phoneNumber: '093-065-2881',
   teamName: 'Atomy Thailand Team freedomlife',
   welcomeNote: 'ยินดีต้อนรับทุกท่านที่กำลังมองหาโอกาสธุรกิจระดับโลก สมัครฟรี ไม่มีค่าใช้จ่าย พร้อมที่ปรึกษามืออาชีพดูแลตลอด 24 ชม.',
-  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+  avatarUrl: toonProfileImg,
+  fbPixelId: '1673256503238517',
+  tiktokPixelId: 'CRIJ9QBC77UDCNKERUHG',
+  googleTagId: '377178012',
 };
 
 export const VIDEO_PRESETS: VideoPreset[] = [
@@ -103,7 +108,7 @@ export const BUSINESS_BENEFITS: BenefitItem[] = [
     tag: 'Absolute Quality',
     statLabel: 'อัตราซื้อซ้ำสูง',
     keyHighlight: 'สินค้าสุขภาพ HemoHIM และสกินแคร์ระดับโลกการันตีรางวัล',
-    imageUrl: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80',
+    imageUrl: atomyMasstigeImg,
   },
   {
     iconName: 'Users',

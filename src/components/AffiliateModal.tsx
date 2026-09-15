@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { SponsorProfile } from '../types';
+import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
@@ -297,7 +298,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 {/* Image Preview */}
                 <div className="relative shrink-0">
                   <img
-                    src={formData.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80'}
+                    src={formData.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                     alt="Preview"
                     className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-slate-200"
                   />

@@ -78,11 +78,24 @@ export default function App() {
           };
           return updated;
         });
+
+        // If satellite sponsorId has a saved profile in Firebase, load their custom avatar & details
+        if (ref && !avatar) {
+          loadSponsorProfile(ref).then((cloudProfile) => {
+            if (cloudProfile && cloudProfile.avatarUrl) {
+              setSponsor((prev) => ({ ...prev, avatarUrl: cloudProfile.avatarUrl }));
+            }
+          }).catch(() => {});
+        }
       } else {
-        // If no URL param, attempt to check Firebase for saved sponsor config
+        // If no URL param, load saved sponsor config for default sponsor
         loadSponsorProfile(DEFAULT_SPONSOR.sponsorId).then((cloudProfile) => {
-          if (cloudProfile && cloudProfile.avatarUrl) {
-            setSponsor((prev) => ({ ...prev, ...cloudProfile }));
+          if (cloudProfile) {
+            setSponsor((prev) => ({
+              ...prev,
+              ...cloudProfile,
+              avatarUrl: cloudProfile.avatarUrl || prev.avatarUrl,
+            }));
           }
         }).catch(() => {});
       }

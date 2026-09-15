@@ -1,6 +1,7 @@
 import React from 'react';
 import { BUSINESS_BENEFITS } from '../data/atomyData';
-import { ShieldCheck, TrendingUp, Globe2, Sparkles, Users, Award, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Globe2, Sparkles, Users, Award, CheckCircle2, ArrowRight, BadgeCheck } from 'lucide-react';
+import { BinaryNetworkGraphicOverlay } from './BinaryNetworkGraphicOverlay';
 
 export const BusinessHighlights: React.FC = () => {
   const iconMap: Record<string, React.ElementType> = {
@@ -48,7 +49,7 @@ export const BusinessHighlights: React.FC = () => {
                 className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-blue-300 shadow-md hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Photo Header with Badge Overlay */}
-                <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-900">
+                <div className={`relative ${item.title.includes('Binary') ? 'h-52 sm:h-60' : 'h-44 sm:h-52'} w-full overflow-hidden bg-slate-900`}>
                   <img
                     src={item.imageUrl}
                     alt={item.title}
@@ -58,28 +59,46 @@ export const BusinessHighlights: React.FC = () => {
                   {/* Subtle Gradient Over Image */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
 
-                  {/* Top Floating Badges */}
-                  <div className="absolute top-3 left-3 right-3 sm:top-3.5 sm:left-3.5 sm:right-3.5 flex items-center justify-between z-10">
-                    <span className="text-[11px] font-bold text-white bg-black/50 backdrop-blur-md px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-white/20 shadow-xs">
-                      #{index + 1} {item.tag}
-                    </span>
+                  {/* If Binary Card: Render Professional 2-Leg Binary Network Graphic Overlay */}
+                  {item.title.includes('Binary') && (
+                    <BinaryNetworkGraphicOverlay />
+                  )}
 
-                    {item.statLabel && (
-                      <span className="text-[11px] font-bold text-amber-300 bg-amber-950/80 backdrop-blur-md px-2.5 py-0.5 sm:py-1 rounded-full border border-amber-500/40 shadow-xs">
-                        {item.statLabel}
-                      </span>
-                    )}
-                  </div>
+                  {/* If NOT Binary: Render Standard Floating Badges */}
+                  {!item.title.includes('Binary') && (
+                    <>
+                      {/* Top Floating Badges */}
+                      <div className="absolute top-3 left-3 right-3 sm:top-3.5 sm:left-3.5 sm:right-3.5 flex items-center justify-between z-10">
+                        <span className="text-[11px] font-bold text-white bg-black/50 backdrop-blur-md px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-white/20 shadow-xs">
+                          #{index + 1} {item.tag}
+                        </span>
 
-                  {/* Floating Icon in Corner */}
-                  <div className="absolute bottom-3 left-3 sm:bottom-3.5 sm:left-4 z-10 flex items-center gap-2">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-600/90 backdrop-blur-md text-white flex items-center justify-center shadow-lg border border-blue-400/40">
-                      <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-semibold text-white/90 drop-shadow-sm font-mono tracking-wide">
-                      ATOMY VALUE
-                    </span>
-                  </div>
+                        {item.statLabel && (
+                          <span className="text-[11px] font-bold text-amber-300 bg-amber-950/80 backdrop-blur-md px-2.5 py-0.5 sm:py-1 rounded-full border border-amber-500/40 shadow-xs">
+                            {item.statLabel}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Floating Icon in Corner */}
+                      <div className="absolute bottom-3 left-3 sm:bottom-3.5 sm:left-4 z-10 flex items-center gap-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-600/90 backdrop-blur-md text-white flex items-center justify-center shadow-lg border border-blue-400/40">
+                          <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-semibold text-white/90 drop-shadow-sm font-mono tracking-wide">
+                          ATOMY VALUE
+                        </span>
+                      </div>
+
+                      {/* Masstige Authentic Product Seal Badge */}
+                      {item.title.includes('Masstige') && (
+                        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 text-[10px] sm:text-[11px] font-bold backdrop-blur-md shadow-md">
+                          <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>สินค้าจริง 100%</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 {/* Card Content */}

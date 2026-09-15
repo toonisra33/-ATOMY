@@ -1,5 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
+import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { MessageCircle, Phone, Play } from 'lucide-react';
 import { trackContactEvent } from '../lib/pixel';
 
@@ -18,7 +19,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
         {/* Sponsor Avatar & Name snippet */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <img
-            src={sponsor.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80'}
+            src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
             alt={sponsor.sponsorName}
             className="w-8 h-8 rounded-full object-cover border border-emerald-500 shrink-0"
           />
