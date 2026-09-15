@@ -12,9 +12,12 @@ import {
   ExternalLink,
   ShieldCheck,
   Search,
-  Database
+  Database,
+  Lock,
+  Loader2,
+  Unlock
 } from 'lucide-react';
-import { LeadSubmission, fetchLeads, updateLeadStatus } from '../lib/firebase';
+import { LeadSubmission, fetchLeads, updateLeadStatus, verifySponsorPin } from '../lib/firebase';
 import { SponsorProfile } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
 
@@ -22,15 +25,18 @@ interface LeadsInboxModalProps {
   isOpen: boolean;
   onClose: () => void;
   sponsor: SponsorProfile;
-  isAdmin: boolean;
 }
 
 export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   isOpen,
   onClose,
   sponsor,
-  isAdmin,
 }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [pinInput, setPinInput] = useState<string>('');
+  const [authError, setAuthError] = useState<string>('');
+  const [isVerifying, setIsVerifying] = useState<boolean>(false);
+
   const [leads, setLeads] = useState<LeadSubmission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -38,10 +44,31 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   const [scopeFilter, setScopeFilter] = useState<'current' | 'all'>('current');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  const handleVerifyPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinInput.trim()) return;
+    
+    setIsVerifying(true);
+    setAuthError('');
+    try {
+      const isValid = await verifySponsorPin(sponsor.sponsorId, pinInput.trim());
+      if (isValid) {
+        setIsAuthenticated(true);
+        loadData();
+      } else {
+        setAuthError('รหัส PIN ไม่ถูกต้อง หากยังไม่ได้ตั้งค่า กรุณาไปตั้งค่าที่เมนู "เว็บพ่วงสปอนเซอร์" ก่อน');
+      }
+    } catch (err) {
+      setAuthError('ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await fetchLeads({ isAdmin, sponsorId: sponsor.sponsorId });
+      const data = await fetchLeads();
       setLeads(data);
     } catch (err) {
       console.error('Failed to load leads:', err);
@@ -50,11 +77,14 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     }
   };
 
+  // Reset auth when modal closes or sponsor changes
   useEffect(() => {
-    if (isOpen) {
-      loadData();
+    if (!isOpen) {
+      setIsAuthenticated(false);
+      setPinInput('');
+      setAuthError('');
     }
-  }, [isOpen, isAdmin, sponsor.sponsorId]);
+  }, [isOpen, sponsor.sponsorId]);
 
   if (!isOpen) return null;
 
@@ -110,12 +140,62 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer z-10"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header */}
+        {!isAuthenticated ? (
+          // --- PIN Authentication Gate ---
+          <div className="py-8 px-4 sm:px-10 text-center flex flex-col items-center justify-center min-h-[350px]">
+            <div className="w-16 h-16 rounded-full bg-blue-900/40 border border-blue-500/30 flex items-center justify-center mb-6">
+              <Lock className="w-8 h-8 text-blue-400" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">เข้าสู่ระบบหลังบ้าน</h3>
+            <p className="text-sm text-slate-400 mb-8 max-w-sm">
+              กรุณายืนยันรหัส PIN เพื่อดูรายชื่อผู้มุ่งหวังของสปอนเซอร์ <strong className="text-slate-200">{sponsor.sponsorId}</strong>
+            </p>
+            
+            <form onSubmit={handleVerifyPin} className="w-full max-w-xs space-y-4">
+              <div>
+                <input
+                  type="password"
+                  placeholder="กรอก PIN 4-6 หลัก"
+                  maxLength={6}
+                  required
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  className="w-full text-center tracking-[0.5em] text-lg px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              {authError && (
+                <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg text-left">
+                  {authError}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={isVerifying || !pinInput}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>กำลังตรวจสอบ...</span>
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="w-5 h-5" />
+                    <span>เข้าสู่ระบบ</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        ) : (
+          // --- Leads Inbox Content ---
+          <>
+            {/* Header */}
         <div className="flex items-center gap-3 pr-8">
           <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
             <Users className="w-5 h-5" />
@@ -187,12 +267,14 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
           </button>
         </div>
 
-        {/* Satellite / Scope Switcher */}
+        {/* Satellite / Scope Switcher (ONLY FOR MASTER ADMIN) */}
+        {sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (
         <div className="mt-3 p-2.5 bg-slate-950/90 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-slate-400">เว็บลูกปัจจุบัน:</span>
-            <span className="font-semibold text-blue-300 bg-blue-950/70 px-2 py-0.5 rounded border border-blue-800/60 font-mono">
-              {sponsor.sponsorName} ({sponsor.sponsorId})
+            <span className="text-slate-400">สถานะแอดมิน:</span>
+            <span className="font-semibold text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-800/60 font-mono flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Master Admin
             </span>
           </div>
           <div className="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
@@ -205,9 +287,9 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                   : 'bg-slate-800 text-slate-400 hover:text-white'
               }`}
             >
-              เฉพาะเว็บลูกนี้ ({myLeadsCount})
+              เฉพาะของฉัน ({myLeadsCount})
             </button>
-            {isAdmin && <button
+            <button
               type="button"
               onClick={() => setScopeFilter('all')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
@@ -216,10 +298,11 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                   : 'bg-slate-800 text-slate-400 hover:text-white'
               }`}
             >
-              รวมทั้งระบบ ({leads.length})
-            </button>}
+              เว็บพ่วงทั้งหมด ({leads.length})
+            </button>
           </div>
         </div>
+        )}
 
         {/* Search Bar */}
         <div className="mt-2.5 relative">
@@ -384,7 +467,8 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
             ปิดหน้าต่าง
           </button>
         </div>
-
+        </>
+        )}
       </div>
     </div>
   );

@@ -227,8 +227,6 @@ export function trackLeadEvent(data: {
   fullName?: string;
   sponsorId: string;
   sponsorName: string;
-  eventId?: string;
-  ttclid?: string;
 }) {
   // Facebook Pixel
   if (window.fbq) {
@@ -251,10 +249,8 @@ export function trackLeadEvent(data: {
       window.ttq.track('Lead', {
         content_name: 'Atomy Lead Form',
         content_id: data.sponsorId,
-        event_id: data.eventId,
-        ttclid: data.ttclid,
       });
-      logPixelEvent('TikTok', 'Lead', { sponsor: data.sponsorId, eventId: data.eventId });
+      logPixelEvent('TikTok', 'Lead', { sponsor: data.sponsorId });
     } catch (e) {
       console.warn(e);
     }

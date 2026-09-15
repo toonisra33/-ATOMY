@@ -9,7 +9,6 @@ interface AffiliateModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentSponsor: SponsorProfile;
-  ownerUid: string;
   onApplySponsor: (newSponsor: SponsorProfile) => void;
   onOpenPixelStatus?: () => void;
 }
@@ -18,7 +17,6 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   isOpen,
   onClose,
   currentSponsor,
-  ownerUid,
   onApplySponsor,
   onOpenPixelStatus,
 }) => {
@@ -26,7 +24,6 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [saveError, setSaveError] = useState<string>('');
   const [showPixelSettings, setShowPixelSettings] = useState<boolean>(
     Boolean(currentSponsor.fbPixelId || currentSponsor.tiktokPixelId || currentSponsor.googleTagId)
   );
@@ -90,7 +87,9 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   if (!isOpen) return null;
 
   // Build the generated affiliate URL based on window.location
-  const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://example.com/';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://example.com';
+  
+  // Create a clean URL with ONLY the ref parameter. Data will be fetched from Firestore.
   const queryParams = new URLSearchParams({
     ref: formData.sponsorId.trim() || 'ATOMY888',
   });
@@ -107,28 +106,34 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const handleApplyAndPreview = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setSaveError('');
     try {
-      // 1. Save first so the UI never previews an unverified profile.
-      await saveSponsorProfile(formData, ownerUid);
+      // 1. Update React state in parent App
+      onApplySponsor(formData);
 
-      // 2. Update React state and keep only the verified reference in the URL.
-      onApplySponsor({ ...formData, ownerUid, isActive: true });
+      // 2. Persist to localStorage permanently so page refreshes retain user's photo
+      try {
+        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(formData));
+      } catch (lsErr) {
+        console.warn('LocalStorage save error:', lsErr);
+      }
+
+      // 3. Push state to browser URL without reload (Clean URL)
       window.history.pushState({}, '', generatedAffiliateUrl);
 
-      // 3. Initialize pixels saved on the verified sponsor profile.
+      // 4. Initialize & fire pixels immediately
       setupAllPixels({
         fbPixelId: formData.fbPixelId,
         tiktokPixelId: formData.tiktokPixelId,
         googleTagId: formData.googleTagId,
       });
 
-      onClose();
+      // 5. Save to Firebase Firestore
+      await saveSponsorProfile(formData);
     } catch (err) {
       console.warn('Sync error:', err);
-      setSaveError('บันทึกไม่สำเร็จ บัญชีนี้อาจไม่ได้เป็นเจ้าของรหัสสปอนเซอร์ดังกล่าว');
     } finally {
       setIsSaving(false);
+      onClose();
     }
   };
 
@@ -161,7 +166,6 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
         {/* Form Inputs */}
         <form onSubmit={handleApplyAndPreview} className="mt-5 sm:mt-6 space-y-3.5 sm:space-y-4">
-          {saveError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{saveError}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             <div>
@@ -249,6 +253,21 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, sponsorPosition: e.target.value })}
                 placeholder="เช่น Sales Master / ที่ปรึกษาธุรกิจ"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                รหัสผ่าน PIN (ดูรายชื่อ Leads) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                required
+                maxLength={6}
+                value={formData.pinHash || ''}
+                onChange={(e) => setFormData({ ...formData, pinHash: e.target.value })}
+                placeholder="ตั้ง PIN 4-6 หลัก เพื่อล็อกอินดู Leads"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
 

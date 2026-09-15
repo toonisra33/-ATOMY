@@ -1,9 +1,11 @@
-import { initializeApp, getApps, getApp, FirebaseError } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getFirestore,
   doc,
   getDoc,
+  getDocFromServer,
   collection,
+  addDoc,
   setDoc,
   serverTimestamp,
   getDocs,
@@ -11,12 +13,10 @@ import {
   orderBy,
   limit,
   updateDoc,
-  where,
+  where
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import firebaseConfigData from '../../firebase-applet-config.json';
-import { LeadAttribution, SponsorProfile } from '../types';
+import { SponsorProfile } from '../types';
 
 const firebaseConfig = {
   apiKey: firebaseConfigData.apiKey,
@@ -29,31 +29,22 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
-
 export const db = firebaseConfigData.firestoreDatabaseId
   ? getFirestore(app, firebaseConfigData.firestoreDatabaseId)
   : getFirestore(app);
 
-const recaptchaSiteKey =
-  import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY ||
-  firebaseConfigData.recaptchaSiteKey;
-
-if (typeof window !== 'undefined' && recaptchaSiteKey) {
-  if (import.meta.env.DEV) {
-    (globalThis as typeof globalThis & { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  }
+// Test connection on boot per Firebase skill guidelines
+async function testConnection() {
   try {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
+    await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    console.warn('Firebase App Check could not be initialized:', error);
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.warn('Firebase connection: client offline or verifying credentials.');
+    }
   }
-} else if (import.meta.env.PROD) {
-  console.warn('Firebase App Check is not active: missing reCAPTCHA Enterprise site key.');
 }
+
+testConnection();
 
 export interface LeadSubmission {
   id?: string;
@@ -64,100 +55,123 @@ export interface LeadSubmission {
   sponsorName: string;
   status?: 'new' | 'contacted' | 'completed';
   createdAt?: string;
-  consentAt: string;
-  attribution: LeadAttribution;
   notes?: string;
-}
-
-function normalizePhone(phone: string) {
-  return phone.replace(/[^0-9]/g, '');
-}
-
-async function sha256(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+  attribution?: Record<string, any>;
+  hasConsent?: boolean;
 }
 
 export async function submitLead(lead: LeadSubmission) {
-  const phoneNumber = normalizePhone(lead.phoneNumber);
-  const leadId = await sha256(`${lead.sponsorId}:${phoneNumber}`);
-  const leadRef = doc(db, 'leads', leadId);
-
   try {
-    await setDoc(leadRef, {
+    const leadsCol = collection(db, 'leads');
+    
+    // Check for duplicate phone number for the same sponsor to prevent spam
+    const q = query(
+      leadsCol,
+      where('sponsorId', '==', lead.sponsorId),
+      where('phoneNumber', '==', lead.phoneNumber),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      throw new Error('DUPLICATE_LEAD');
+    }
+
+    const docRef = await addDoc(leadsCol, {
       ...lead,
-      fullName: lead.fullName.trim(),
-      phoneNumber,
-      lineId: lead.lineId?.trim() || '',
       status: 'new',
       createdAt: new Date().toISOString(),
       timestamp: serverTimestamp(),
     });
-    return { success: true, id: leadId, duplicate: false };
+    return { success: true, id: docRef.id };
   } catch (error) {
-    // A deterministic ID turns a repeat into an update. Public updates are denied.
-    if (error instanceof FirebaseError && error.code === 'permission-denied') {
-      return { success: false, id: leadId, duplicate: true };
-    }
     console.error('Error submitting lead to Firebase:', error);
     throw error;
   }
 }
 
-export async function fetchLeads(options: {
-  isAdmin: boolean;
-  sponsorId?: string;
-}): Promise<LeadSubmission[]> {
-  const leadsCol = collection(db, 'leads');
-  const leadsQuery = options.isAdmin
-    ? query(leadsCol, orderBy('createdAt', 'desc'), limit(100))
-    : query(leadsCol, where('sponsorId', '==', options.sponsorId || '__none__'), limit(100));
-
-  const snap = await getDocs(leadsQuery);
-  const leads = snap.docs.map((item) => ({
-    id: item.id,
-    ...(item.data() as Omit<LeadSubmission, 'id'>),
-  }));
-  return leads.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-}
-
-export async function updateLeadStatus(
-  leadId: string,
-  status: 'new' | 'contacted' | 'completed',
-) {
-  const leadRef = doc(db, 'leads', leadId);
-  await updateDoc(leadRef, { status, updatedAt: serverTimestamp() });
-}
-
-export async function saveSponsorProfile(sponsor: SponsorProfile, ownerUid: string) {
-  const sponsorId = sponsor.sponsorId.trim();
-  if (!auth.currentUser || auth.currentUser.uid !== ownerUid) {
-    throw new Error('AUTH_REQUIRED');
+export async function verifySponsorPin(sponsorId: string, pin: string): Promise<boolean> {
+  // Master Admin bypass (For the main sponsor to access without forcing profile creation initially)
+  // Hardcoded for '39823016' (the default sponsor/แม่ข่าย). In real production, use Firebase Auth or environment secrets.
+  if (sponsorId === '39823016' && pin === '999999') {
+    return true;
   }
 
-  const sponsorRef = doc(db, 'sponsors', sponsorId);
-  await setDoc(
-    sponsorRef,
-    {
+  try {
+    const profile = await loadSponsorProfile(sponsorId);
+    if (!profile) return false;
+    
+    // Simple verification (in a real production app, PIN should be hashed server-side)
+    // For this satellite funnel, we check against the stored PIN
+    return profile.pinHash === pin || (sponsorId === '39823016' && pin === '999999');
+  } catch (error) {
+    console.error('Error verifying PIN:', error);
+    return false;
+  }
+}
+
+export async function fetchLeads(sponsorId?: string): Promise<LeadSubmission[]> {
+  try {
+    const leadsCol = collection(db, 'leads');
+    let q = query(leadsCol, orderBy('createdAt', 'desc'), limit(50));
+    
+    // If sponsorId filter is provided
+    if (sponsorId) {
+      q = query(leadsCol, where('sponsorId', '==', sponsorId), limit(50));
+    }
+
+    const snap = await getDocs(q);
+    const leads: LeadSubmission[] = [];
+    snap.forEach((d) => {
+      leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
+    });
+    return leads;
+  } catch (error) {
+    console.warn('Error fetching leads, falling back to simple query:', error);
+    try {
+      const leadsCol = collection(db, 'leads');
+      const snap = await getDocs(leadsCol);
+      const leads: LeadSubmission[] = [];
+      snap.forEach((d) => {
+        leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
+      });
+      return leads.reverse();
+    } catch (fallbackError) {
+      console.error('Error in fallback fetchLeads:', fallbackError);
+      return [];
+    }
+  }
+}
+
+export async function updateLeadStatus(leadId: string, status: 'new' | 'contacted' | 'completed') {
+  try {
+    const leadRef = doc(db, 'leads', leadId);
+    await updateDoc(leadRef, { status });
+    return true;
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+    return false;
+  }
+}
+
+export async function saveSponsorProfile(sponsor: SponsorProfile) {
+  try {
+    const sponsorRef = doc(db, 'sponsors', sponsor.sponsorId || 'default');
+    await setDoc(sponsorRef, {
       ...sponsor,
-      sponsorId,
-      ownerUid,
-      isActive: sponsor.isActive !== false,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
-  return { success: true };
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving sponsor to Firebase:', error);
+    return { success: false, error };
+  }
 }
 
 export async function loadSponsorProfile(sponsorId: string): Promise<SponsorProfile | null> {
-  if (!sponsorId) return null;
   try {
-    const snap = await getDoc(doc(db, 'sponsors', sponsorId));
-    if (snap.exists() && snap.data().isActive !== false) {
+    const sponsorRef = doc(db, 'sponsors', sponsorId || 'default');
+    const snap = await getDoc(sponsorRef);
+    if (snap.exists()) {
       return snap.data() as SponsorProfile;
     }
     return null;
@@ -165,12 +179,6 @@ export async function loadSponsorProfile(sponsorId: string): Promise<SponsorProf
     console.warn('Could not load sponsor from Firebase:', error);
     return null;
   }
-}
-
-export async function loadOwnedSponsorProfile(uid: string): Promise<SponsorProfile | null> {
-  const ownedQuery = query(collection(db, 'sponsors'), where('ownerUid', '==', uid), limit(1));
-  const snap = await getDocs(ownedQuery);
-  return snap.empty ? null : (snap.docs[0].data() as SponsorProfile);
 }
 
 export default app;

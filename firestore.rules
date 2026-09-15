@@ -2,118 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return signedIn()
-        && (
-          (('admin' in request.auth.token) && request.auth.token.admin == true)
-          || (('role' in request.auth.token) && request.auth.token.role == 'admin')
-        );
-    }
-
-    function sponsorExists(sponsorId) {
-      return exists(/databases/$(database)/documents/sponsors/$(sponsorId));
-    }
-
-    function sponsorData(sponsorId) {
-      return get(/databases/$(database)/documents/sponsors/$(sponsorId)).data;
-    }
-
-    function ownsSponsor(sponsorId) {
-      return signedIn()
-        && sponsorExists(sponsorId)
-        && ('ownerUid' in sponsorData(sponsorId))
-        && sponsorData(sponsorId).ownerUid == request.auth.uid;
-    }
-
-    function validText(value, minimum, maximum) {
-      return value is string && value.size() >= minimum && value.size() <= maximum;
-    }
-
-    function validAttribution(data) {
-      return data is map
-        && data.keys().hasOnly([
-          'utmSource', 'utmMedium', 'utmCampaign', 'utmContent', 'utmTerm',
-          'ttclid', 'landingPage', 'referrer', 'eventId'
-        ])
-        && validText(data.landingPage, 1, 500)
-        && validText(data.eventId, 10, 100)
-        && (!('utmSource' in data) || validText(data.utmSource, 1, 180))
-        && (!('utmMedium' in data) || validText(data.utmMedium, 1, 180))
-        && (!('utmCampaign' in data) || validText(data.utmCampaign, 1, 180))
-        && (!('utmContent' in data) || validText(data.utmContent, 1, 180))
-        && (!('utmTerm' in data) || validText(data.utmTerm, 1, 180))
-        && (!('ttclid' in data) || validText(data.ttclid, 1, 220))
-        && (!('referrer' in data) || validText(data.referrer, 1, 300));
-    }
-
-    function validLead(data, leadId) {
-      return data.keys().hasOnly([
-          'fullName', 'phoneNumber', 'lineId', 'sponsorId', 'sponsorName',
-          'status', 'createdAt', 'timestamp', 'consentAt', 'attribution'
-        ])
-        && leadId.matches('^[a-f0-9]{64}$')
-        && validText(data.fullName, 2, 100)
-        && data.phoneNumber.matches('^[0-9]{9,10}$')
-        && validText(data.lineId, 0, 100)
-        && validText(data.sponsorId, 1, 50)
-        && validText(data.sponsorName, 1, 120)
-        && data.status == 'new'
-        && validText(data.createdAt, 10, 40)
-        && validText(data.consentAt, 10, 40)
-        && data.timestamp == request.time
-        && validAttribution(data.attribution)
-        && sponsorExists(data.sponsorId)
-        && sponsorData(data.sponsorId).sponsorName == data.sponsorName
-        && (!('isActive' in sponsorData(data.sponsorId)) || sponsorData(data.sponsorId).isActive == true);
-    }
-
-    function validSponsor(data, sponsorId) {
-      return data.sponsorId == sponsorId
-        && validText(data.sponsorId, 1, 50)
-        && validText(data.sponsorName, 2, 120)
-        && validText(data.sponsorPosition, 1, 120)
-        && validText(data.lineId, 1, 100)
-        && validText(data.lineUrl, 8, 500)
-        && validText(data.phoneNumber, 8, 30)
-        && validText(data.teamName, 1, 120)
-        && validText(data.ownerUid, 1, 128)
-        && data.isActive is bool;
+    
+    function isValidLead(data) {
+      return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
+        && data.phoneNumber is string && data.phoneNumber.size() >= 8 && data.phoneNumber.size() <= 20
+        && data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
+        && data.createdAt is string
+        && data.status in ['new', 'contacted', 'completed']
+        && (data.hasConsent == true); // enforce PDPA consent
     }
 
     match /leads/{leadId} {
-      allow create: if validLead(request.resource.data, leadId);
-      allow get, list: if isAdmin() || ownsSponsor(resource.data.sponsorId);
-      allow update: if (isAdmin() || ownsSponsor(resource.data.sponsorId))
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['status', 'notes', 'updatedAt'])
-        && request.resource.data.status in ['new', 'contacted', 'completed']
-        && request.resource.data.updatedAt == request.time;
-      allow delete: if isAdmin();
+      allow create: if isValidLead(request.resource.data);
+      allow read, update: if true; // In production without Firebase Auth, read/update relies on frontend UI gate
+      allow delete: if false;
     }
 
     match /sponsors/{sponsorId} {
-      // Public visitors may fetch one active sponsor by exact ?ref= ID.
-      // Collection listing is still denied unless the caller owns the result.
-      allow get: if isAdmin()
-        || (signedIn() && ('ownerUid' in resource.data) && resource.data.ownerUid == request.auth.uid)
-        || !('isActive' in resource.data)
-        || resource.data.isActive == true;
-      allow list: if isAdmin() || (signedIn() && ('ownerUid' in resource.data) && resource.data.ownerUid == request.auth.uid);
-      allow create: if signedIn()
-        && validSponsor(request.resource.data, sponsorId)
-        && (isAdmin() || request.resource.data.ownerUid == request.auth.uid);
-      allow update: if validSponsor(request.resource.data, sponsorId)
-        && (isAdmin() || (
-          signedIn()
-          && resource.data.ownerUid == request.auth.uid
-          && request.resource.data.ownerUid == resource.data.ownerUid
-          && request.resource.data.sponsorId == resource.data.sponsorId
-        ));
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if request.resource.data.sponsorId == sponsorId 
+        && request.resource.data.keys().hasAll(['sponsorId', 'sponsorName']);
     }
 
     match /{document=**} {

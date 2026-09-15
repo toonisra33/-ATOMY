@@ -4,7 +4,6 @@ import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { MessageCircle, Copy, Check, QrCode, ArrowRight, ShieldCheck, Sparkles, Send, UserCheck, Loader2, Users } from 'lucide-react';
 import { submitLead } from '../lib/firebase';
 import { trackLeadEvent, trackContactEvent } from '../lib/pixel';
-import { captureAttribution } from '../lib/attribution';
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
@@ -21,12 +20,10 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenL
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [prospectLineId, setProspectLineId] = useState('');
+  const [hasConsent, setHasConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [consent, setConsent] = useState(false);
-  const [website, setWebsite] = useState('');
-  const [formStartedAt] = useState(() => Date.now());
 
   const prefilledMessage = `สวัสดีครับ/ค่ะ สนใจสมัครสมาชิก Atomy รับรหัสสปอนเซอร์ ${sponsor.sponsorId} ดูคลิปบรรยาย 15 นาทีเรียบร้อยแล้ว ต้องการคำแนะนำเปิดรหัสสมาชิกฟรีครับ/ค่ะ`;
 
@@ -46,69 +43,64 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenL
     }
   };
 
+  const getAttributionParams = () => {
+    if (typeof window === 'undefined') return {};
+    const params = new URLSearchParams(window.location.search);
+    return {
+      utm_source: params.get('utm_source') || undefined,
+      utm_medium: params.get('utm_medium') || undefined,
+      utm_campaign: params.get('utm_campaign') || undefined,
+      ttclid: params.get('ttclid') || undefined,
+      fbclid: params.get('fbclid') || undefined,
+      gclid: params.get('gclid') || undefined,
+      landing_page: window.location.pathname,
+      referrer: document.referrer || undefined,
+    };
+  };
+
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phone.trim()) {
       setErrorMessage('กรุณาระบุชื่อและเบอร์โทรศัพท์');
       return;
     }
-    const normalizedPhone = phone.replace(/[^0-9]/g, '');
-    if (normalizedPhone.length < 9 || normalizedPhone.length > 10) {
-      setErrorMessage('กรุณาตรวจสอบเบอร์โทรศัพท์ให้ถูกต้อง');
-      return;
-    }
-    if (!consent) {
-      setErrorMessage('กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนส่งข้อมูล');
-      return;
-    }
-    if (website || Date.now() - formStartedAt < 2500) {
-      setErrorMessage('ระบบตรวจพบการส่งข้อมูลเร็วผิดปกติ กรุณาลองอีกครั้ง');
-      return;
-    }
-    const cooldownKey = `atomy_lead_${sponsor.sponsorId}_${normalizedPhone}`;
-    const lastSent = Number(localStorage.getItem(cooldownKey) || 0);
-    if (Date.now() - lastSent < 10 * 60 * 1000) {
-      setErrorMessage('เบอร์นี้เพิ่งส่งข้อมูลไปแล้ว กรุณารอการติดต่อกลับ');
+    if (!hasConsent) {
+      setErrorMessage('กรุณายอมรับนโยบายความเป็นส่วนตัว (PDPA) ก่อนส่งข้อมูล');
       return;
     }
 
     setIsSubmitting(true);
     setErrorMessage('');
     try {
-      const attribution = captureAttribution();
-      const result = await submitLead({
+      await submitLead({
         fullName: fullName.trim(),
-        phoneNumber: normalizedPhone,
+        phoneNumber: phone.trim(),
         lineId: prospectLineId.trim() || '',
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
-        consentAt: new Date().toISOString(),
-        attribution,
+        attribution: getAttributionParams(),
+        hasConsent: true,
       });
-
-      if (!result.success) {
-        setErrorMessage('ข้อมูลนี้เคยถูกส่งแล้ว กรุณารอที่ปรึกษาติดต่อกลับ หรือติดต่อผ่าน LINE');
-        return;
-      }
-      localStorage.setItem(cooldownKey, String(Date.now()));
 
       // Fire Pixel Lead Conversion Event across Meta, TikTok, and Google
       trackLeadEvent({
         fullName: fullName.trim(),
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
-        eventId: attribution.eventId,
-        ttclid: attribution.ttclid,
       });
 
       setSubmitSuccess(true);
       setFullName('');
       setPhone('');
       setProspectLineId('');
-      setConsent(false);
+      setHasConsent(false);
     } catch (err: any) {
       console.error(err);
-      setErrorMessage('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อทาง LINE โดยตรง');
+      if (err.message === 'DUPLICATE_LEAD') {
+        setErrorMessage('เบอร์โทรศัพท์นี้ได้ฝากข้อมูลไว้แล้ว ทางทีมงานจะรีบติดต่อกลับโดยเร็วที่สุดครับ');
+      } else {
+        setErrorMessage('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อทาง LINE โดยตรง');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -299,16 +291,6 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenL
               </div>
             ) : (
               <form onSubmit={handleLeadSubmit} className="space-y-3">
-                <input
-                  type="text"
-                  name="website"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  className="absolute -left-[9999px] h-px w-px opacity-0"
-                />
                 {errorMessage && (
                   <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-lg">
                     {errorMessage}
@@ -354,20 +336,21 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({ sponsor, onOpenL
                     />
                   </div>
                 </div>
-                <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-600">
+                
+                {/* PDPA Consent Checkbox */}
+                <div className="flex items-start gap-2 mt-3 mb-4">
                   <input
                     type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                    id="pdpa-consent"
+                    checked={hasConsent}
+                    onChange={(e) => setHasConsent(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
                   />
-                  <span>
-                    ฉันยินยอมให้เก็บและใช้ข้อมูลนี้เพื่อให้ที่ปรึกษาติดต่อกลับเกี่ยวกับ ATOMY ตาม{' '}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline">
-                      นโยบายความเป็นส่วนตัว
-                    </a>
-                  </span>
-                </label>
+                  <label htmlFor="pdpa-consent" className="text-[10px] sm:text-xs text-slate-500 leading-relaxed cursor-pointer select-none">
+                    ข้าพเจ้ายินยอมให้เก็บรวบรวมและใช้ข้อมูลส่วนบุคคล เพื่อให้ทีมงานติดต่อกลับและให้คำแนะนำเกี่ยวกับการสมัครสมาชิก Atomy (ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล PDPA)
+                  </label>
+                </div>
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
