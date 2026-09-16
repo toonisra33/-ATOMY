@@ -1,7 +1,6 @@
 import React from 'react';
 import { BUSINESS_BENEFITS } from '../data/atomyData';
 import { ShieldCheck, TrendingUp, Globe2, Sparkles, Users, Award, CheckCircle2, ArrowRight, BadgeCheck } from 'lucide-react';
-import { BinaryNetworkGraphicOverlay } from './BinaryNetworkGraphicOverlay';
 
 export const BusinessHighlights: React.FC = () => {
   const iconMap: Record<string, React.ElementType> = {
@@ -16,7 +15,7 @@ export const BusinessHighlights: React.FC = () => {
   return (
     <section id="highlights" className="py-20 sm:py-28 bg-gradient-to-b from-white via-slate-50/60 to-white border-b border-slate-200 relative overflow-hidden">
       {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-blue-400/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-blue-400/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -27,7 +26,7 @@ export const BusinessHighlights: React.FC = () => {
             <span>ทำไมต้องเป็น อะโทมี่ (Atomy)?</span>
           </div>
 
-          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-snug sm:leading-[1.2]">
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-snug sm:leading-[1.2]">
             <span className="inline-block">6 จุดเด่นปฏิวัติวงการ</span>{' '}
             <span className="inline-block">
               ที่ทำให้ทุกคน <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600">สำเร็จได้จริงและยั่งยืน</span>
@@ -39,7 +38,7 @@ export const BusinessHighlights: React.FC = () => {
         </div>
 
         {/* 6 Rich Visual Benefit Cards Grid */}
-        <div className="mt-8 sm:mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+        <div className="mt-8 sm:mt-14 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
           {BUSINESS_BENEFITS.map((item, index) => {
             const IconComp = iconMap[item.iconName] || Sparkles;
 
@@ -49,7 +48,7 @@ export const BusinessHighlights: React.FC = () => {
                 className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-blue-300 shadow-md hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Photo Header with Badge Overlay */}
-                <div className={`relative ${item.title.includes('Binary') ? 'h-52 sm:h-60' : 'h-44 sm:h-52'} w-full overflow-hidden bg-slate-900`}>
+                <div className={`relative ${item.title.includes('Binary') ? 'h-36 sm:h-60' : 'h-28 sm:h-52'} w-full overflow-hidden bg-slate-900`}>
                   <img
                     src={item.imageUrl}
                     alt={item.title}
@@ -59,15 +58,8 @@ export const BusinessHighlights: React.FC = () => {
                   {/* Subtle Gradient Over Image */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
 
-                  {/* If Binary Card: Render Professional 2-Leg Binary Network Graphic Overlay */}
-                  {item.title.includes('Binary') && (
-                    <BinaryNetworkGraphicOverlay />
-                  )}
-
-                  {/* If NOT Binary: Render Standard Floating Badges */}
-                  {!item.title.includes('Binary') && (
-                    <>
-                      {/* Top Floating Badges */}
+                  
+                    {/* Top Floating Badges */}
                       <div className="absolute top-3 left-3 right-3 sm:top-3.5 sm:left-3.5 sm:right-3.5 flex items-center justify-between z-10">
                         <span className="text-[11px] font-bold text-white bg-black/50 backdrop-blur-md px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-white/20 shadow-xs">
                           #{index + 1} {item.tag}
@@ -97,17 +89,15 @@ export const BusinessHighlights: React.FC = () => {
                           <span>สินค้าจริง 100%</span>
                         </div>
                       )}
-                    </>
-                  )}
-                </div>
+                    </div>
 
                 {/* Card Content */}
-                <div className="p-4 sm:p-7 flex-1 flex flex-col justify-between">
+                <div className="p-3 sm:p-7 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-base sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                    <h3 className="text-[13px] sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                       {item.title}
                     </h3>
-                    <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal text-pretty">
+                    <p className="mt-1.5 sm:mt-3 text-[11px] sm:text-sm text-slate-600 leading-relaxed font-normal text-pretty line-clamp-3 sm:line-clamp-none">
                       {item.description}
                     </p>
                   </div>

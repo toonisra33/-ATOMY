@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 id="btn-deploy-guide"
                 onClick={onOpenDeployGuide}
                 className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer shadow-2xs"
-                title="อัพเดตโค้ดขึ้น Firebase Hosting (localhub-atomy.web.app)"
+                title="อัพเดตโค้ดขึ้น Firebase Hosting (เว็บไซต์จริงของคุณ)"
               >
                 <CloudUpload className="w-3.5 h-3.5 text-amber-600" />
                 <span>อัพเดต</span>

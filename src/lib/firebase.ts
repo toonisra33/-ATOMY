@@ -15,7 +15,8 @@ import {
   orderBy,
   limit,
   updateDoc,
-  where
+  where,
+  setLogLevel
 } from 'firebase/firestore';
 import firebaseConfigData from '../../firebase-applet-config.json';
 import { SponsorProfile } from '../types';
@@ -48,12 +49,15 @@ export const db = firebaseConfigData.firestoreDatabaseId
   : getFirestore(app);
 export const auth = getAuth(app);
 
+// Suppress internal Firebase offline warnings in console
+setLogLevel('silent');
+
 // Test connection on boot per Firebase skill guidelines
 async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
+    if (error instanceof Error && error.message.includes('the client is offline') || ((error as any).code === 'unavailable')) {
       console.warn('Firebase connection: client offline or verifying credentials.');
     }
   }
@@ -68,6 +72,7 @@ export interface LeadSubmission {
   lineId?: string;
   sponsorId: string;
   sponsorName: string;
+  ownerUid?: string;
   status?: 'new' | 'contacted' | 'completed';
   createdAt?: string;
   notes?: string;
@@ -82,8 +87,10 @@ export async function submitLead(lead: LeadSubmission) {
     // Check for duplicate phone number for the same sponsor to prevent spam
     const q = query(
       leadsCol,
-      where('sponsorId', '==', lead.sponsorId),
-      where('phoneNumber', '==', lead.phoneNumber),
+      where,
+  where('sponsorId', '==', lead.sponsorId),
+      where,
+  where('phoneNumber', '==', lead.phoneNumber),
       limit(1)
     );
     try {
@@ -129,16 +136,20 @@ export async function verifySponsorPin(sponsorId: string, pin: string): Promise<
   }
 }
 
-export async function fetchLeads(sponsorId?: string): Promise<LeadSubmission[]> {
+export async function fetchLeads(): Promise<LeadSubmission[]> {
   try {
     const leadsCol = collection(db, 'leads');
-    let q = query(leadsCol, orderBy('createdAt', 'desc'), limit(50));
-    
-    // If sponsorId filter is provided
-    if (sponsorId) {
-      q = query(leadsCol, where('sponsorId', '==', sponsorId), limit(50));
-    }
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
 
+    const q = query(
+      leadsCol, 
+      where,
+  where('ownerUid', '==', user.uid),
+      orderBy('createdAt', 'desc'), 
+      limit(50)
+    );
+    
     const snap = await getDocs(q);
     const leads: LeadSubmission[] = [];
     snap.forEach((d) => {
@@ -146,19 +157,8 @@ export async function fetchLeads(sponsorId?: string): Promise<LeadSubmission[]> 
     });
     return leads;
   } catch (error) {
-    console.warn('Error fetching leads, falling back to simple query:', error);
-    try {
-      const leadsCol = collection(db, 'leads');
-      const snap = await getDocs(leadsCol);
-      const leads: LeadSubmission[] = [];
-      snap.forEach((d) => {
-        leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
-      });
-      return leads.reverse();
-    } catch (fallbackError) {
-      console.error('Error in fallback fetchLeads:', fallbackError);
-      return [];
-    }
+    console.error('Error fetching leads:', error);
+    return [];
   }
 }
 

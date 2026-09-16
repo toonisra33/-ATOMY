@@ -3,29 +3,76 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Global Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Role Checks
+    function isProfileOwner() {
+      return existing().ownerUid == request.auth.uid;
+    }
+
+    // Validation Blueprints
     function isValidLead(data) {
       return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
         && data.phoneNumber is string && data.phoneNumber.size() >= 8 && data.phoneNumber.size() <= 20
+        && (data.lineId == null || (data.lineId is string && data.lineId.size() <= 50))
         && data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
+        && data.ownerUid is string && data.ownerUid.size() <= 128
+        && data.status is string && data.status in ['new', 'contacted', 'completed']
+        && (data.hasConsent == true)
         && data.createdAt is string
-        && data.status in ['new', 'contacted', 'completed']
-        && (data.hasConsent == true); // enforce PDPA consent
+        && (data.timestamp == request.time || data.timestamp == null);
+    }
+
+    function isValidSponsorProfile(data) {
+      return data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
+        && data.sponsorName is string && data.sponsorName.size() > 0 && data.sponsorName.size() <= 100
+        && data.ownerUid is string && data.ownerUid == request.auth.uid // Strict Identity check
+        && (data.lineId == null || (data.lineId is string && data.lineId.size() <= 50))
+        && data.updatedAt is string;
     }
 
     match /leads/{leadId} {
-      allow create: if isValidLead(request.resource.data);
-      allow read, update: if true; // In production without Firebase Auth, read/update relies on frontend UI gate
-      allow delete: if false;
+      // Anyone can submit a lead (prospects on the landing page)
+      allow create: if isValidId(leadId) 
+        && isValidLead(incoming());
+
+      // ONLY the sponsor owner can read and update their leads
+      allow read: if isSignedIn() && existing().ownerUid == request.auth.uid;
+      
+      allow update: if isSignedIn() 
+        && existing().ownerUid == request.auth.uid
+        && isValidLead(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'timestamp', 'updatedAt']);
+        
+      allow delete: if false; // Never delete leads
     }
 
     match /sponsors/{sponsorId} {
-      allow read: if true;
-      allow write: if request.resource.data.sponsorId == sponsorId 
-        && request.resource.data.keys().hasAll(['sponsorId', 'sponsorName']);
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
+      // Publicly readable for the landing page
+      allow read: if isValidId(sponsorId);
+      
+      // Creating a new sponsor profile
+      allow create: if isSignedIn() 
+        && isValidId(sponsorId)
+        && incoming().sponsorId == sponsorId
+        && isValidSponsorProfile(incoming());
+        
+      // Updating existing sponsor profile
+      allow update: if isSignedIn()
+        && isProfileOwner() // Must be the original owner
+        && isValidSponsorProfile(incoming())
+        && incoming().ownerUid == existing().ownerUid; // Cannot transfer ownership
+        
+      allow delete: if false;
     }
   }
 }

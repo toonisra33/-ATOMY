@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { SponsorProfile } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
-import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
+import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Lock, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
 
@@ -258,21 +258,10 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
               />
             </div>
             
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                รหัสผ่าน PIN (ดูรายชื่อ Leads) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                required
-                maxLength={6}
-                value={formData.pinHash || ''}
-                onChange={(e) => setFormData({ ...formData, pinHash: e.target.value })}
-                placeholder="ตั้ง PIN 4-6 หลัก เพื่อล็อกอินดู Leads"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
+            <div className="flex items-center text-xs text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100 h-[42px] mt-auto">
+              <Lock className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+              <span>ความปลอดภัยสูงสุด: ผูกบัญชี Google ของคุณเพื่อเข้าถึง Leads</span>
             </div>
-
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 ชื่อทีม / สายงาน (Team Name)

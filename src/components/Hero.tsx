@@ -21,7 +21,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center">
           
           {/* Left Column: Core Value Proposition & Headings */}
-          <div className="lg:col-span-7 text-center lg:text-left">
+          <div className="lg:col-span-7 text-center lg:text-left max-w-2xl mx-auto lg:max-w-none">
             {/* Top Pill Tag */}
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-blue-100 text-blue-800 text-[11px] sm:text-sm font-medium mb-4 sm:mb-6 shadow-2xs border border-blue-200/70">
               <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping shrink-0" />
@@ -29,7 +29,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
             </div>
 
             {/* Main Headline with responsive typography and balanced phrasing */}
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-snug sm:leading-[1.2]">
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-snug sm:leading-[1.2]">
               <span className="inline-block">เปลี่ยนรายจ่ายในชีวิตประจำวัน</span>{' '}
               <span className="inline-block">
                 ให้เป็น <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600">Passive Income ตลอดชีพ</span>
@@ -43,7 +43,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
             </p>
 
             {/* Primary Action Buttons */}
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center lg:justify-start gap-3 sm:gap-4">
               <button
                 id="hero-btn-watch-video"
                 onClick={onScrollToVideo}
@@ -69,7 +69,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
             </div>
 
             {/* Key Assurance Bullets */}
-            <div className="mt-5 sm:mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-left max-w-lg mx-auto lg:mx-0">
+            <div className="mt-5 sm:mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-left max-w-lg mx-auto mx-auto">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/80 sm:bg-transparent text-xs sm:text-sm text-slate-700 font-medium border border-emerald-100/80 sm:border-0">
                 <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
                 <span>ไม่มีค่าแรกเข้า 0 บาท</span>
@@ -86,7 +86,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
           </div>
 
           {/* Right Column: Sponsor Profile Card & Fast Trust Card */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 w-full max-w-lg mx-auto">
             <div className="relative bg-white rounded-2xl p-4 sm:p-7 shadow-xl shadow-slate-200/70 border border-slate-200/90">
               {/* Header Badge */}
               <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100">

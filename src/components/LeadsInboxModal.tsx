@@ -17,26 +17,23 @@ import {
   Loader2,
   Unlock
 } from 'lucide-react';
-import { LeadSubmission, fetchLeads, updateLeadStatus, verifySponsorPin } from '../lib/firebase';
-import { SponsorProfile } from '../types';
+import { LeadSubmission, fetchLeads, updateLeadStatus } from '../lib/firebase';
+import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
 
 interface LeadsInboxModalProps {
   isOpen: boolean;
   onClose: () => void;
   sponsor: SponsorProfile;
+  session: AuthSession | null;
 }
 
 export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   isOpen,
   onClose,
   sponsor,
+  session,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [pinInput, setPinInput] = useState<string>('');
-  const [authError, setAuthError] = useState<string>('');
-  const [isVerifying, setIsVerifying] = useState<boolean>(false);
-
   const [leads, setLeads] = useState<LeadSubmission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -44,28 +41,8 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   const [scopeFilter, setScopeFilter] = useState<'current' | 'all'>('current');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const handleVerifyPin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pinInput.trim()) return;
-    
-    setIsVerifying(true);
-    setAuthError('');
-    try {
-      const isValid = await verifySponsorPin(sponsor.sponsorId, pinInput.trim());
-      if (isValid) {
-        setIsAuthenticated(true);
-        loadData();
-      } else {
-        setAuthError('รหัส PIN ไม่ถูกต้อง หากยังไม่ได้ตั้งค่า กรุณาไปตั้งค่าที่เมนู "เว็บพ่วงสปอนเซอร์" ก่อน');
-      }
-    } catch (err) {
-      setAuthError('ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   const loadData = async () => {
+    if (!session) return;
     setLoading(true);
     try {
       const data = await fetchLeads();
@@ -77,14 +54,11 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     }
   };
 
-  // Reset auth when modal closes or sponsor changes
   useEffect(() => {
-    if (!isOpen) {
-      setIsAuthenticated(false);
-      setPinInput('');
-      setAuthError('');
+    if (isOpen && session) {
+      loadData();
     }
-  }, [isOpen, sponsor.sponsorId]);
+  }, [isOpen, session]);
 
   if (!isOpen) return null;
 
@@ -145,52 +119,22 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {!isAuthenticated ? (
-          // --- PIN Authentication Gate ---
+        {!session ? (
+          // --- Auth Gate ---
           <div className="py-8 px-4 sm:px-10 text-center flex flex-col items-center justify-center min-h-[350px]">
-            <div className="w-16 h-16 rounded-full bg-blue-900/40 border border-blue-500/30 flex items-center justify-center mb-6">
-              <Lock className="w-8 h-8 text-blue-400" />
+            <div className="w-16 h-16 rounded-full bg-rose-900/40 border border-rose-500/30 flex items-center justify-center mb-6">
+              <Lock className="w-8 h-8 text-rose-400" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">เข้าสู่ระบบหลังบ้าน</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">ต้องลงชื่อเข้าใช้</h3>
             <p className="text-sm text-slate-400 mb-8 max-w-sm">
-              กรุณายืนยันรหัส PIN เพื่อดูรายชื่อผู้มุ่งหวังของสปอนเซอร์ <strong className="text-slate-200">{sponsor.sponsorId}</strong>
+              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยบัญชี Google ของคุณที่มุมขวาบนของเว็บก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังของคุณได้
             </p>
-            
-            <form onSubmit={handleVerifyPin} className="w-full max-w-xs space-y-4">
-              <div>
-                <input
-                  type="password"
-                  placeholder="กรอก PIN 4-6 หลัก"
-                  maxLength={6}
-                  required
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  className="w-full text-center tracking-[0.5em] text-lg px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                />
-              </div>
-              {authError && (
-                <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg text-left">
-                  {authError}
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={isVerifying || !pinInput}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 text-white font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>กำลังตรวจสอบ...</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-5 h-5" />
-                    <span>เข้าสู่ระบบ</span>
-                  </>
-                )}
-              </button>
-            </form>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all cursor-pointer"
+            >
+              ปิดหน้าต่าง
+            </button>
           </div>
         ) : (
           // --- Leads Inbox Content ---

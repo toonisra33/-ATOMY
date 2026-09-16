@@ -460,7 +460,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                 คุณสามารถส่ง URL ที่มีพารามิเตอร์ Pixel ให้กับทีมงานนำไปยิงแอดได้ โดยไม่ต้องแก้โค้ดเว็บ เช่น:
               </p>
               <div className="bg-slate-900 p-2 rounded-lg font-mono text-[10px] text-sky-300 break-all select-all">
-                https://localhub-atomy.web.app/?ref={sponsor.sponsorId}&fbp=YOUR_FB_PIXEL&ttp=YOUR_TIKTOK_PIXEL
+                https://เว็บไซต์จริงของคุณ/?ref={sponsor.sponsorId}&fbp=YOUR_FB_PIXEL&ttp=YOUR_TIKTOK_PIXEL
               </div>
             </div>
 

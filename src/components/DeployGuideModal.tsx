@@ -36,7 +36,7 @@ export const DeployGuideModal: React.FC<DeployGuideModalProps> = ({ isOpen, onCl
           </div>
           <div>
             <h3 className="text-xl font-bold text-slate-900">
-              วิธีอัพเดตโค้ดขึ้น Firebase Hosting (localhub-atomy)
+              วิธีอัพเดตโค้ดขึ้น Firebase Hosting (เว็บไซต์จริง)
             </h3>
             <p className="text-xs sm:text-sm text-slate-500">
               นำไฟล์ที่สร้างเสร็จแล้วขึ้นเว็บไซต์จริง ให้อัพเดตทันที
@@ -48,7 +48,7 @@ export const DeployGuideModal: React.FC<DeployGuideModalProps> = ({ isOpen, onCl
         <div className="mt-5 p-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3 text-amber-900 text-xs sm:text-sm leading-relaxed">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">สาเหตุที่หน้า localhub-atomy.web.app ยังเป็นหน้าเดิม:</span>
+            <span className="font-bold">สาเหตุที่หน้า เว็บไซต์จริงของคุณ ยังเป็นหน้าเดิม:</span>
             <p className="mt-1 text-amber-800">
               เนื่องจากเซิร์ฟเวอร์ Cloud Run ปัจจุบันไม่มีสิทธิ์เข้าถึงบัญชี Firebase Hosting ของท่านโดยตรง (ต้องล็อกอินผ่านเครื่องคอมพิวเตอร์ของคุณที่มีสิทธิ์) 
               ท่านสามารถอัพเดตได้ง่ายๆ ใน 1 นาทีตาม 2 วิธีด้านล่างนี้ครับ:

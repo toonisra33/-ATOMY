@@ -1,6 +1,7 @@
 export interface SponsorProfile {
   sponsorId: string;
   sponsorName: string;
+  ownerUid?: string;
   sponsorPosition: string;
   lineId: string;
   lineUrl: string;

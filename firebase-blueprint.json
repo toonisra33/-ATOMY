@@ -5,41 +5,37 @@
       "description": "A prospect registration or contact request for Atomy business mentorship.",
       "type": "object",
       "properties": {
-        "fullName": {
+        "name": {
           "type": "string",
-          "description": "Full name of the prospect"
+          "description": "Full name of the prospect",
+          "maxLength": 100
         },
-        "phoneNumber": {
+        "phone": {
           "type": "string",
-          "description": "Contact phone number"
+          "description": "Contact phone number",
+          "maxLength": 20
         },
         "lineId": {
           "type": "string",
-          "description": "LINE ID of the prospect"
+          "description": "LINE ID of the prospect",
+          "maxLength": 50
         },
         "sponsorId": {
           "type": "string",
-          "description": "Sponsor ID the lead is inquiring under"
-        },
-        "sponsorName": {
-          "type": "string",
-          "description": "Sponsor name"
+          "description": "Sponsor ID the lead is inquiring under",
+          "maxLength": 50
         },
         "status": {
           "type": "string",
-          "enum": ["new", "contacted", "completed"],
+          "enum": ["new", "contacted", "registered", "rejected"],
           "description": "Current status of the lead"
         },
-        "notes": {
-          "type": "string",
-          "description": "Optional notes or message from the prospect"
-        },
         "createdAt": {
-          "type": "string",
-          "description": "ISO timestamp when the lead was submitted"
+          "type": "timestamp",
+          "description": "Firestore server timestamp when the lead was submitted"
         }
       },
-      "required": ["fullName", "phoneNumber", "sponsorId", "createdAt", "status"]
+      "required": ["name", "phone", "sponsorId", "createdAt", "status"]
     },
     "SponsorProfile": {
       "title": "SponsorProfile",
@@ -48,31 +44,48 @@
       "properties": {
         "sponsorId": {
           "type": "string",
-          "description": "Unique Atomy member/sponsor ID"
+          "description": "Unique Atomy member/sponsor ID",
+          "maxLength": 50
         },
         "sponsorName": {
           "type": "string",
-          "description": "Sponsor display name"
+          "description": "Sponsor display name",
+          "maxLength": 100
+        },
+        "ownerUid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner to ensure strict ABAC zero-trust security",
+          "maxLength": 128
+        },
+        "pinHash": {
+          "type": "string",
+          "description": "Legacy 6-digit PIN",
+          "maxLength": 10
         },
         "sponsorPosition": {
           "type": "string",
-          "description": "Sponsor rank or position title"
+          "description": "Sponsor rank or position title",
+          "maxLength": 50
         },
         "lineId": {
           "type": "string",
-          "description": "Sponsor LINE ID"
+          "description": "Sponsor LINE ID",
+          "maxLength": 50
         },
         "lineUrl": {
           "type": "string",
-          "description": "Sponsor LINE Official or personal add link"
+          "description": "Sponsor LINE Official or personal add link",
+          "maxLength": 200
         },
         "phoneNumber": {
           "type": "string",
-          "description": "Sponsor phone number"
+          "description": "Sponsor phone number",
+          "maxLength": 20
         },
         "teamName": {
           "type": "string",
-          "description": "Team name"
+          "description": "Team name",
+          "maxLength": 100
         },
         "avatarUrl": {
           "type": "string",
@@ -83,7 +96,7 @@
           "description": "ISO timestamp of last update"
         }
       },
-      "required": ["sponsorId", "sponsorName", "lineId", "updatedAt"]
+      "required": ["sponsorId", "sponsorName", "ownerUid", "lineId", "updatedAt"]
     }
   },
   "firestore": {

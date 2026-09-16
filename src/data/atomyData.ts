@@ -117,7 +117,7 @@ export const BUSINESS_BENEFITS: BenefitItem[] = [
     tag: 'Unlimited Depth',
     statLabel: 'ลึกไม่จำกัดชั้น',
     keyHighlight: 'ทำงานเป็นทีม ส่งต่อพลังเครือข่ายเติบโตไปด้วยกัน',
-    imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
   },
   {
     iconName: 'Award',
