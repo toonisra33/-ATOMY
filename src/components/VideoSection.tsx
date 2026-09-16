@@ -207,11 +207,24 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                     <button
                       id="btn-fast-forward-video"
                       onClick={handleFastForwardComplete}
-                      className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/40 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                      disabled={secondsElapsed < 14 * 60}
+                      className={`w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                        secondsElapsed < 14 * 60
+                          ? 'bg-slate-800/80 text-slate-500 border border-slate-700 cursor-not-allowed'
+                          : 'bg-sky-600/30 hover:bg-sky-600/50 text-sky-300 border border-sky-500/40 cursor-pointer'
+                      }`}
                     >
                       <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span className="hidden sm:inline">ฉันดูจบแล้ว (ปลดล็อกขั้นตอนถัดไป)</span>
-                      <span className="sm:hidden">ฉันดูจบแล้ว (ปลดล็อกสิทธิ์)</span>
+                      <span className="hidden sm:inline">
+                        {secondsElapsed < 14 * 60
+                          ? `ต้องดูอย่างน้อย 14 นาที (${Math.floor(secondsElapsed / 60)}/14)`
+                          : 'ฉันดูจบแล้ว (ปลดล็อกขั้นตอนถัดไป)'}
+                      </span>
+                      <span className="sm:hidden">
+                        {secondsElapsed < 14 * 60 
+                          ? `ดูอย่างน้อย 14 นาที (${Math.floor(secondsElapsed / 60)}/14)`
+                          : 'ฉันดูจบแล้ว (ปลดล็อกสิทธิ์)'}
+                      </span>
                     </button>
                   ) : (
                     <span className="w-full sm:w-auto inline-flex items-center justify-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-700 px-2.5 py-1.5 rounded-lg">

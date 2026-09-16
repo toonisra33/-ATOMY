@@ -32,6 +32,7 @@
     "esbuild": "^0.25.0",
     "firebase-admin": "^14.4.0",
     "firebase-tools": "^13.35.1",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
