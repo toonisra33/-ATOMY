@@ -20,6 +20,7 @@ import { PixelStatusModal } from "./components/PixelStatusModal";
 import { DeployGuideModal } from "./components/DeployGuideModal";
 import { LeadsInboxModal } from "./components/LeadsInboxModal";
 import { LoginModal } from "./components/LoginModal";
+import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
 import { loadSponsorProfile } from "./lib/firebase";
 import { watchAuthSession, logout } from "./lib/auth";
@@ -30,6 +31,7 @@ import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
 export default function App() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [resetOobCode, setResetOobCode] = useState<string | null>(null);
 
   useEffect(() => {
     return watchAuthSession(setSession);
@@ -348,10 +350,18 @@ export default function App() {
         onClose={() => setIsDeployGuideOpen(false)}
       />
 
-      <LoginModal
+            <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
+
+      {resetOobCode && (
+        <ResetPasswordModal
+          isOpen={!!resetOobCode}
+          onClose={() => setResetOobCode(null)}
+          oobCode={resetOobCode}
+        />
+      )}
 
       {(session?.isAdmin || (session?.uid && session.uid === sponsor.ownerUid)) && (
             <button

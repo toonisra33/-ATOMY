@@ -46,7 +46,12 @@ export async function logout() {
 }
 
 export async function resetPassword(email: string) {
-  await sendPasswordResetEmail(auth, email.trim());
+  const actionCodeSettings = {
+    // URL you want to redirect back to. The domain must be whitelisted in the Firebase Console.
+    url: typeof window !== 'undefined' ? window.location.origin : 'https://sponsor-atomy.web.app',
+    handleCodeInApp: false
+  };
+  await sendPasswordResetEmail(auth, email.trim(), actionCodeSettings);
 }
 
 export async function registerWithEmail(email: string, password: string) {
