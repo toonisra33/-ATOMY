@@ -7,6 +7,9 @@
       "hosting": {
         "atomy": [
           "localhub-atomy"
+        ],
+        "sponsor-atomy": [
+          "sponsor-atomy"
         ]
       }
     }

@@ -18,11 +18,6 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm run build
-      - name: Prepare Functions
-        run: |
-          cd functions
-          npm install
-          cp ../dist/index.html ./index.html
       - name: Grant the owner Admin access
         run: node scripts/set-user-role.mjs
         env:
@@ -34,4 +29,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
           channelId: live
           projectId: localhub-69fbe
-          target: atomy
+          target: sponsor-atomy
