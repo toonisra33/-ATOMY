@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useRef, useEffect } from 'react';
 import { SponsorProfile } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
-import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2, Upload } from 'lucide-react';
+import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
 import { registerWithEmail } from '../lib/auth';
@@ -113,10 +115,10 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   if (!isOpen) return null;
 
   const generatedAffiliateUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}${window.location.pathname}?ref=${formData.sponsorId}`
+    ? \`\${window.location.origin}\${window.location.pathname}?ref=\${formData.sponsorId}\`
     : '';
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(generatedAffiliateUrl)}`;
+  const qrCodeUrl = \`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=\${encodeURIComponent(generatedAffiliateUrl)}\`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(generatedAffiliateUrl);
@@ -238,7 +240,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 type="text"
                 required
                 value={formData.lineId}
-                onChange={(e) => setFormData({ ...formData, lineId: e.target.value, lineUrl: `https://lin.ee/${e.target.value.replace('@', '')}` })}
+                onChange={(e) => setFormData({ ...formData, lineId: e.target.value, lineUrl: \`https://lin.ee/\${e.target.value.replace('@', '')}\` })}
                 placeholder="เช่น @atomyth"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
@@ -404,6 +406,52 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
           </div>
 
+          <div className="mt-4 p-3.5 sm:p-4 bg-slate-900 text-white rounded-xl sm:rounded-2xl border border-slate-800">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-xs font-semibold text-sky-400 flex items-center gap-1.5">
+                <LinkIcon className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">ลิงก์เว็บพ่วงส่วนตัวของคุณ:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowQr(!showQr)}
+                className="text-[11px] text-slate-300 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-md cursor-pointer border border-slate-700 shrink-0"
+              >
+                <QrCode className="w-3 h-3" />
+                <span>{showQr ? 'ซ่อน' : 'QR Code'}</span>
+              </button>
+            </div>
+
+            <div className="bg-slate-950 p-2 sm:p-2.5 rounded-xl border border-slate-800 font-mono text-[11px] sm:text-xs text-sky-200 break-all select-all">
+              {generatedAffiliateUrl}
+            </div>
+
+            {showQr && (
+              <div className="mt-3 p-3 bg-white rounded-xl text-center inline-block w-full">
+                <img
+                  src={qrCodeUrl}
+                  alt="Generated Satellite QR"
+                  className="w-36 h-36 mx-auto rounded-lg"
+                />
+                <p className="text-[10px] sm:text-[11px] text-slate-600 mt-2 font-sans font-medium">
+                  สแกนหรือบันทึกภาพ QR Code นี้ไปใส่ในป้ายประชาสัมพันธ์ได้ทันที
+                </p>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <button
+                type="button"
+                id="btn-copy-affiliate-url"
+                onClick={handleCopyLink}
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95"
+              >
+                {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedLink ? 'คัดลอกลิงก์สำเร็จแล้ว!' : 'คัดลอกลิงก์เว็บพ่วงนี้'}</span>
+              </button>
+            </div>
+          </div>
+
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[11px] sm:text-xs text-blue-900 flex items-start gap-2">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div className="leading-relaxed text-pretty">
@@ -433,3 +481,5 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
     </div>
   );
 };
+`
+fs.writeFileSync('src/components/AffiliateModal.tsx', code);
