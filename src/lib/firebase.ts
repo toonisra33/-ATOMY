@@ -87,10 +87,8 @@ export async function submitLead(lead: LeadSubmission) {
     // Check for duplicate phone number for the same sponsor to prevent spam
     const q = query(
       leadsCol,
-      where,
-  where('sponsorId', '==', lead.sponsorId),
-      where,
-  where('phoneNumber', '==', lead.phoneNumber),
+      where('sponsorId', '==', lead.sponsorId),
+      where('phoneNumber', '==', lead.phoneNumber),
       limit(1)
     );
     try {
@@ -144,8 +142,7 @@ export async function fetchLeads(): Promise<LeadSubmission[]> {
 
     const q = query(
       leadsCol, 
-      where,
-  where('ownerUid', '==', user.uid),
+      where('ownerUid', '==', user.uid),
       orderBy('createdAt', 'desc'), 
       limit(50)
     );

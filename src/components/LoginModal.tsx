@@ -15,6 +15,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
@@ -75,8 +76,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             เข้าสู่ระบบ
           </button>
-          <button type="button" onClick={handleReset} className="w-full text-xs font-medium text-blue-700 hover:underline">ลืมรหัสผ่าน</button>
-        </form>
+          <button type="button" onClick={handleReset} className="w-full text-xs font-medium text-blue-700 hover:underline mb-2">ลืมรหัสผ่าน</button>
+
+          </form>
       </div>
     </div>
   );

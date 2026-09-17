@@ -1,9 +1,9 @@
 import {
-  GoogleAuthProvider,
+  
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  
   signOut,
   User,
 } from 'firebase/auth';
@@ -39,12 +39,6 @@ export async function loginWithEmail(email: string, password: string) {
   return toSession(result.user);
 }
 
-export async function loginWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await signInWithPopup(auth, provider);
-  return toSession(result.user);
-}
 
 export async function logout() {
   await signOut(auth);
