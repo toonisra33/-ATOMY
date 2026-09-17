@@ -4,6 +4,7 @@ import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { X, Copy, Check, ExternalLink, QrCode, Share2, Sparkles, AlertCircle, Link as LinkIcon, Lock, Target, Activity, ChevronDown, ChevronUp, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
+import { registerWithEmail } from '../lib/auth';
 
 interface AffiliateModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [showPixelSettings, setShowPixelSettings] = useState<boolean>(
     Boolean(currentSponsor.fbPixelId || currentSponsor.tiktokPixelId || currentSponsor.googleTagId)
   );
@@ -105,10 +109,30 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  
   const handleApplyAndPreview = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setAuthError('');
     try {
+      let finalOwnerUid = ownerUid;
+      
+      // If user is not logged in, but provided email/password, register them first
+      if (!ownerUid && email && password) {
+        try {
+          const session = await registerWithEmail(email, password);
+          finalOwnerUid = session.uid;
+        } catch (authErr: any) {
+          setIsSaving(false);
+          setAuthError(authErr.message?.includes('email-already') ? 'อีเมลนี้มีในระบบแล้ว กรุณาเข้าสู่ระบบแทน' : 'ไม่สามารถสร้างบัญชีได้ (รหัสผ่านต้อง 6 ตัวขึ้นไป)');
+          return;
+        }
+      } else if (!ownerUid) {
+          setIsSaving(false);
+          setAuthError('กรุณาสร้างบัญชี (อีเมลและรหัสผ่าน) เพื่อใช้จัดการหน้าเว็บและรายชื่อของคุณ');
+          return;
+      }
+
       // 1. Update React state in parent App
       onApplySponsor(formData);
 
@@ -130,14 +154,17 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
       });
 
       // 5. Save to Firebase Firestore
-      await saveSponsorProfile(formData, ownerUid);
+      await saveSponsorProfile(formData, finalOwnerUid);
+      
+      onClose();
     } catch (err) {
       console.warn('Sync error:', err);
+      setAuthError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSaving(false);
-      onClose();
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">

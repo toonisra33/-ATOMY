@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyRound, Loader2, LockKeyhole, Mail, X } from 'lucide-react';
-import { loginWithEmail, resetPassword } from '../lib/auth';
+import { loginWithEmail, resetPassword, registerWithEmail } from '../lib/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,19 +12,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   if (!isOpen) return null;
 
   
-  const handleLogin = async (event: React.FormEvent) => {
+    const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setMessage('');
     try {
-      await loginWithEmail(email, password);
-      onClose();
-    } catch {
-      setMessage('อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชียังไม่ได้รับสิทธิ์');
+      if (isRegistering) {
+        await registerWithEmail(email, password);
+        setMessage('สร้างบัญชีสำเร็จ! (หากเป็นแอดมิน กรุณารอระบบอัปเดตสิทธิ์)');
+        // Auto close after success?
+        setTimeout(() => { onClose(); }, 2000);
+      } else {
+        await loginWithEmail(email, password);
+        onClose();
+      }
+    } catch (error: any) {
+      if (isRegistering) {
+         setMessage(error.message?.includes('email-already') ? 'อีเมลนี้มีในระบบแล้ว' : 'ไม่สามารถสร้างบัญชีได้ รหัสผ่านต้อง 6 ตัวขึ้นไป');
+      } else {
+         setMessage('อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชียังไม่ได้รับสิทธิ์');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,7 +64,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center gap-3 mb-6">
           <div className="rounded-2xl bg-blue-600 p-3 text-white"><LockKeyhole className="h-5 w-5" /></div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">เข้าสู่ระบบ Partner / Admin</h2>
+            <h2 className="text-xl font-bold text-slate-900">{isRegistering ? 'สร้างบัญชีใหม่' : 'เข้าสู่ระบบ Partner / Admin'}</h2>
             <p className="text-xs text-slate-500">ข้อมูล Lead เปิดได้เฉพาะบัญชีที่ได้รับอนุญาต</p>
           </div>
         </div>
@@ -72,11 +84,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             </span>
           </label>
           {message && <p className="rounded-xl bg-slate-100 p-3 text-xs text-slate-700">{message}</p>}
+          
           <button disabled={loading} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            เข้าสู่ระบบ
+            {isRegistering ? 'สร้างบัญชี (สมัครสมาชิก)' : 'เข้าสู่ระบบ'}
           </button>
-          <button type="button" onClick={handleReset} className="w-full text-xs font-medium text-blue-700 hover:underline mb-2">ลืมรหัสผ่าน</button>
+          <div className="flex justify-between w-full mt-2">
+            <button type="button" onClick={handleReset} className="text-xs font-medium text-slate-500 hover:text-blue-600">ลืมรหัสผ่าน?</button>
+            <button type="button" onClick={() => { setIsRegistering(!isRegistering); setMessage(''); }} className="text-xs font-medium text-slate-500 hover:text-blue-600">
+              {isRegistering ? 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ' : 'เพิ่มบัญชีใหม่ (สำหรับแอดมิน/ลูกทีม)'}
+            </button>
+          </div>
+
 
           </form>
       </div>

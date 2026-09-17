@@ -190,6 +190,7 @@ export default function App() {
         sponsor={sponsor}
         isAuthenticated={!!session}
         isAdmin={session?.isAdmin ?? false}
+        isOwner={session?.uid === sponsor.ownerUid}
         accountEmail={session?.email}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onLogout={logout}
@@ -276,28 +277,29 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
       />
 
-      {/* Floating Pixel & Tracking Quick Badge */}
-      <button
-        type="button"
-        id="btn-floating-pixel-status"
-        onClick={() => setIsPixelModalOpen(true)}
-        className="fixed bottom-20 left-4 z-40 bg-slate-950/95 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full border border-purple-500/30 hover:border-purple-400 shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition-all group active:scale-95"
-        title="คลิกเพื่อติดตั้งหรือตรวจสอบ Pixel (Facebook / TikTok / GA4)"
-      >
-        <span
-          className={`w-2 h-2 rounded-full ${
-            sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId
-              ? "bg-emerald-400 animate-pulse"
-              : "bg-amber-400"
-          }`}
-        />
-        <Target className="w-3.5 h-3.5 text-purple-400 group-hover:rotate-45 transition-transform" />
-        <span className="font-semibold text-[11px] text-slate-200">
-          {sponsor.fbPixelId || sponsor.tiktokPixelId
-            ? "Pixel ทำงานอยู่"
-            : "ติดตั้ง Pixel"}
-        </span>
-      </button>
+      {(session?.isAdmin || (session?.uid && session.uid === sponsor.ownerUid)) && (
+            <button
+              type="button"
+              id="btn-floating-pixel-status"
+              onClick={() => setIsPixelModalOpen(true)}
+              className="fixed bottom-20 left-4 z-40 bg-slate-950/95 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full border border-purple-500/30 hover:border-purple-400 shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition-all group active:scale-95"
+              title="คลิกเพื่อติดตั้งหรือตรวจสอบ Pixel (Facebook / TikTok / GA4)"
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId
+                    ? "bg-emerald-400 animate-pulse"
+                    : "bg-amber-400"
+                }`}
+              />
+              <Target className="w-3.5 h-3.5 text-purple-400 group-hover:rotate-45 transition-transform" />
+              <span className="font-semibold text-[11px] text-slate-200">
+                {sponsor.fbPixelId || sponsor.tiktokPixelId
+                  ? "Pixel ทำงานอยู่"
+                  : "ติดตั้ง Pixel"}
+              </span>
+            </button>
+      )}
     </div>
   );
 }

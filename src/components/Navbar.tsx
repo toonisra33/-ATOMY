@@ -6,6 +6,7 @@ interface NavbarProps {
   sponsor: SponsorProfile;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isOwner?: boolean;
   accountEmail?: string;
   onOpenLogin: () => void;
   onLogout: () => void;
@@ -19,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   sponsor,
   isAuthenticated,
   isAdmin,
+  isOwner,
   accountEmail,
   onOpenLogin,
   onLogout,

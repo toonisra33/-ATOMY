@@ -1,4 +1,5 @@
 import {
+  createUserWithEmailAndPassword,
   
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -46,4 +47,9 @@ export async function logout() {
 
 export async function resetPassword(email: string) {
   await sendPasswordResetEmail(auth, email.trim());
+}
+
+export async function registerWithEmail(email: string, password: string) {
+  const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  return toSession(result.user);
 }
