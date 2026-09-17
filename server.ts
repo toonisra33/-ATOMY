@@ -10,7 +10,7 @@ const DEFAULT_TITLE = 'เปลี่ยนรายจ่ายเป็นร
 const DEFAULT_DESC = 'โอกาสธุรกิจออนไลน์ระดับโลก 26+ ประเทศ สมัครฟรี 100%';
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80';
 
-async function fetchSponsorProfile(sponsorId) {
+async function fetchSponsorProfile(sponsorId: string) {
   try {
     const projectId = 'localhub-69fbe';
     const databaseId = 'ai-studio-atomy-8c095ab7-7361-4880-9af8-2d105a37ebb2';
@@ -22,8 +22,8 @@ async function fetchSponsorProfile(sponsorId) {
     const data = await response.json();
     if (!data.fields) return null;
 
-    const profile = {};
-    for (const [key, value] of Object.entries(data.fields)) {
+    const profile: any = {};
+    for (const [key, value] of Object.entries(data.fields as Record<string, any>)) {
       if (value.stringValue !== undefined) profile[key] = value.stringValue;
     }
     return profile;
@@ -33,7 +33,7 @@ async function fetchSponsorProfile(sponsorId) {
   }
 }
 
-function injectMetaTags(html, profile) {
+function injectMetaTags(html: string, profile: any) {
   const title = profile?.sponsorName ? `${profile.sponsorName} - ที่ปรึกษาธุรกิจ Atomy` : DEFAULT_TITLE;
   const description = profile?.welcomeNote || DEFAULT_DESC;
   const image = profile?.avatarUrl || DEFAULT_IMAGE;
@@ -65,7 +65,7 @@ async function startServer() {
     app.use(express.static(distPath, { index: false }));
   }
 
-  app.get('*', async (req, res, next) => {
+  app.get('*', async (req: any, res: any, next: any) => {
     try {
       const url = req.originalUrl;
       const refMatch = url.match(/[?&]ref=([^&]+)/);
