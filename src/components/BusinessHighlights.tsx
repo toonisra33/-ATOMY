@@ -38,7 +38,7 @@ export const BusinessHighlights: React.FC = () => {
         </div>
 
         {/* 6 Rich Visual Benefit Cards Grid */}
-        <div className="mt-8 sm:mt-14 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
+        <div className="mt-8 sm:mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {BUSINESS_BENEFITS.map((item, index) => {
             const IconComp = iconMap[item.iconName] || Sparkles;
 
@@ -48,7 +48,7 @@ export const BusinessHighlights: React.FC = () => {
                 className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 hover:border-blue-300 shadow-md hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Photo Header with Badge Overlay */}
-                <div className={`relative ${item.title.includes('Binary') ? 'h-36 sm:h-60' : 'h-28 sm:h-52'} w-full overflow-hidden bg-slate-900`}>
+                <div className={`relative ${item.title.includes('Binary') ? 'h-48 sm:h-60' : 'h-44 sm:h-52'} w-full overflow-hidden bg-slate-900`}>
                   <img
                     src={item.imageUrl}
                     alt={item.title}
@@ -58,55 +58,54 @@ export const BusinessHighlights: React.FC = () => {
                   {/* Subtle Gradient Over Image */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none" />
 
-                  
-                    {/* Top Floating Badges */}
-                      <div className="absolute top-3 left-3 right-3 sm:top-3.5 sm:left-3.5 sm:right-3.5 flex items-center justify-between z-10">
-                        <span className="text-[11px] font-bold text-white bg-black/50 backdrop-blur-md px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-white/20 shadow-xs">
-                          #{index + 1} {item.tag}
-                        </span>
+                  {/* Top Floating Badges */}
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10">
+                    <span className="text-xs font-bold text-white bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 shadow-xs">
+                      #{index + 1} {item.tag}
+                    </span>
 
-                        {item.statLabel && (
-                          <span className="text-[11px] font-bold text-amber-300 bg-amber-950/80 backdrop-blur-md px-2.5 py-0.5 sm:py-1 rounded-full border border-amber-500/40 shadow-xs">
-                            {item.statLabel}
-                          </span>
-                        )}
-                      </div>
+                    {item.statLabel && (
+                      <span className="text-xs font-bold text-amber-300 bg-amber-950/80 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/40 shadow-xs">
+                        {item.statLabel}
+                      </span>
+                    )}
+                  </div>
 
-                      {/* Floating Icon in Corner */}
-                      <div className="absolute bottom-3 left-3 sm:bottom-3.5 sm:left-4 z-10 flex items-center gap-2">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-600/90 backdrop-blur-md text-white flex items-center justify-center shadow-lg border border-blue-400/40">
-                          <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </div>
-                        <span className="text-[11px] sm:text-xs font-semibold text-white/90 drop-shadow-sm font-mono tracking-wide">
-                          ATOMY VALUE
-                        </span>
-                      </div>
-
-                      {/* Masstige Authentic Product Seal Badge */}
-                      {item.title.includes('Masstige') && (
-                        <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 text-[10px] sm:text-[11px] font-bold backdrop-blur-md shadow-md">
-                          <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>สินค้าจริง 100%</span>
-                        </div>
-                      )}
+                  {/* Floating Icon in Corner */}
+                  <div className="absolute bottom-3.5 left-4 z-10 flex items-center gap-2">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600/90 backdrop-blur-md text-white flex items-center justify-center shadow-lg border border-blue-400/40">
+                      <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
+                    <span className="text-xs font-semibold text-white/90 drop-shadow-sm font-mono tracking-wide">
+                      ATOMY VALUE
+                    </span>
+                  </div>
+
+                  {/* Masstige Authentic Product Seal Badge */}
+                  {item.title.includes('Masstige') && (
+                    <div className="absolute bottom-3.5 right-3.5 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/90 border border-emerald-400/60 text-emerald-300 text-xs font-bold backdrop-blur-md shadow-md">
+                      <BadgeCheck className="w-4 h-4 text-emerald-400" />
+                      <span>สินค้าจริง 100%</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Card Content */}
-                <div className="p-3 sm:p-7 flex-1 flex flex-col justify-between">
+                <div className="p-5 sm:p-7 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-[13px] sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                    <h3 className="text-base sm:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                       {item.title}
                     </h3>
-                    <p className="mt-1.5 sm:mt-3 text-[11px] sm:text-sm text-slate-600 leading-relaxed font-normal text-pretty line-clamp-3 sm:line-clamp-none">
+                    <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed font-normal text-pretty">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Highlight Pill & Quality Guarantee */}
-                  <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-100 space-y-2">
+                  <div className="mt-5 sm:mt-6 pt-4 border-t border-slate-100 space-y-2">
                     {item.keyHighlight && (
-                      <div className="flex items-start gap-2 text-xs font-medium text-blue-900 bg-blue-50/80 p-2 sm:p-2.5 rounded-xl border border-blue-100/80">
-                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2 text-xs sm:text-sm font-medium text-blue-900 bg-blue-50/80 p-2.5 sm:p-3 rounded-xl border border-blue-100/80">
+                        <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                         <span className="leading-snug text-pretty">{item.keyHighlight}</span>
                       </div>
                     )}

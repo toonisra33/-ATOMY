@@ -325,18 +325,18 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
           <div className="mt-4 space-y-4">
             
             {/* Status Summary */}
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center">
               <div className={`p-2.5 rounded-xl border ${hasFb ? 'bg-blue-950/40 border-blue-500/40 text-blue-300' : 'bg-slate-800/30 border-slate-700/50 text-slate-500'}`}>
-                <div className="text-[10px] font-semibold">Meta Pixel</div>
-                <div className="text-xs font-mono truncate">{fbPixelId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
+                <div className="text-xs font-semibold">Meta Pixel</div>
+                <div className="text-xs font-mono mt-0.5">{fbPixelId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
               </div>
               <div className={`p-2.5 rounded-xl border ${hasTikTok ? 'bg-pink-950/40 border-pink-500/40 text-pink-300' : 'bg-slate-800/30 border-slate-700/50 text-slate-500'}`}>
-                <div className="text-[10px] font-semibold">TikTok Pixel</div>
-                <div className="text-xs font-mono truncate">{tiktokPixelId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
+                <div className="text-xs font-semibold">TikTok Pixel</div>
+                <div className="text-xs font-mono mt-0.5">{tiktokPixelId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
               </div>
               <div className={`p-2.5 rounded-xl border ${hasGoogle ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' : 'bg-slate-800/30 border-slate-700/50 text-slate-500'}`}>
-                <div className="text-[10px] font-semibold">Google GA4</div>
-                <div className="text-xs font-mono truncate">{googleTagId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
+                <div className="text-xs font-semibold">Google GA4</div>
+                <div className="text-xs font-mono mt-0.5">{googleTagId ? 'ติดตั้งแล้ว' : 'ยังไม่ระบุ'}</div>
               </div>
             </div>
 
@@ -408,9 +408,9 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                         }`}>
                           {log.platform}
                         </span>
-                        <span className="text-slate-200 font-bold">{log.eventName}</span>
+                        <span className="text-slate-200 font-bold shrink-0">{log.eventName}</span>
                         {log.details && (
-                          <span className="text-slate-500 text-[10px] truncate max-w-[120px] sm:max-w-[160px]">
+                          <span className="text-slate-400 text-xs break-all font-mono">
                             {JSON.stringify(log.details)}
                           </span>
                         )}

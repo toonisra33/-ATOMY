@@ -272,8 +272,8 @@ export default function App() {
               </button>
             </div>
 
-            <div className="relative z-10 bg-slate-950 p-3 sm:p-4 rounded-xl border border-slate-800 font-mono text-[11px] sm:text-sm text-sky-200 break-all select-all flex items-center justify-between gap-4">
-              <span className="flex-1 truncate">{generatedAffiliateUrl}</span>
+            <div className="relative z-10 bg-slate-950 p-3.5 sm:p-4 rounded-xl border border-slate-800 font-mono text-xs sm:text-sm text-sky-200 break-all select-all flex items-center justify-between gap-4">
+              <span className="flex-1 break-all select-all leading-relaxed">{generatedAffiliateUrl}</span>
             </div>
 
             <div className="relative z-10 mt-4 flex flex-col sm:flex-row gap-3">

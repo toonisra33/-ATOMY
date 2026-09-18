@@ -392,7 +392,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[11px] sm:text-xs text-blue-900 flex items-start gap-2">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div className="leading-relaxed text-pretty">
-              <strong>แนวทางใช้งานเว็บพ่วง:</strong> นำลิงก์นี้ไปใส่ใน Bio TikTok, Facebook หรือส่งให้ผู้สนใจ เมื่อผู้มุ่งหวังดูวิดีโอจบ จะมีปุ่มทักเข้า LINE Official ของคุณโดยตรงพร้อมระบุรหัสสปอนเซอร์ของคุณ!
+              <strong>แนวทางใช้งานเว็บพ่วง:</strong> นำลิงก์นี้ไปใส่ใน Bio TikTok, Facebook หรือส่งให้ผู้สนใจ เมื่อผู้มุ่งหวังดูวิดีโอจบ จะมีปุ่มทักเข้า LINE Official ของคุณโดยตรงเพื่อขอข้อมูลและเริ่มธุรกิจทันที!
             </div>
           </div>
 

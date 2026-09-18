@@ -124,7 +124,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                       : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 border border-slate-700/80'
                   }`}
                 >
-                  <span className="truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">{vid.title}</span>
+                  <span>{vid.title}</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-sky-300 shrink-0">
                     {vid.durationLabel}
                   </span>
@@ -175,9 +175,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                         </span>
                         <span className="text-slate-400 text-xs font-mono">/ 15:00 น.</span>
                       </div>
-                      <p className="text-[11px] sm:text-xs text-slate-300 flex items-center gap-1 truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
-                        <BookmarkCheck className="w-3 h-3 text-blue-400 shrink-0" />
-                        <span className="truncate">{activeChapter.title}</span>
+                      <p className="text-xs text-slate-300 flex items-center gap-1.5 break-words">
+                        <BookmarkCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                        <span>{activeChapter.title}</span>
                       </p>
                     </div>
                   </div>
@@ -326,11 +326,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                       }`}>
                         {ch.title}
                       </h4>
-                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                         {ch.description}
                       </p>
                       
-                      <div className="mt-2 text-[10px] text-sky-300 bg-sky-950/50 px-2 py-1 rounded border border-sky-900/50">
+                      <div className="mt-2 text-[11px] text-sky-300 bg-sky-950/60 px-2.5 py-1 rounded-lg border border-sky-900/60">
                         ⚡ {ch.highlight}
                       </div>
                     </button>

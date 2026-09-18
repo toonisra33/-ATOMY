@@ -168,56 +168,36 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
           <div className="mt-8 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto lg:max-w-none w-full">
               {/* Sponsor Profile & Quick Contact Summary */}
-              <div className="p-3.5 sm:p-5 bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200/80 flex flex-row items-center justify-between gap-3.5 sm:gap-4">
-                <div className="flex items-center gap-3 text-left min-w-0">
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-50/60 via-slate-50 to-emerald-50/40 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                <div className="relative shrink-0">
                   <img
                     src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                     alt={sponsor.sponsorName}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/20 shrink-0"
+                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/20"
                   />
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white" title="พร้อมให้คำปรึกษา" />
+                </div>
+                <div className="min-w-0 flex-1 text-center sm:text-left">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
                       {sponsor.sponsorName}
                     </h4>
-                    <p className="text-[11px] sm:text-xs text-emerald-700 font-semibold truncate">
-                      {sponsor.sponsorPosition} • {sponsor.teamName}
-                    </p>
-                    <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate hidden xs:block">
-                      ยินดีให้คำปรึกษา แนะนำการสมัคร
-                      และส่งต่อเครื่องมือการทำงานฟรี
-                    </p>
-                  </div>
-                </div>
-
-                {/* Sponsor ID copy badge */}
-                <div className="flex items-center justify-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs shrink-0">
-                  <div className="text-left">
-                    <span className="text-[10px] text-slate-400 block font-mono">
-                      ลิงก์สมัครสมาชิก:
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-blue-700 font-mono">
-                      {sponsor.sponsorId}
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-300">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>ผู้ดูแลสายงาน (Official Consultant)</span>
                     </span>
                   </div>
-                  <button
-                    id="btn-copy-sponsor-id"
-                    onClick={() =>
-                      copyToClipboard(sponsor.sponsorId, "sponsor")
-                    }
-                    className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-                    title="คัดลอกลิงก์สมัครสมาชิก"
-                  >
-                    {copiedSponsorId ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
+                  <p className="text-xs sm:text-sm text-emerald-700 font-semibold mt-1 break-words">
+                    {sponsor.sponsorPosition} • {sponsor.teamName}
+                  </p>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed text-pretty">
+                    ยินดีให้คำปรึกษา แนะนำการสมัครสมาชิก และส่งต่อเครื่องมือการทำงานฟรีตลอดชีพ
+                  </p>
                 </div>
               </div>
 
               {/* Primary Action Button Grid */}
-              <div className="mt-3 sm:mt-4 flex flex-row items-stretch justify-center gap-3 sm:gap-3.5">
+              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-stretch justify-center gap-3 sm:gap-3.5">
                 {/* Direct LINE Link Button */}
                 <a
                   id="btn-main-line-cta"
@@ -225,18 +205,18 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackContactEvent("line", sponsor.sponsorId)}
-                  className="flex-1 inline-flex items-center justify-center gap-2.5 px-3 sm:px-8 py-3.5 sm:py-4 bg-[#06C755] hover:bg-[#05b34c] text-white text-[13px] sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-600/30 transition-all active:scale-95 text-center min-h-[48px]"
+                  className="flex-1 inline-flex items-center justify-center gap-2.5 px-4 sm:px-8 py-3.5 sm:py-4 bg-[#06C755] hover:bg-[#05b34c] text-white text-sm sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-600/30 transition-all active:scale-95 text-center min-h-[48px]"
                 >
                   <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white shrink-0" />
                   <span>คลิกเพื่อแอด LINE Official ทันที</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 shrink-0" />
                 </a>
 
-                {/* Open QR Code Button (For desktop users) */}
+                {/* Open QR Code Button */}
                 <button
                   id="btn-show-qr-code"
                   onClick={() => setShowQrModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-3 sm:py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] sm:text-base font-semibold rounded-xl sm:rounded-2xl transition-colors border border-slate-200 cursor-pointer shadow-2xs min-h-[44px]"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-base font-semibold rounded-xl sm:rounded-2xl transition-colors border border-slate-200 cursor-pointer shadow-2xs min-h-[48px]"
                 >
                   <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 shrink-0" />
                   <span>สแกน QR Code</span>

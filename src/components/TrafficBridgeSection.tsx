@@ -35,61 +35,61 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
             <span>3 ขั้นตอนการสมัครสมาชิกฟรีสู่เว็บหลัก Atomy</span>
           </h3>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 relative">
             {/* Step 1 */}
-            <div className="p-2.5 sm:p-5 rounded-xl sm:rounded-2xl bg-blue-50/50 border border-blue-100 relative flex flex-col justify-between">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-blue-50/60 border border-blue-100 relative flex flex-col justify-between">
               <div>
-                <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-xl bg-blue-600 text-white font-bold text-[11px] sm:text-base flex items-center justify-center mb-3 shadow-md shadow-blue-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-600 text-white font-bold text-sm sm:text-base flex items-center justify-center mb-3 shadow-md shadow-blue-500/20">
                   1
                 </div>
-                <h4 className="text-[11px] sm:text-base font-bold text-slate-900">
+                <h4 className="text-base sm:text-lg font-bold text-slate-900">
                   ทัก LINE ติดต่อที่ปรึกษา
                 </h4>
-                <p className="mt-1.5 text-[9px] xs:text-[10px] sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  ติดต่อที่ปรึกษาผ่าน LINE Official เพื่อรับลิงก์สมัครสมาชิกและสอบถามข้อมูลเบื้องต้น
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed text-pretty">
+                  ติดต่อที่ปรึกษาผ่าน LINE Official เพื่อรับคำแนะนำการสมัครและสอบถามข้อมูลเบื้องต้น
                 </p>
               </div>
 
-              <div className="mt-3.5 pt-3 border-t border-blue-200/60 text-[9px] sm:text-xs font-mono text-blue-900 font-semibold flex flex-col xl:flex-row xl:items-center xl:justify-between items-start gap-1">
-                <span>รหัสแนะนำ:</span>
-                <span className="bg-blue-100 px-2 py-0.5 rounded">{sponsor.sponsorId}</span>
+              <div className="mt-4 pt-3 border-t border-blue-200/60 text-xs sm:text-sm text-blue-900 font-semibold flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>มีที่ปรึกษาคอยดูแลทุกขั้นตอน</span>
               </div>
             </div>
 
             {/* Step 2 */}
-            <div className="p-2.5 sm:p-5 rounded-xl sm:rounded-2xl bg-sky-50/50 border border-sky-100 relative flex flex-col justify-between">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-sky-50/60 border border-sky-100 relative flex flex-col justify-between">
               <div>
-                <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-xl bg-sky-600 text-white font-bold text-[11px] sm:text-base flex items-center justify-center mb-3 shadow-md shadow-sky-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-600 text-white font-bold text-sm sm:text-base flex items-center justify-center mb-3 shadow-md shadow-sky-500/20">
                   2
                 </div>
-                <h4 className="text-[11px] sm:text-base font-bold text-slate-900">
+                <h4 className="text-base sm:text-lg font-bold text-slate-900">
                   เข้าสู่เว็บหลัก Atomy และกด 'สมัครสมาชิก'
                 </h4>
-                <p className="mt-1.5 text-[9px] xs:text-[10px] sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  คลิกลิงก์เข้าสู่หน้าสมัครของ Atomy Thailand อย่างเป็นทางการ กรอกข้อมูลส่วนตัวยืนยันตัวตน
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed text-pretty">
+                  เข้าสู่หน้าสมัครของ Atomy Thailand อย่างเป็นทางการ กรอกข้อมูลส่วนตัวเพื่อยืนยันตัวตนอย่างปลอดภัย
                 </p>
               </div>
 
-              <div className="mt-3.5 pt-3 border-t border-sky-200/60 text-[9px] sm:text-xs text-sky-800 font-medium">
+              <div className="mt-4 pt-3 border-t border-sky-200/60 text-xs sm:text-sm text-sky-800 font-medium">
                 ไม่มีค่าธรรมเนียมสมัครใดๆ (0 บาท)
               </div>
             </div>
 
             {/* Step 3 */}
-            <div className="p-2.5 sm:p-5 rounded-xl sm:rounded-2xl bg-emerald-50/50 border border-emerald-100 relative flex flex-col justify-between">
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-emerald-50/60 border border-emerald-100 relative flex flex-col justify-between">
               <div>
-                <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 text-white font-bold text-[11px] sm:text-base flex items-center justify-center mb-3 shadow-md shadow-emerald-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 text-white font-bold text-sm sm:text-base flex items-center justify-center mb-3 shadow-md shadow-emerald-500/20">
                   3
                 </div>
-                <h4 className="text-[11px] sm:text-base font-bold text-slate-900">
+                <h4 className="text-base sm:text-lg font-bold text-slate-900">
                   สมัครสมาชิก & รับรหัสส่วนตัว
                 </h4>
-                <p className="mt-1.5 text-[9px] xs:text-[10px] sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  สมัครสมาชิกผ่านลิงก์ของที่ปรึกษา ระบบจะออกรหัสสมาชิกให้ทันที เริ่มสั่งซื้อและสร้างรายได้ได้เลย
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed text-pretty">
+                  สมัครสมาชิกเรียบร้อย ระบบจะออกรหัสสมาชิกให้ทันที เริ่มสั่งซื้อสินค้าคุณภาพและสร้างรายได้ได้เลย
                 </p>
               </div>
 
-              <div className="mt-3.5 pt-3 border-t border-emerald-200/60 text-[9px] sm:text-xs text-emerald-800 font-medium">
+              <div className="mt-4 pt-3 border-t border-emerald-200/60 text-xs sm:text-sm text-emerald-800 font-medium">
                 สิทธิ์สมาชิกตลอดชีพทั่วโลก 26+ ประเทศ
               </div>
             </div>
@@ -107,7 +107,7 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
             </span>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             {ATOMY_OFFICIAL_LINKS.map((link, idx) => {
               const icons = [Globe, Video, ShoppingBag, Ticket];
               const IconComp = icons[idx % icons.length];
@@ -118,29 +118,29 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 sm:p-5 bg-white rounded-xl sm:rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all group flex flex-col justify-between"
+                  className="p-4 sm:p-5 bg-white rounded-xl sm:rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-lg transition-all group flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-2.5 sm:mb-3">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-                        <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                        <IconComp className="w-5 h-5" />
                       </div>
-                      <span className="text-[9px] sm:text-[10px] font-semibold text-sky-700 bg-sky-50 px-1.5 sm:px-2 py-0.5 rounded border border-sky-100 shrink-0">
+                      <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100 shrink-0">
                         {link.badge}
                       </span>
                     </div>
 
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    <h4 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                       {link.title}
                     </h4>
-                    <p className="mt-1 text-[10px] sm:text-xs text-slate-500 line-clamp-2">
+                    <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                       {link.description}
                     </p>
                   </div>
 
-                  <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-xs font-semibold text-blue-600">
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs sm:text-sm font-semibold text-blue-600">
                     <span>เปิดเว็บไซต์หลัก</span>
-                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </div>
                 </a>
               );
