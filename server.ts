@@ -6,9 +6,9 @@ import { createServer as createViteServer } from 'vite';
 const app = express();
 const PORT = 3000;
 
-const DEFAULT_TITLE = 'เปลี่ยนรายจ่ายเป็นรายได้กับ Atomy';
-const DEFAULT_DESC = 'โอกาสธุรกิจออนไลน์ระดับโลก 26+ ประเทศ สมัครฟรี 100%';
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&auto=format&fit=crop&q=80';
+const DEFAULT_TITLE = 'Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง';
+const DEFAULT_DESC = 'ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ (Atomy) พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official ทันที';
+const DEFAULT_IMAGE = 'https://sponsor-atomy.web.app/og-image.jpg';
 
 async function fetchSponsorProfile(sponsorId: string) {
   try {

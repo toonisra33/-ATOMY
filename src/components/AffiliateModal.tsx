@@ -278,6 +278,18 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                ข้อความต้อนรับ / สโลแกนที่จะแสดงในพรีวิวการแชร์
+              </label>
+              <input
+                type="text"
+                value={formData.welcomeNote || ''}
+                onChange={(e) => setFormData({ ...formData, welcomeNote: e.target.value })}
+                placeholder="เช่น ยินดีต้อนรับสู่ทีมงาน Atomy ร่วมสร้าง passive income ด้วยกันครับ"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
             {/* Account Creation Block */}
             {!ownerUid && (
               <div className="sm:col-span-2 mt-2 bg-blue-50/50 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-blue-200">
@@ -385,6 +397,66 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                   <p className="text-[10px] text-slate-500">รองรับ JPG, PNG, WebP (บีบอัดให้อัตโนมัติ)</p>
                 </div>
               </div>
+            </div>
+
+            {/* Social Share Preview Card (LINE / Facebook / TikTok) */}
+            <div className="sm:col-span-2 p-3.5 sm:p-4 bg-slate-900 text-white rounded-xl sm:rounded-2xl border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-sky-400" />
+                  <span className="text-xs sm:text-sm font-bold text-white">
+                    ตัวอย่างรูปพรีวิวเวลาแชร์ลิงก์ (Social Share Preview)
+                  </span>
+                </div>
+                <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/70 border border-emerald-800/80 px-2 py-0.5 rounded-full">
+                  1200 x 630 HD
+                </span>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950 shadow-md">
+                <div className="relative aspect-video sm:aspect-[1200/630] max-h-[170px] sm:max-h-[220px] w-full bg-slate-900 overflow-hidden">
+                  <img
+                    src="/og-image.jpg"
+                    alt="Atomy Preview Banner"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full border-2 border-emerald-400 overflow-hidden bg-white shrink-0">
+                        <img
+                          src={formData.avatarUrl || '/profile.jpg'}
+                          alt="Sponsor"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <div className="text-[11px] font-bold text-white truncate">
+                          {formData.sponsorName || 'สปอนเซอร์ผู้ดูแลสายงาน'}
+                        </div>
+                        <div className="text-[9px] text-slate-300">
+                          ที่ปรึกษาธุรกิจ Atomy Global
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-slate-900 border-t border-slate-800 text-left">
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                    SPONSOR-ATOMY.WEB.APP
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
+                    {formData.sponsorName ? `${formData.sponsorName} - ที่ปรึกษาธุรกิจ Atomy` : 'Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง'}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    {formData.welcomeNote || 'ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official'}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                💡 เวลาคัดลอกลิงก์นี้ไปส่งในแชท LINE, โพสต์บน Facebook หรือปักหมุดใน Bio TikTok ระบบจะดึงรูปแบนเนอร์ Atomy คุณภาพสูงนี้ขึ้นแสดงเป็นการ์ดตัวอย่างอัตโนมัติ
+              </p>
             </div>
 
           </div>

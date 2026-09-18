@@ -9,6 +9,9 @@ export interface SponsorProfile {
   teamName: string;
   welcomeNote?: string;
   avatarUrl?: string;
+  ogImageUrl?: string;
+  shareTitle?: string;
+  shareDescription?: string;
   fbPixelId?: string;
   tiktokPixelId?: string;
   googleTagId?: string;

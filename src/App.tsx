@@ -24,7 +24,7 @@ import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
 import { loadSponsorProfile } from "./lib/firebase";
 import { watchAuthSession, logout } from "./lib/auth";
-import { Target, Link as LinkIcon, QrCode, Copy, Check } from "lucide-react";
+import { Target, Link as LinkIcon, QrCode, Copy, Check, Share2 } from "lucide-react";
 import { AuthSession } from "./types";
 import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
 
@@ -302,6 +302,40 @@ export default function App() {
                 </p>
               </div>
             )}
+
+            {/* Social Share Preview Info Card */}
+            <div className="relative z-10 mt-5 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Share2 className="w-3.5 h-3.5 text-sky-400" />
+                  <span>ภาพพรีวิวการแชร์ (Social Media Card: LINE, Facebook, TikTok)</span>
+                </span>
+                <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">
+                  1200 x 630 HD Ready
+                </span>
+              </div>
+              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/80 flex flex-col sm:flex-row items-center gap-3 p-3">
+                <div className="w-full sm:w-44 aspect-video rounded-lg overflow-hidden shrink-0 border border-slate-700/60 relative">
+                  <img
+                    src="/og-image.jpg"
+                    alt="Atomy Banner"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent flex items-end p-1.5">
+                    <span className="text-[9px] font-bold text-sky-300">ATOMY SATELLITE</span>
+                  </div>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <div className="text-[10px] font-semibold text-slate-400">SPONSOR-ATOMY.WEB.APP</div>
+                  <div className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
+                    {sponsor.sponsorName ? `${sponsor.sponsorName} - ที่ปรึกษาธุรกิจ Atomy` : 'Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง'}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                    {sponsor.welcomeNote || 'ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
