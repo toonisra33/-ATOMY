@@ -41,30 +41,6 @@ const formBlock = `            <div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ลิงก์ Facebook (ถ้ามี)
-              </label>
-              <input
-                type="url"
-                value={formData.facebookUrl || ''}
-                onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
-                placeholder="https://facebook.com/..."
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ลิงก์ TikTok (ถ้ามี)
-              </label>
-              <input
-                type="url"
-                value={formData.tiktokUrl || ''}
-                onChange={(e) => setFormData({ ...formData, tiktokUrl: e.target.value })}
-                placeholder="https://tiktok.com/@..."
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 ชื่อทีม / สายงาน (Team Name)
               </label>
               <input
@@ -72,6 +48,30 @@ const formBlock = `            <div>
                 value={formData.teamName || ''}
                 onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
                 placeholder="เช่น Atomy Thailand Team"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                เบอร์โทรศัพท์ติดต่อ
+              </label>
+              <input
+                type="tel"
+                value={formData.phoneNumber || ''}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                placeholder="เช่น 093-XXX-XXXX"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                ตำแหน่ง
+              </label>
+              <input
+                type="text"
+                value={formData.sponsorPosition || ''}
+                onChange={(e) => setFormData({ ...formData, sponsorPosition: e.target.value })}
+                placeholder="เช่น ที่ปรึกษาธุรกิจ"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>`;

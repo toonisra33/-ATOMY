@@ -206,19 +206,6 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                รหัสสปอนเซอร์ของคุณ (Sponsor ID) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.sponsorId}
-                onChange={(e) => setFormData({ ...formData, sponsorId: e.target.value })}
-                placeholder="เช่น 39823016"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 ชื่อ-นามสกุล หรือชื่อเรียกในสายงาน <span className="text-red-500">*</span>
               </label>
               <input
@@ -248,11 +235,23 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 ลิงก์ LINE (Auto Link)
               </label>
               <input
-                type="text"
+                type="url"
                 value={formData.lineUrl}
                 onChange={(e) => setFormData({ ...formData, lineUrl: e.target.value })}
-                placeholder="https://lin.ee/xxxx"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+                placeholder="https://lin.ee/..."
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                ชื่อทีม / สายงาน (Team Name)
+              </label>
+              <input
+                type="text"
+                value={formData.teamName || ''}
+                onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
+                placeholder="เช่น Atomy Thailand Team"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
             <div>
@@ -260,39 +259,25 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 เบอร์โทรศัพท์ติดต่อ
               </label>
               <input
-                type="text"
-                value={formData.phoneNumber}
+                type="tel"
+                value={formData.phoneNumber || ''}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                placeholder="เช่น 093-065-2881"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+                placeholder="เช่น 093-XXX-XXXX"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ตำแหน่ง / สายงาน
+                ตำแหน่ง
               </label>
               <input
                 type="text"
-                value={formData.sponsorPosition}
+                value={formData.sponsorPosition || ''}
                 onChange={(e) => setFormData({ ...formData, sponsorPosition: e.target.value })}
-                placeholder="ที่ปรึกษาธุรกิจ Atomy Thailand"
+                placeholder="เช่น ที่ปรึกษาธุรกิจ"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
-            
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ชื่อทีม / สายงาน (Team Name)
-              </label>
-              <input
-                type="text"
-                value={formData.teamName}
-                onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                placeholder="Atomy Thailand Team freedomlife"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
-            </div>
-
             {/* Account Creation Block */}
             {!ownerUid && (
               <div className="sm:col-span-2 mt-2 bg-blue-50/50 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-blue-200">

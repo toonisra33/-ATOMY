@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
             </h4>
             <div className="space-y-1 sm:space-y-1.5 text-slate-300 text-[8px] sm:text-xs break-words">
               <p><strong className="text-white">ชื่อ:</strong> {sponsor.sponsorName}</p>
-              <p><strong className="text-white">รหัสสปอนเซอร์:</strong> {sponsor.sponsorId}</p>
+              
               <p><strong className="text-white">ตำแหน่ง:</strong> {sponsor.sponsorPosition}</p>
               <p><strong className="text-white">ทีม:</strong> {sponsor.teamName}</p>
               <p><strong className="text-white">LINE ID:</strong> {sponsor.lineId}</p>

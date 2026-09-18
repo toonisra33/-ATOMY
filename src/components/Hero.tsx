@@ -64,7 +64,7 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-xl shadow-md shadow-emerald-500/20 transition-all active:scale-95 min-h-[46px]"
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-white shrink-0" />
-                <span>แอด Line เพื่อขอรับรหัสฟรี</span>
+                <span>แอด Line เพื่อสมัครสมาชิกฟรี</span>
               </a>
             </div>
 

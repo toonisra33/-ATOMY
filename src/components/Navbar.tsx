@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <span className="hidden md:inline">คุณกำลังเข้าชมเว็บของ:</span>
         <span className="font-bold underline decoration-sky-300 truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">{sponsor.sponsorName}</span>
         <span className="bg-blue-900/70 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono shrink-0">
-          รหัส: {sponsor.sponsorId}
+          
         </span>
       </div>
 

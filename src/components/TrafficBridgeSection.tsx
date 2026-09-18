@@ -32,7 +32,7 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
         <div className="mt-8 sm:mt-12 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-10 border border-slate-200/90 shadow-xl shadow-slate-100">
           <h3 className="text-base sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6 flex items-center gap-2">
             <span className="w-2 sm:w-2.5 h-5 sm:h-6 bg-blue-600 rounded-full shrink-0" />
-            <span>3 ขั้นตอนการเปิดรหัสสมาชิกฟรีสู่เว็บหลัก Atomy</span>
+            <span>3 ขั้นตอนการสมัครสมาชิกฟรีสู่เว็บหลัก Atomy</span>
           </h3>
 
           <div className="grid grid-cols-3 gap-2 sm:gap-6 relative">
@@ -43,10 +43,10 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
                   1
                 </div>
                 <h4 className="text-[11px] sm:text-base font-bold text-slate-900">
-                  ทัก LINE รับรหัสสปอนเซอร์
+                  ทัก LINE ติดต่อที่ปรึกษา
                 </h4>
                 <p className="mt-1.5 text-[9px] xs:text-[10px] sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  ติดต่อสปอนเซอร์ผ่าน LINE Official เพื่อรับรหัสสปอนเซอร์ล่าสุด และสอบถามข้อมูลเบื้องต้น
+                  ติดต่อที่ปรึกษาผ่าน LINE Official เพื่อรับลิงก์สมัครสมาชิกและสอบถามข้อมูลเบื้องต้น
                 </p>
               </div>
 
@@ -82,10 +82,10 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
                   3
                 </div>
                 <h4 className="text-[11px] sm:text-base font-bold text-slate-900">
-                  กรอกรหัสสปอนเซอร์ & รับรหัสสมาชิก
+                  สมัครสมาชิก & รับรหัสส่วนตัว
                 </h4>
                 <p className="mt-1.5 text-[9px] xs:text-[10px] sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  ระบุรหัสสปอนเซอร์ในระบบ ระบบจะออกรหัสสมาชิกส่วนตัวให้ทันที สามารถเริ่มสั่งซื้อสินค้าและเริ่มสร้างรายได้ได้เลย
+                  สมัครสมาชิกผ่านลิงก์ของที่ปรึกษา ระบบจะออกรหัสสมาชิกให้ทันที เริ่มสั่งซื้อและสร้างรายได้ได้เลย
                 </p>
               </div>
 

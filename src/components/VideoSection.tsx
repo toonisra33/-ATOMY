@@ -263,7 +263,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                       <Sparkles className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
                     </h4>
                     <p className="text-xs sm:text-sm text-emerald-200 mt-1">
-                      ปลดล็อกสิทธิพิเศษ: รับรหัสสปอนเซอร์ และคู่มือเริ่มต้นธุรกิจฟรีกับคุณ {sponsor.sponsorName}
+                      ปลดล็อกสิทธิพิเศษ: รับลิงก์สมัครสมาชิก และคู่มือเริ่มต้นธุรกิจฟรีกับคุณ {sponsor.sponsorName}
                     </p>
                   </div>
                 </div>

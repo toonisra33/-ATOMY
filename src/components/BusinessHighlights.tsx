@@ -131,7 +131,7 @@ export const BusinessHighlights: React.FC = () => {
             href="#line-official"
             className="w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition-all active:scale-95"
           >
-            <span>แอด LINE ขอรับรหัสสปอนเซอร์ฟรี</span>
+            <span>แอด LINE ขอลิงก์สมัครสมาชิกฟรี</span>
             <ArrowRight className="w-4 h-4 shrink-0" />
           </a>
         </div>

@@ -40,7 +40,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const prefilledMessage = `สวัสดีครับ/ค่ะ สนใจสมัครสมาชิก Atomy รับรหัสสปอนเซอร์ ${sponsor.sponsorId} ดูคลิปบรรยาย 15 นาทีเรียบร้อยแล้ว ต้องการคำแนะนำเปิดรหัสสมาชิกฟรีครับ/ค่ะ`;
+  const prefilledMessage = `สวัสดีครับ/ค่ะ สนใจสมัครสมาชิก Atomy รับลิงก์สมัครสมาชิก ดูคลิปบรรยาย 15 นาทีเรียบร้อยแล้ว ต้องการคำแนะนำเปิดรหัสสมาชิกฟรีครับ/ค่ะ`;
 
   const copyToClipboard = (
     text: string,
@@ -154,12 +154,12 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
               <span className="text-[#06C755] inline-block">
                 แอด LINE สปอนเซอร์
               </span>{" "}
-              <span className="inline-block">เพื่อรับรหัสฟรี</span>
+              <span className="inline-block">เพื่อสมัครฟรี</span>
             </h2>
             <p className="mt-2.5 sm:mt-3 text-slate-600 text-xs sm:text-base leading-relaxed text-pretty">
-              การเปิดรหัสสมาชิก Atomy จำเป็นต้องใช้{" "}
+              การสมัครสมาชิก Atomy จำเป็นต้องมีผู้แนะนำ{" "}
               <strong className="font-semibold text-slate-800">
-                รหัสสปอนเซอร์
+                ลิงก์สมัครสมาชิก
               </strong>{" "}
               เพื่อรับสิทธิ์ทีมงานและพี่เลี้ยงดูแลตลอดเส้นทางธุรกิจ
             </p>
@@ -193,7 +193,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                 <div className="flex items-center justify-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs shrink-0">
                   <div className="text-left">
                     <span className="text-[10px] text-slate-400 block font-mono">
-                      รหัสสปอนเซอร์:
+                      ลิงก์สมัครสมาชิก:
                     </span>
                     <span className="text-xs sm:text-sm font-bold text-blue-700 font-mono">
                       {sponsor.sponsorId}
@@ -205,7 +205,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                       copyToClipboard(sponsor.sponsorId, "sponsor")
                     }
                     className="p-1.5 text-slate-500 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-                    title="คัดลอกรหัสสปอนเซอร์"
+                    title="คัดลอกลิงก์สมัครสมาชิก"
                   >
                     {copiedSponsorId ? (
                       <Check className="w-4 h-4 text-emerald-600" />
@@ -342,7 +342,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                       </div>
                       <div className="text-xs text-emerald-700 mt-0.5">
                         {sponsor.sponsorName}{" "}
-                        จะติดต่อกลับเพื่อให้ข้อมูลและแนะนำการเปิดรหัสสมาชิกโดยเร็วที่สุด
+                        จะติดต่อกลับเพื่อให้ข้อมูลและแนะนำการสมัครสมาชิกโดยเร็วที่สุด
                       </div>
                     </div>
                   </div>
