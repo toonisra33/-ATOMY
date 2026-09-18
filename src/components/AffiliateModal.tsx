@@ -142,7 +142,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           finalOwnerUid = session.uid;
         } catch (authErr: any) {
           setIsSaving(false);
-          setAuthError(authErr.message?.includes('email-already') ? 'อีเมลนี้มีในระบบแล้ว กรุณาเข้าสู่ระบบแทน' : 'ไม่สามารถสร้างบัญชีได้ (รหัสผ่านต้อง 6 ตัวขึ้นไป)');
+          setAuthError('Error: ' + (authErr.message || authErr.code));
           return;
         }
       } else if (!ownerUid) {
