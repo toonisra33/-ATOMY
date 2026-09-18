@@ -2,77 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true || 
+        request.auth.token.role == 'admin'
+      );
+    }
     
-    // Global Deny
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    // Helpers
-    function isSignedIn() { return request.auth != null; }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-    function isValidId(id) { return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
-
-    // Role Checks
-    function isProfileOwner() {
-      return existing().ownerUid == request.auth.uid;
-    }
-
-    // Validation Blueprints
-    function isValidLead(data) {
-      return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
-        && data.phoneNumber is string && data.phoneNumber.size() >= 8 && data.phoneNumber.size() <= 20
-        && (data.lineId == null || (data.lineId is string && data.lineId.size() <= 50))
-        && data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
-        && data.ownerUid is string && data.ownerUid.size() <= 128
-        && data.status is string && data.status in ['new', 'contacted', 'completed']
-        && (data.hasConsent == true)
-        && data.createdAt is string
-        && (data.timestamp == request.time || data.timestamp == null);
-    }
-
-    function isValidSponsorProfile(data) {
-      return data.sponsorId is string && data.sponsorId.size() > 0 && data.sponsorId.size() <= 50
-        && data.sponsorName is string && data.sponsorName.size() > 0 && data.sponsorName.size() <= 100
-        && data.ownerUid is string && data.ownerUid == request.auth.uid // Strict Identity check
-        && (data.lineId == null || (data.lineId is string && data.lineId.size() <= 50))
-        && data.updatedAt is string;
-    }
-
-    match /leads/{leadId} {
-      // Anyone can submit a lead (prospects on the landing page)
-      allow create: if isValidId(leadId) 
-        && isValidLead(incoming());
-
-      // ONLY the sponsor owner can read and update their leads
-      allow read: if isSignedIn() && existing().ownerUid == request.auth.uid;
-      
-      allow update: if isSignedIn() 
-        && existing().ownerUid == request.auth.uid
-        && isValidLead(incoming())
-        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'timestamp', 'updatedAt']);
-        
-      allow delete: if false; // Never delete leads
+    // Helper to check if user owns the document
+    function isOwner(ownerUid) {
+      return request.auth != null && request.auth.uid == ownerUid;
     }
 
     match /sponsors/{sponsorId} {
-      // Publicly readable for the landing page
-      allow read: if isValidId(sponsorId);
-      
-      // Creating a new sponsor profile
-      allow create: if isSignedIn() 
-        && isValidId(sponsorId)
-        && incoming().sponsorId == sponsorId
-        && isValidSponsorProfile(incoming());
-        
-      // Updating existing sponsor profile
-      allow update: if isSignedIn()
-        && isProfileOwner() // Must be the original owner
-        && isValidSponsorProfile(incoming())
-        && incoming().ownerUid == existing().ownerUid; // Cannot transfer ownership
-        
-      allow delete: if false;
+      allow read: if true; // Anyone can read sponsor profiles to see the landing page
+      // Allow creation/update if admin, or if the user is claiming their own profile
+      allow write: if isAdmin() || isOwner(request.resource.data.ownerUid) || isOwner(resource.data.ownerUid);
+    }
+
+    match /leads/{leadId} {
+      // Admins can read all leads. Sponsors can only read their own leads.
+      allow read: if isAdmin() || (request.auth != null && resource.data.ownerUid == request.auth.uid);
+      // Anyone (even unauthenticated) can submit a new lead.
+      allow create: if true;
+      // Only admins or the sponsor who owns the lead can update it (e.g. changing status)
+      allow update: if isAdmin() || isOwner(resource.data.ownerUid);
+      // Only admins can delete leads
+      allow delete: if isAdmin();
     }
   }
 }

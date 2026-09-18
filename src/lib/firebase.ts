@@ -23,7 +23,7 @@ import { SponsorProfile } from '../types';
 
 const firebaseConfig = {
   apiKey: firebaseConfigData.apiKey,
-  authDomain: "sponsor-atomy.web.app",
+  authDomain: firebaseConfigData.authDomain,
   projectId: firebaseConfigData.projectId,
   storageBucket: firebaseConfigData.storageBucket,
   messagingSenderId: firebaseConfigData.messagingSenderId,
