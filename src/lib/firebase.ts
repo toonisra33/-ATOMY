@@ -210,6 +210,12 @@ export async function saveSponsorProfile(sponsor: SponsorProfile, ownerUid?: str
     if (ownerUid) {
       data.ownerUid = ownerUid;
     }
+    // Remove any undefined properties to prevent Firestore invalid data errors
+    Object.keys(data).forEach((key) => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
+    });
     await setDoc(sponsorRef, data, { merge: true });
     return { success: true };
   } catch (error) {

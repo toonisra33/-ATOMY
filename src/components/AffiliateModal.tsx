@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SponsorProfile } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
-import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2, Upload, Monitor, Smartphone, Download } from 'lucide-react';
+import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2, Upload, Monitor, Smartphone, Download, RotateCcw, AlertCircle } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
 import { registerWithEmail } from '../lib/auth';
 import { detectDeviceType } from '../lib/device';
+import { compressImage, uploadBanner, getCustomBanner, clearCustomBanner } from '../lib/imageUtils';
 
 interface AffiliateModalProps {
   isOpen: boolean;
@@ -32,6 +33,9 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [bannerPreviewMode, setBannerPreviewMode] = useState<'desktop' | 'mobile'>(detectDeviceType);
   const [bannerKey, setBannerKey] = useState<number>(Date.now());
   const [isUploadingBanner, setIsUploadingBanner] = useState<boolean>(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  const [avatarMessage, setAvatarMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,31 +47,20 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
     setIsUploadingBanner(true);
+    setBannerMessage(null);
     try {
-      const reader = new FileReader();
-      reader.onload = async (uploadEvent) => {
-        const base64 = uploadEvent.target?.result as string;
-        const res = await fetch('/api/admin/upload-banner', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, bannerType: type })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setBannerKey(Date.now());
-          alert(type === 'mobile' ? 'อัปโหลดภาพแบนเนอร์ Mobile สำเร็จเรียบร้อย!' : 'อัปโหลดภาพแบนเนอร์ Desktop สำเร็จเรียบร้อย!');
-        } else {
-          alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + (data.error || 'Unknown error'));
-        }
-        setIsUploadingBanner(false);
-      };
-      reader.readAsDataURL(file);
+      const result = await uploadBanner(file, type);
+      setBannerKey(Date.now());
+      setBannerMessage({ type: 'success', text: result.message });
+      setTimeout(() => setBannerMessage(null), 4000);
     } catch (err: any) {
-      console.error(err);
-      alert('เกิดข้อผิดพลาดในการอ่านไฟล์: ' + err.message);
+      console.error('Banner upload failed:', err);
+      setBannerMessage({ type: 'error', text: err.message || 'เกิดข้อผิดพลาดในการอัปโหลดภาพแบนเนอร์' });
+    } finally {
       setIsUploadingBanner(false);
     }
   };
@@ -105,52 +98,28 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
     }
   }, [isOpen, currentSponsor, ownerUid]);
 
-  const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 400;
-          const MAX_HEIGHT = 400;
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert('ขนาดไฟล์ใหญ่เกิน 5MB กรุณาเลือกรูปอื่น');
-      return;
-    }
+
+    setIsUploadingAvatar(true);
+    setAvatarMessage(null);
     try {
-      const compressedBase64 = await compressImage(file);
-      setFormData({ ...formData, avatarUrl: compressedBase64 });
-    } catch (err) {
-      console.warn('Image compression failed:', err);
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 500,
+        maxHeight: 500,
+        quality: 0.82,
+        mimeType: 'image/jpeg',
+      });
+      setFormData((prev) => ({ ...prev, avatarUrl: compressedBase64 }));
+      setAvatarMessage({ type: 'success', text: 'อัปโหลดและปรับขนาดรูปโปรไฟล์สำเร็จเรียบร้อย!' });
+      setTimeout(() => setAvatarMessage(null), 3500);
+    } catch (err: any) {
+      console.error('Avatar processing failed:', err);
+      setAvatarMessage({ type: 'error', text: err.message || 'เกิดข้อผิดพลาดในการประมวลผลรูปภาพ' });
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -405,17 +374,23 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div className="relative shrink-0">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-200 border-2 border-dashed border-slate-300 overflow-hidden flex items-center justify-center relative group">
-                    {formData.avatarUrl ? (
+                    {isUploadingAvatar ? (
+                      <div className="flex flex-col items-center justify-center gap-1 text-blue-600">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <span className="text-[9px] font-semibold">กำลังย่อรูป...</span>
+                      </div>
+                    ) : formData.avatarUrl ? (
                       <img src={formData.avatarUrl} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="w-8 h-8 text-slate-400" />
                     )}
                   </div>
-                  {formData.avatarUrl && (
+                  {formData.avatarUrl && !isUploadingAvatar && (
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, avatarUrl: undefined })}
-                      className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 transition-colors shadow-sm"
+                      onClick={() => setFormData({ ...formData, avatarUrl: '' })}
+                      className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 transition-colors shadow-sm cursor-pointer"
+                      title="ลบรูปโปรไฟล์"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -428,17 +403,43 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                     accept="image/*"
                     ref={fileInputRef}
                     onChange={handleImageUpload}
+                    disabled={isUploadingAvatar}
                     className="hidden"
                   />
                   <button
                     type="button"
+                    disabled={isUploadingAvatar}
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
                   >
-                    <Upload className="w-3.5 h-3.5" />
-                    อัพโหลดรูปจากเครื่อง
+                    {isUploadingAvatar ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>กำลังประมวลผลรูปภาพ...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>อัพโหลดรูปจากเครื่อง</span>
+                      </>
+                    )}
                   </button>
-                  <p className="text-[10px] text-slate-500">รองรับ JPG, PNG, WebP (บีบอัดให้อัตโนมัติ)</p>
+                  <p className="text-[10px] text-slate-500">รองรับ JPG, PNG, WebP (บีบอัดให้อัตโนมัติ รองรับภาพถ่ายทุกขนาดจากมือถือ)</p>
+
+                  {avatarMessage && (
+                    <div className={`text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 ${
+                      avatarMessage.type === 'success' 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {avatarMessage.type === 'success' ? (
+                        <Check className="w-3.5 h-3.5 shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      )}
+                      <span>{avatarMessage.text}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -494,13 +495,34 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 </div>
               </div>
 
+              {bannerMessage && (
+                <div className={`text-xs px-3 py-2 rounded-xl flex items-center gap-2 ${
+                  bannerMessage.type === 'success' 
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/80' 
+                    : 'bg-red-950/80 text-red-300 border border-red-700/80'
+                }`}>
+                  {bannerMessage.type === 'success' ? (
+                    <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                  )}
+                  <span>{bannerMessage.text}</span>
+                </div>
+              )}
+
               <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950 shadow-md">
                 <div className={`relative ${bannerPreviewMode === 'desktop' ? 'aspect-video sm:aspect-[1200/630] max-h-[180px] sm:max-h-[220px]' : 'aspect-[4/3] max-h-[220px] sm:max-h-[260px]'} w-full bg-slate-900 overflow-hidden`}>
                   <img
                     key={`${bannerPreviewMode}-${bannerKey}`}
-                    src={`${bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}?v=${bannerKey}`}
+                    src={getCustomBanner(bannerPreviewMode) || `${bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}?v=${bannerKey}`}
                     alt="Atomy Preview Banner"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.src.includes('/og-image.jpg')) {
+                        img.src = `/og-image.jpg?v=${Date.now()}`;
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3">
                     <div className="flex items-center gap-2.5">
@@ -517,6 +539,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                         </div>
                         <div className="text-[9px] text-slate-300">
                           {bannerPreviewMode === 'desktop' ? 'DESKTOP 1200x630' : 'MOBILE SAFE-ZONE'}
+                          {getCustomBanner(bannerPreviewMode) && ' • (ภาพที่คุณอัปโหลด)'}
                         </div>
                       </div>
                     </div>
@@ -537,7 +560,11 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                   <div className="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer">
-                        <Upload className="w-3.5 h-3.5" />
+                        {isUploadingBanner ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5" />
+                        )}
                         <span>{isUploadingBanner ? 'กำลังอัปโหลด...' : `อัปโหลดเปลี่ยนรูป (${bannerPreviewMode === 'mobile' ? 'Mobile' : 'Desktop'})`}</span>
                         <input
                           type="file"
@@ -549,13 +576,29 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                       </label>
 
                       <a
-                        href={bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}
+                        href={getCustomBanner(bannerPreviewMode) || (bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg')}
                         download={bannerPreviewMode === 'mobile' ? 'atomy-banner-mobile.jpg' : 'atomy-banner-desktop.jpg'}
                         className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors"
                       >
                         <Download className="w-3.5 h-3.5 text-sky-400" />
                         <span>ดาวน์โหลดรูป</span>
                       </a>
+
+                      {getCustomBanner(bannerPreviewMode) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            clearCustomBanner(bannerPreviewMode);
+                            setBannerKey(Date.now());
+                            setBannerMessage({ type: 'success', text: 'คืนค่ารูปแบนเนอร์เป็นภาพมาตรฐานแล้ว' });
+                            setTimeout(() => setBannerMessage(null), 3000);
+                          }}
+                          className="px-2 py-1.5 text-[11px] text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 rounded-lg border border-amber-800/60 flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>รีเซ็ตเป็นรูปมาตรฐาน</span>
+                        </button>
+                      )}
                     </div>
 
                     <span className="text-[10px] text-slate-400">

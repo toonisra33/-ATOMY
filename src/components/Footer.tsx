@@ -1,6 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { ShieldCheck, Share2, ExternalLink, Heart } from 'lucide-react';
+import { ShieldCheck, Share2 } from 'lucide-react';
 
 interface FooterProps {
   sponsor: SponsorProfile;
@@ -11,17 +11,17 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
   return (
     <footer className="bg-slate-900 text-slate-400 py-10 sm:py-14 pb-28 sm:pb-24 md:pb-14 text-sm border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           
           {/* Brand Info */}
-          <div className="sm:col-span-2 md:col-span-5">
+          <div className="md:col-span-7">
             <div className="flex items-center gap-2.5 text-white font-bold text-base sm:text-lg leading-tight break-words mb-3">
               <span className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-black shrink-0">
                 A
               </span>
               <span className="tracking-tight">ATOMY SATELLITE NETWORK</span>
             </div>
-            <p className="text-slate-400 leading-relaxed text-xs sm:text-sm text-pretty mt-2">
+            <p className="text-slate-400 leading-relaxed text-xs sm:text-sm text-pretty mt-2 max-w-xl">
               ระบบเว็บพ่วงและกรวยสปอนเซอร์ผู้มุ่งหวัง (Affiliate & Satellite Funnel) สำหรับส่งต่อทราฟฟิกและผู้สนใจเข้าสู่ธุรกิจ อะโทมี่ (Atomy) ผ่านสื่อวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official
             </p>
             {onOpenAffiliateModal && (
@@ -38,58 +38,17 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
           </div>
 
           {/* Sponsor Credentials */}
-          <div className="md:col-span-3">
-            <h4 className="text-white font-semibold mb-3 text-sm sm:text-base leading-tight">
-              ข้อมูลสปอนเซอร์ผู้ดูแลหน้านี้
+          <div className="md:col-span-5 bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-slate-800">
+            <h4 className="text-white font-semibold mb-3 text-sm sm:text-base leading-tight flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>ข้อมูลสปอนเซอร์ผู้ดูแลหน้านี้</span>
             </h4>
-            <div className="space-y-2 text-slate-300 text-xs sm:text-sm break-words">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-300 text-xs sm:text-sm break-words">
               <p><strong className="text-white">ชื่อ:</strong> {sponsor.sponsorName}</p>
               <p><strong className="text-white">ตำแหน่ง:</strong> {sponsor.sponsorPosition}</p>
               <p><strong className="text-white">ทีม:</strong> {sponsor.teamName}</p>
               <p><strong className="text-white">LINE ID:</strong> {sponsor.lineId}</p>
             </div>
-          </div>
-
-          {/* Official Resources */}
-          <div className="md:col-span-4">
-            <h4 className="text-white font-semibold mb-3 text-sm sm:text-base leading-tight">
-              ลิงก์ภายนอกสู่ระบบหลัก Atomy
-            </h4>
-            <ul className="space-y-2 text-xs sm:text-sm break-words">
-              <li>
-                <a
-                  href="https://www.atomy.com/th/Home"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-400 flex items-center gap-2 transition-colors py-0.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>เว็บไซต์หลัก Atomy Thailand</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://ch.atomy.com/th"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-400 flex items-center gap-2 transition-colors py-0.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>Channel Atomy (คลังความรู้ & วิดีโอ)</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.atomy.com/th/Home/Product/MallMain"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-400 flex items-center gap-2 transition-colors py-0.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>Atomy Shopping Mall</span>
-                </a>
-              </li>
-            </ul>
           </div>
 
         </div>

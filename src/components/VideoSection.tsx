@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SponsorProfile, VideoChapter, VideoPreset } from '../types';
 import { VIDEO_PRESETS, VIDEO_CHAPTERS } from '../data/atomyData';
-import { Play, Pause, RotateCcw, CheckCircle, Clock, Sparkles, MessageCircle, ChevronRight, ExternalLink, BookmarkCheck, Trophy } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle, Clock, Sparkles, MessageCircle, ChevronRight, ExternalLink, BookmarkCheck, Trophy, Volume2, VolumeX } from 'lucide-react';
 
 interface VideoSectionProps {
   sponsor: SponsorProfile;
@@ -11,13 +11,93 @@ interface VideoSectionProps {
 export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineModal }) => {
   const [selectedVideo, setSelectedVideo] = useState<VideoPreset>(VIDEO_PRESETS[0]);
   const [activeChapter, setActiveChapter] = useState<VideoChapter>(VIDEO_CHAPTERS[0]);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  // Video autoplays with sound immediately upon page arrival
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
   const [secondsElapsed, setSecondsElapsed] = useState<number>(0);
   const [videoTimestamp, setVideoTimestamp] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const timerRef = useRef<number | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const TOTAL_DURATION_SECONDS = 15 * 60; // 15 minutes = 900 seconds
+
+  // Helper to send commands to the YouTube iframe via postMessage
+  const postToPlayer = (command: string, args: any[] = []) => {
+    try {
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: command, args }),
+          '*'
+        );
+      }
+    } catch (e) {
+      console.warn('Could not communicate with video player', e);
+    }
+  };
+
+  const handleUnmuteOnly = () => {
+    postToPlayer('unMute');
+    postToPlayer('setVolume', [100]);
+    setIsMuted(false);
+  };
+
+  const handleToggleMute = () => {
+    if (isMuted) {
+      handleUnmuteOnly();
+    } else {
+      postToPlayer('mute');
+      setIsMuted(true);
+    }
+  };
+
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      postToPlayer('pauseVideo');
+      setIsPlaying(false);
+    } else {
+      postToPlayer('playVideo');
+      handleUnmuteOnly();
+      setIsPlaying(true);
+    }
+  };
+
+  // Ensure audio plays as soon as user enters and touches/interacts with the page
+  useEffect(() => {
+    const ensureAudioPlaying = () => {
+      handleUnmuteOnly();
+      postToPlayer('playVideo');
+    };
+
+    // Attempt immediately
+    const t1 = setTimeout(ensureAudioPlaying, 500);
+    const t2 = setTimeout(ensureAudioPlaying, 1500);
+
+    // Also trigger on first user gesture anywhere on page to satisfy mobile browser autoplay audio policy
+    const userGestureEvents = ['click', 'touchstart', 'pointerdown', 'keydown', 'scroll'];
+    const handleFirstGesture = () => {
+      ensureAudioPlaying();
+      userGestureEvents.forEach(evt => window.removeEventListener(evt, handleFirstGesture));
+    };
+
+    userGestureEvents.forEach(evt => window.addEventListener(evt, handleFirstGesture, { passive: true, once: true }));
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      userGestureEvents.forEach(evt => window.removeEventListener(evt, handleFirstGesture));
+    };
+  }, []);
+
+  // Listen for external trigger to unmute (e.g. from Hero "Watch Video" CTA)
+  useEffect(() => {
+    const handleTriggerUnmute = () => {
+      handleUnmuteOnly();
+      setIsPlaying(true);
+    };
+    window.addEventListener('atomy-unmute-video', handleTriggerUnmute);
+    return () => window.removeEventListener('atomy-unmute-video', handleTriggerUnmute);
+  }, []);
 
   // Handle Timer ticking
   useEffect(() => {
@@ -67,19 +147,24 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
     setVideoTimestamp(chapter.timeSeconds);
     setSecondsElapsed(chapter.timeSeconds);
     setIsPlaying(true);
+    postToPlayer('seekTo', [chapter.timeSeconds, true]);
+    postToPlayer('playVideo');
   };
 
   const handleFastForwardComplete = () => {
     setSecondsElapsed(TOTAL_DURATION_SECONDS);
     setIsCompleted(true);
     setIsPlaying(false);
+    postToPlayer('pauseVideo');
   };
 
   const handleResetTimer = () => {
     setSecondsElapsed(0);
     setVideoTimestamp(0);
     setIsCompleted(false);
-    setIsPlaying(false);
+    setIsPlaying(true);
+    postToPlayer('seekTo', [0, true]);
+    postToPlayer('playVideo');
   };
 
   return (
@@ -142,22 +227,38 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
             {/* The Video Container with 16:9 ratio */}
             <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-2xl border border-slate-700/80 group">
               <iframe
-                key={`${selectedVideo.youtubeId}-${videoTimestamp}`}
+                ref={iframeRef}
+                key={selectedVideo.youtubeId}
                 className="w-full h-full"
-                src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=${isPlaying ? 1 : 0}&start=${videoTimestamp}&rel=0`}
+                src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&playsinline=1&enablejsapi=1&rel=0&start=${videoTimestamp}`}
                 title={selectedVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+
+              {/* Floating Unmute Banner if currently muted by browser policy */}
+              {isMuted && (
+                <button
+                  type="button"
+                  onClick={handleUnmuteOnly}
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 bg-blue-600/90 hover:bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xl backdrop-blur-md transition-all animate-pulse cursor-pointer border border-blue-400/50"
+                  title="แตะเพื่อเปิดเสียง"
+                >
+                  <Volume2 className="w-4 h-4 text-sky-200 shrink-0" />
+                  <span>แตะเพื่อเปิดเสียง 🔊</span>
+                </button>
+              )}
             </div>
 
             {/* 15-Minute Live Interactive Tracker Bar */}
             <div className="bg-slate-800/90 backdrop-blur-md rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-700 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    {/* Play/Pause Button */}
                     <button
-                      onClick={() => setIsPlaying(!isPlaying)}
+                      type="button"
+                      onClick={handleTogglePlay}
                       className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer shrink-0 ${
                         isPlaying
                           ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
@@ -168,12 +269,36 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                       {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 fill-white" />}
                     </button>
 
+                    {/* Mute/Unmute Button */}
+                    <button
+                      type="button"
+                      onClick={handleToggleMute}
+                      className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-bold transition-all shadow-md cursor-pointer shrink-0 border ${
+                        isMuted
+                          ? 'bg-slate-700/90 hover:bg-slate-600 text-amber-300 border-amber-500/40'
+                          : 'bg-slate-700/80 hover:bg-slate-600 text-sky-300 border-slate-600'
+                      }`}
+                      title={isMuted ? 'เปิดเสียงบรรยาย (Unmute)' : 'ปิดเสียง (Mute)'}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" />
+                      )}
+                    </button>
+
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <span className="font-mono text-base sm:text-lg font-bold text-sky-400">
                           {formatTime(secondsElapsed)}
                         </span>
                         <span className="text-slate-400 text-xs font-mono">/ 15:00 น.</span>
+                        {isPlaying && (
+                          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                            เล่นอัตโนมัติ
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-300 flex items-center gap-1.5 break-words">
                         <BookmarkCheck className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -184,6 +309,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
 
                   {/* Reset button next to time on mobile */}
                   <button
+                    type="button"
                     onClick={handleResetTimer}
                     className="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors text-xs flex items-center gap-1 cursor-pointer sm:hidden shrink-0"
                     title="เริ่มนับเวลาใหม่"

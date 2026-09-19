@@ -24,10 +24,11 @@ import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
 import { loadSponsorProfile } from "./lib/firebase";
 import { watchAuthSession, logout } from "./lib/auth";
-import { Target, Link as LinkIcon, QrCode, Copy, Check, Share2, Monitor, Smartphone, Download, Upload, Image as ImageIcon, RefreshCw, SmartphoneNfc } from "lucide-react";
+import { Target, Link as LinkIcon, QrCode, Copy, Check, Share2, Monitor, Smartphone, Download, Upload, Image as ImageIcon, RefreshCw, SmartphoneNfc, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
 import { AuthSession } from "./types";
 import { PrivacyPolicyPage } from "./components/PrivacyPolicyPage";
 import { detectDeviceType } from "./lib/device";
+import { uploadBanner, getCustomBanner, clearCustomBanner } from "./lib/imageUtils";
 
 export default function App() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -62,34 +63,33 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>(detectDeviceType);
   const [bannerKey, setBannerKey] = useState(Date.now());
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Synchronize banner across components
+  useEffect(() => {
+    const handleBannerSync = () => {
+      setBannerKey(Date.now());
+    };
+    window.addEventListener('atomy-banner-updated', handleBannerSync);
+    return () => window.removeEventListener('atomy-banner-updated', handleBannerSync);
+  }, []);
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
     setIsUploadingBanner(true);
+    setBannerMessage(null);
     try {
-      const reader = new FileReader();
-      reader.onload = async (uploadEvent) => {
-        const base64 = uploadEvent.target?.result as string;
-        const res = await fetch('/api/admin/upload-banner', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, bannerType: type })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setBannerKey(Date.now());
-          alert(type === 'mobile' ? 'อัปโหลดภาพแบนเนอร์ Mobile สำเร็จเรียบร้อย!' : 'อัปโหลดภาพแบนเนอร์ Desktop สำเร็จเรียบร้อย!');
-        } else {
-          alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + (data.error || 'Unknown error'));
-        }
-        setIsUploadingBanner(false);
-      };
-      reader.readAsDataURL(file);
+      const result = await uploadBanner(file, type);
+      setBannerKey(Date.now());
+      setBannerMessage({ type: 'success', text: result.message });
+      setTimeout(() => setBannerMessage(null), 4000);
     } catch (err: any) {
-      console.error(err);
-      alert('เกิดข้อผิดพลาดในการอ่านไฟล์: ' + err.message);
+      console.error('Banner upload failed:', err);
+      setBannerMessage({ type: 'error', text: err.message || 'เกิดข้อผิดพลาดในการอัปโหลดภาพแบนเนอร์' });
+    } finally {
       setIsUploadingBanner(false);
     }
   };
@@ -228,6 +228,7 @@ export default function App() {
     const el = document.getElementById("video-15min");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
+      window.dispatchEvent(new CustomEvent('atomy-unmute-video'));
     }
   };
 
@@ -281,7 +282,10 @@ export default function App() {
         <BusinessHighlights />
 
         {/* Traffic Bridge to Official Atomy Web & 3-Step Registration */}
-        <TrafficBridgeSection sponsor={sponsor} />
+        <TrafficBridgeSection
+          sponsor={sponsor}
+          onOpenLineModal={scrollToLineSection}
+        />
 
         {/* FAQs */}
         <FaqSection sponsor={sponsor} />
@@ -396,18 +400,40 @@ export default function App() {
                 </div>
               </div>
 
+              {bannerMessage && (
+                <div className={`text-xs px-3 py-2 rounded-xl flex items-center gap-2 mb-2 ${
+                  bannerMessage.type === 'success' 
+                    ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/80' 
+                    : 'bg-red-950/80 text-red-300 border border-red-700/80'
+                }`}>
+                  {bannerMessage.type === 'success' ? (
+                    <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                  )}
+                  <span>{bannerMessage.text}</span>
+                </div>
+              )}
+
               {/* Preview Box */}
               <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950/90 flex flex-col md:flex-row items-center gap-4 p-3.5">
                 <div className={`w-full ${previewMode === 'desktop' ? 'md:w-56 aspect-video' : 'md:w-44 aspect-[4/3]'} rounded-lg overflow-hidden shrink-0 border border-slate-700/60 relative bg-slate-900 shadow-md`}>
                   <img
                     key={`${previewMode}-${bannerKey}`}
-                    src={previewMode === 'mobile' ? `/og-image-mobile.jpg?v=${bannerKey}` : `/og-image.jpg?v=${bannerKey}`}
+                    src={getCustomBanner(previewMode) || (previewMode === 'mobile' ? `/og-image-mobile.jpg?v=${bannerKey}` : `/og-image.jpg?v=${bannerKey}`)}
                     alt="Atomy Social Share Banner"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.src.includes('/og-image.jpg')) {
+                        img.src = `/og-image.jpg?v=${Date.now()}`;
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2">
                     <span className="text-[9px] font-bold text-sky-300">
                       {previewMode === 'desktop' ? 'DESKTOP 1200x630' : 'MOBILE SAFE-ZONE'}
+                      {getCustomBanner(previewMode) && ' • (ภาพของคุณ)'}
                     </span>
                   </div>
                 </div>
@@ -426,7 +452,11 @@ export default function App() {
                   {/* Actions for All Users & Admin */}
                   <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
                     <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer">
-                      <Upload className="w-3.5 h-3.5" />
+                      {isUploadingBanner ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5" />
+                      )}
                       <span>{isUploadingBanner ? 'กำลังอัปโหลด...' : `อัปโหลดเปลี่ยนรูป (${previewMode === 'mobile' ? 'Mobile' : 'Desktop'})`}</span>
                       <input
                         type="file"
@@ -438,13 +468,29 @@ export default function App() {
                     </label>
 
                     <a
-                      href={previewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}
+                      href={getCustomBanner(previewMode) || (previewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg')}
                       download={previewMode === 'mobile' ? 'atomy-banner-mobile.jpg' : 'atomy-banner-desktop.jpg'}
                       className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors"
                     >
                       <Download className="w-3.5 h-3.5 text-sky-400" />
                       <span>ดาวน์โหลดรูป {previewMode === 'mobile' ? 'Mobile' : 'Desktop'}</span>
                     </a>
+
+                    {getCustomBanner(previewMode) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearCustomBanner(previewMode);
+                          setBannerKey(Date.now());
+                          setBannerMessage({ type: 'success', text: 'คืนค่ารูปแบนเนอร์เป็นภาพมาตรฐานแล้ว' });
+                          setTimeout(() => setBannerMessage(null), 3000);
+                        }}
+                        className="px-2 py-1.5 text-[11px] text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 rounded-lg border border-amber-800/60 flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>รีเซ็ตเป็นรูปมาตรฐาน</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

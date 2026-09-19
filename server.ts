@@ -73,6 +73,10 @@ async function startServer() {
       const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
       
+      if (buffer.length < 1000) {
+        return res.status(400).json({ error: 'ไฟล์รูปภาพไม่สมบูรณ์หรือมีขนาดเล็กเกินไป' });
+      }
+
       const fileName = bannerType === 'mobile' ? 'og-image-mobile.jpg' : 'og-image.jpg';
       const publicPath = path.join(process.cwd(), 'public', fileName);
       fs.writeFileSync(publicPath, buffer);
