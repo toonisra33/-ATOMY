@@ -86,12 +86,17 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
 
   // Pre-filled LINE follow up message
   const followUpLineMessage = `สวัสดีครับ/ค่ะคุณ ${prospectName} ตามที่คุยสายกันเมื่อสักครู่นะครับ 🙏
-เพื่อรับสิทธิ์:
-1. สมัครเปิดรหัสสมาชิก Atomy ฟรี 100% (ไม่มีค่าแรกเข้า)
-2. จองสิทธิ์ตำแหน่งต้นสายในผังทีมงาน
-3. รับเว็บไซต์ขยายงานและห้องเรียนออนไลน์ฟรีตลอดชีพ
+เพื่อรับสิทธิ์เปิดรหัสสมาชิก Atomy ฟรี 100% และล็อคตำแหน่งสายงานที่ดีที่สุด:
 
-👉 รบกวนพิมพ์เลข "88" ส่งเข้ามาในช่องแชทนี้ได้เลยครับ แล้วระบบจะส่งลิงก์เปิดรหัสสมาชิกทางการให้ทันทีครับ ✨`;
+👉 รบกวนพิมพ์เลข "88" ส่งเข้ามาในช่องแชทนี้ได้เลยครับ ✨
+ระบบตอบกลับอัตโนมัติจะแจ้งให้ลงข้อมูลทิ้งไว้:
+1️⃣ ชื่อ-นามสกุล
+2️⃣ เบอร์โทรศัพท์
+3️⃣ อีเมล
+4️⃣ ภาพถ่ายบัตรประชาชน หน้า/หลัง 📸
+
+🔒 ทางผม (สปอนเซอร์) จะทำหน้าที่คีย์สมัครสมาชิกและเลือกวางตำแหน่งสายงาน (2 สายงาน) ที่เติบโตเร็วที่สุดให้พี่เองครับ
+เมื่อลงข้อมูลเรียบร้อยแล้ว ก็นั่งรอการติดต่อกลับพร้อมส่งรหัสสมาชิกและห้องเรียนรู้งานจากผมได้เลยครับ 🚀`;
 
   const fullSpokenScript = `สวัสดีครับคุณ ${prospectName} ... ผม ${sponsorName} ที่ปรึกษาจากระบบ Atomy นะครับ ที่คุณ ${prospectName} ได้ฝากข้อมูลสร้างรายได้เสริมไว้ในหน้าเว็บครับ สะดวกคุยสั้นๆ สัก 1-2 นาทีไหมครับ?
 
@@ -101,12 +106,14 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
 
 ที่ผมรีบติดต่อคุณ ${prospectName} วันนี้ เพราะทีมงานกำลังรันผังองค์กรสายงานรอบใหม่ และมี 3 สิทธิประโยชน์ฟรีพิเศษ ที่ไม่อยากให้เสียโอกาสครับ:
 1. สมัครฟรี 100% ไม่มีค่าแรกเข้า ไม่มีต่ออายุรายปี ไม่มีความเสี่ยงแม้แต่บาทเดียว
-2. สิทธิ์จองตำแหน่งต้นสายทีมงาน ระบบเราเป็น 2 สายงาน ทีมงานจะช่วยส่งต่อคนและคะแนน PV ดันขึ้นมาใต้ผังคุณ ${prospectName} ทันทีที่เปิดรหัส
+2. สิทธิ์จองตำแหน่งต้นสายทีมงาน สปอนเซอร์จะเป็นคนเลือกจัดวางสายงานให้พี่เอง เพื่อให้ได้รับคะแนน PV ดันขึ้นมาเต็มที่
 3. รับฟรี! ลิงก์ระบบเว็บขยายงานอัตโนมัติ มีคลิปทำงานแทน 24 ชม. พร้อมห้องเทรนนิ่งฟรีตลอดชีพครับ
 
-ขั้นตอนที่ง่ายและไวที่สุดตอนนี้ เพื่อไม่ให้เสียสิทธิ์ต้นสาย:
-ให้คุณ ${prospectName} เปิดแอป LINE ของผมนะครับ แล้ว "พิมพ์เลข 88" ส่งเข้ามาในแชทได้เลยครับ
-พอกด 88 ปุ๊บ ระบบจะส่งลิงก์กรอกเปิดรหัสสมาชิกทางการของ Atomy ให้ทันที แล้วผมจะรีบนำรหัสไปล็อคตำแหน่งสายงานให้เลยครับ สะดวกพิมพ์ 88 ใน LINE ตอนนี้เลยนะครับ`;
+ขั้นตอนที่ง่ายและไวที่สุดตอนนี้ เพื่อให้ผมคีย์สมัครและเลือกสายงานที่ดีที่สุดให้พี่ทันที:
+ให้คุณ ${prospectName} เปิดแอป LINE ของผมนะครับ แล้ว "พิมพ์เลข 88" ส่งเข้ามาในช่องแชทได้เลยครับ
+พอกด 88 ปุ๊บ ระบบจะแจ้งให้ส่งข้อมูล 4 อย่างทิ้งไว้ คือ ชื่อ-นามสกุล เบอร์โทร อีเมล และภาพถ่ายบัตรประชาชนหน้า-หลัง
+ที่ให้ส่งข้อมูลทิ้งไว้เพื่อให้ผม (สปอนเซอร์) เป็นคนคีย์สมัครสมาชิกให้โดยตรง เพราะผมจะทำหน้าที่วิเคราะห์และเลือกวางตำแหน่งสายงานที่เติบโตเร็วที่สุดให้พี่เองครับ
+ส่งข้อมูลครบแล้ว พี่ก็นั่งรอการติดต่อกลับจากผมได้เลยครับ! เมื่อผมลงทะเบียนเสร็จเรียบร้อยแล้ว จะรีบโทรกลับพร้อมส่งรหัสสมาชิกและดึงเข้ากลุ่มเรียนรู้งานทันทีครับ สะดวกเปิด LINE พิมพ์ 88 ส่งมาตอนนี้เลยนะครับ เดี๋ยวผมรอรับข้อมูลครับ!`;
 
   return (
     <div className="space-y-4">
@@ -127,7 +134,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                คุยกระชับ นำเสนอคุณค่า 3 สิทธิ์ฟรี และปิดให้ผู้มุ่งหวังพิมพ์ "88" ใน LINE เพื่อรับรหัสทันที
+                คุยกระชับ นำเสนอ 3 สิทธิ์ฟรี และปิดให้ผู้มุ่งหวังพิมพ์ "88" ใน LINE เพื่อส่งข้อมูลทิ้งไว้ให้สปอนเซอร์เป็นคนคีย์สมัครและเลือกสายงานที่ดีที่สุดให้
               </p>
             </div>
           </div>
@@ -356,7 +363,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-emerald-400 font-bold shrink-0">2.</span>
-                <span><strong className="text-white">สิทธิ์จองตำแหน่งต้นสายทีมงาน:</strong> ผัง 2 สายงาน ทีมงานจะช่วยส่งต่อสมาชิกและคะแนน PV ดันขึ้นมาใต้รหัสคุณ {prospectName} ทันที</span>
+                <span><strong className="text-white">สิทธิ์จองตำแหน่งต้นสายทีมงาน:</strong> ผัง 2 สายงาน สปอนเซอร์จะเป็นผู้ดูแลคีย์สมัครและเลือกวางตำแหน่งสายงานที่ดีที่สุดให้คุณ {prospectName} เพื่อรับคะแนน PV ดันขึ้นจากทีมงานเต็มที่</span>
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-emerald-400 font-bold shrink-0">3.</span>
@@ -367,15 +374,15 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
         </div>
 
         {/* Step 4 */}
-        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-950 to-emerald-950/60 border-2 border-[#06C755]/80 relative shadow-lg shadow-emerald-500/10">
-          <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-950/60 via-slate-950 to-emerald-950/60 border-2 border-[#06C755]/80 relative shadow-lg shadow-emerald-500/10 space-y-3">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-[#06C755] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
                 4
               </span>
               <h5 className="text-xs sm:text-sm font-extrabold text-[#06C755] flex items-center gap-1.5">
                 <MessageCircle className="w-4 h-4 fill-[#06C755]" />
-                <span>ขั้นตอนปิดการสมัคร: สั่งพิมพ์ "88" ใน LINE เท่านั้น!</span>
+                <span>ขั้นตอนปิดการสมัคร: สั่งพิมพ์ "88" ใน LINE &rarr; ส่งข้อมูล &rarr; รอสปอนเซอร์วางสายงานให้</span>
               </h5>
             </div>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">
@@ -385,12 +392,59 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
 
           <div className="bg-slate-900/90 p-3.5 rounded-xl border border-emerald-800/60 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">
             <p>
-              "ขั้นตอนที่ง่ายและไวที่สุดตอนนี้ เพื่อไม่ให้เสียสิทธิ์ต้นสาย:
+              "ขั้นตอนที่ง่ายและไวที่สุดตอนนี้ เพื่อให้ผมคีย์สมัครและเลือกสายงานที่ดีที่สุดให้พี่ทันที:
             </p>
-            <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-100 text-xs sm:text-sm font-medium">
-              "ให้คุณ <span className="font-bold text-white underline">{prospectName}</span> เปิดแอป LINE ของผมนะครับ แล้ว <strong className="text-amber-300 text-sm font-extrabold bg-emerald-900/90 px-2 py-0.5 rounded border border-amber-400">พิมพ์เลข '88'</strong> ส่งเข้ามาในช่องแชทได้เลยครับ
-              <br className="my-1" />
-              พอกด 88 ปุ๊บ ระบบออโต้จะส่งลิงก์กรอกเปิดรหัสสมาชิกทางการของ Atomy ให้ทันที แล้วผมจะรีบนำรหัสไปล็อคตำแหน่งสายงานให้เลยครับ สะดวกเปิด LINE แล้วพิมพ์ 88 ส่งมาตอนนี้เลยนะครับ เดี๋ยวผมรอรับข้อมูลเลยครับ!"
+            <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-100 text-xs sm:text-sm font-medium space-y-2">
+              <p>
+                "ให้คุณ <span className="font-bold text-white underline">{prospectName}</span> เปิดแอป LINE ของผมนะครับ แล้ว <strong className="text-amber-300 text-sm font-extrabold bg-emerald-900/90 px-2 py-0.5 rounded border border-amber-400">พิมพ์เลข '88'</strong> ส่งเข้ามาในช่องแชทได้เลยครับ
+              </p>
+              <p className="text-slate-200">
+                พอกด 88 ปุ๊บ ใน LINE จะมีข้อความตอบกลับอัตโนมัติแจ้งให้คุณ <span className="font-bold text-white">{prospectName}</span> ส่งข้อมูล 4 อย่างทิ้งไว้ คือ:
+                <br />
+                <span className="text-amber-300 font-semibold">1. ชื่อ-นามสกุล | 2. เบอร์โทรศัพท์ | 3. อีเมล | 4. ภาพถ่ายบัตรประชาชน หน้า/หลัง</span>
+              </p>
+              <p className="text-emerald-200">
+                💡 <strong className="text-white underline">ที่ให้ส่งข้อมูลทิ้งไว้ใน LINE เพื่อให้ผม (สปอนเซอร์) เป็นคนคีย์สมัครให้โดยตรง</strong> เพราะในผัง 2 สายงานของ Atomy ผมจะทำหน้าที่วิเคราะห์และเลือกวางตำแหน่งสายงานที่ดีและเติบโตเร็วที่สุดให้พี่เองครับ พี่จะได้ไม่ต้องยุ่งยากคีย์เอง และได้เปรียบเรื่องคะแนน PV สะสมทันที!
+              </p>
+              <p className="text-white font-semibold pt-1 border-t border-emerald-700/60">
+                ส่งข้อมูลครบแล้ว พี่ก็นั่งรอการติดต่อกลับจากผมได้เลยครับ! เมื่อผมลงทะเบียนเสร็จสิ้น จะรีบโทรกลับพร้อมส่งรหัสสมาชิกและดึงเข้ากลุ่มเรียนรู้งานทันทีครับ สะดวกเปิด LINE พิมพ์ 88 ตอนนี้เลยนะครับ เดี๋ยวผมรอรับข้อมูลเลยครับ!"
+              </p>
+            </div>
+          </div>
+
+          {/* Visual Mockup of LINE Auto-Reply */}
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-950/90 border border-emerald-900/60 text-xs space-y-2">
+            <div className="flex items-center justify-between text-slate-400 text-[11px] pb-1.5 border-b border-slate-800">
+              <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+                <MessageCircle className="w-3.5 h-3.5 text-[#06C755]" />
+                <span>ตัวอย่างข้อความตอบกลับอัตโนมัติใน LINE เมื่อผู้มุ่งหวังพิมพ์ "88" :</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
+                LINE Auto-Reply
+              </span>
+            </div>
+            
+            <div className="bg-slate-900/90 p-3 rounded-lg border border-slate-800 font-sans text-xs text-slate-200 space-y-1.5">
+              <p className="font-bold text-white">ลงทะเบียนกับอะโทมี่ง่ายๆ ตามนี้ครับ :</p>
+              <div className="pl-1 space-y-1 text-slate-300 font-medium">
+                <p>1️⃣ ชื่อ-นามสกุล</p>
+                <p>2️⃣ เบอร์โทรศัพท์</p>
+                <p>3️⃣ อีเมล</p>
+                <p>4️⃣ ภาพถ่ายบัตรประชาชน หน้า/หลัง 📸</p>
+              </div>
+              <p className="pt-1.5 text-emerald-300 font-medium">
+                กรอกข้อมูลครบแล้ว ก็รอการติดต่อกลับจากผมได้เลยครับ 🚀
+              </p>
+              <p className="text-amber-300 text-[11px]">
+                อย่าลืม!!! ถ่ายภาพบัตร ปปช ให้ชัดเจนตามตัวอย่างด้านล่างครับ
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-[11px] text-blue-300 bg-blue-950/50 p-2 rounded-lg border border-blue-900/50">
+              <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
+              <span>
+                <strong>หน้าที่ของสปอนเซอร์:</strong> นำข้อมูลไปคีย์สมัครในระบบทางการของ Atomy &rarr; เลือกตำแหน่งผังสายงานที่ดีที่สุด &rarr; ติดต่อกลับแจ้งรหัสสมาชิกให้ผู้มุ่งหวัง
+              </span>
             </div>
           </div>
         </div>
@@ -461,7 +515,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
             </button>
             {expandedFaq === 1 && (
               <div className="px-3 pb-3 text-slate-300 text-[11px] sm:text-xs leading-relaxed border-t border-slate-800/60 pt-2 bg-slate-900/90">
-                💬 <strong>ตอบ:</strong> "เข้าใจเลยครับ คนในทีมกว่า 90% ทำงานประจำและเริ่มจากศูนย์เหมือนกัน เพราะที่นี่เราไม่ใช้การตื๊อขายของ แต่เรามีระบบเว็บไซต์และคลิป 15 นาทีทำงานอธิบายแทน 24 ชั่วโมงครับ แค่พิมพ์ 88 รักษาสิทธิ์เปิดรหัสฟรีไว้ก่อน แล้วเข้ามาศึกษาในห้องเรียนออนไลน์ได้เลยครับ ไม่มีข้อผูกมัดใดๆ ครับ"
+                💬 <strong>ตอบ:</strong> "เข้าใจเลยครับ คนในทีมกว่า 90% ทำงานประจำและเริ่มจากศูนย์เหมือนกัน เพราะที่นี่เราไม่ใช้การตื๊อขายของ แต่เรามีระบบเว็บไซต์และคลิป 15 นาทีทำงานอธิบายแทน 24 ชั่วโมงครับ แค่พิมพ์ 88 ใน LINE แล้วลงข้อมูลทิ้งไว้ สปอนเซอร์จะจัดวางสายงานให้ และดึงเข้าห้องเรียนรู้งานออนไลน์ทันที ไม่มีข้อผูกมัดใดๆ ครับ"
               </div>
             )}
           </div>
@@ -478,7 +532,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
             </button>
             {expandedFaq === 2 && (
               <div className="px-3 pb-3 text-slate-300 text-[11px] sm:text-xs leading-relaxed border-t border-slate-800/60 pt-2 bg-slate-900/90">
-                💬 <strong>ตอบ:</strong> "สบายใจได้ 100% เลยครับ เพราะ <strong>0 บาท</strong> จริงๆ ครับ ไม่มีค่าสมัคร ไม่มีค่าธรรมเนียม และไม่มีบังคับสต็อกสินค้าแม้แต่ชิ้นเดียว เป็นสิทธิ์ผู้บริโภคในการซื้อของใช้คุณภาพเกาหลีที่ต้องใช้อยู่แล้ว เพื่อสะสมคะแนนรับเงินคืนตลอดชีพครับ แค่พิมพ์ 88 รับรหัสฟรีได้เลยครับ"
+                💬 <strong>ตอบ:</strong> "สบายใจได้ 100% เลยครับ เพราะ <strong>0 บาท</strong> จริงๆ ครับ ไม่มีค่าสมัคร ไม่มีค่าธรรมเนียม และไม่มีบังคับสต็อกสินค้าแม้แต่ชิ้นเดียว เป็นสิทธิ์ผู้บริโภคในการซื้อของใช้คุณภาพเกาหลีที่ต้องใช้อยู่แล้ว เพื่อสะสมคะแนนรับเงินคืนตลอดชีพครับ แค่พิมพ์ 88 ใน LINE แล้วลงข้อมูลให้สปอนเซอร์คีย์สมัครให้ได้เลยครับ"
               </div>
             )}
           </div>
@@ -495,7 +549,32 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
             </button>
             {expandedFaq === 3 && (
               <div className="px-3 pb-3 text-slate-300 text-[11px] sm:text-xs leading-relaxed border-t border-slate-800/60 pt-2 bg-slate-900/90">
-                💬 <strong>ตอบ:</strong> "ได้เลยครับ ปรึกษาได้เต็มที่เลยครับ แต่เหตุผลที่ผมแนะนำให้พิมพ์ 88 ใน LINE ไว้ก่อนตอนนี้ เพราะการเปิดรหัสไม่มีค่าใช้จ่ายและไม่มีความเสี่ยงใดๆ แต่จะช่วย <strong>ล็อคตำแหน่งต้นสายในผังทีมงาน</strong> ไว้ก่อน หากมีคนใหม่สมัครเข้ามาหลังจากนี้ เขาจะอยู่ใต้ผังของคุณทันทีครับ พิมพ์ 88 ไว้ก่อนเพื่อความได้เปรียบสูงสุดครับ"
+                💬 <strong>ตอบ:</strong> "ได้เลยครับ ปรึกษาได้เต็มที่เลยครับ แต่เหตุผลที่ผมแนะนำให้พิมพ์ 88 แล้วลงข้อมูลใน LINE ไว้ก่อนตอนนี้ เพราะการเปิดรหัสไม่มีค่าใช้จ่ายและไม่มีความเสี่ยงใดๆ แต่จะช่วยให้สปอนเซอร์ <strong>ล็อคตำแหน่งต้นสายในผังทีมงาน</strong> ไว้ก่อน หากมีคนใหม่สมัครเข้ามาหลังจากนี้ เขาจะอยู่ใต้ผังของคุณทันทีครับ พิมพ์ 88 ไว้ก่อนเพื่อความได้เปรียบสูงสุดครับ"
+              </div>
+            )}
+          </div>
+
+          {/* FAQ 4: Why sponsor registers & ID card */}
+          <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/60">
+            <button
+              type="button"
+              onClick={() => setExpandedFaq(expandedFaq === 4 ? null : 4)}
+              className="w-full px-3 py-2 text-left text-slate-200 font-semibold flex items-center justify-between hover:bg-slate-800/60 cursor-pointer"
+            >
+              <span>❓ "ทำไมต้องให้สปอนเซอร์เป็นคนสมัครให้ และทำไมต้องส่งภาพบัตร ปปช.?"</span>
+              {expandedFaq === 4 ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+            {expandedFaq === 4 && (
+              <div className="px-3 pb-3 text-slate-300 text-[11px] sm:text-xs leading-relaxed border-t border-slate-800/60 pt-2 bg-slate-900/90 space-y-1.5">
+                <p>
+                  💬 <strong>ตอบ:</strong> "มี 2 เหตุผลสำคัญที่ทำให้พี่ได้ประโยชน์สูงสุดครับ:"
+                </p>
+                <p>
+                  1. <strong>เรื่องบัตรประชาชน:</strong> เพื่อยืนยันตัวตน (KYC) ตาม พ.ร.บ. ขายตรงและตลาดแบบตรงของ สคบ. เพื่อป้องกันการสวมสิทธิ์ และใช้ผูกบัญชีรับเงินโอนปันผลเข้าบัญชีจริงของพี่ครับ ข้อมูลปลอดภัย 100%
+                </p>
+                <p>
+                  2. <strong>เรื่องให้สปอนเซอร์เป็นคนสมัครให้:</strong> เพราะ Atomy เป็นผัง 2 สายงาน (Binary) การวางตำแหน่งสำคัญมาก สปอนเซอร์ผู้มีประสบการณ์จะช่วยวิเคราะห์และเลือกวางตำแหน่งสายงานที่ดีที่สุดให้พี่ เพื่อให้พี่ได้รับคะแนน PV ดันขึ้นมาจากทีมงานเต็มที่ครับ เมื่อส่งข้อมูลเสร็จแล้ว พี่เพียงแค่นั่งรอการติดต่อกลับพร้อมรับรหัสสมาชิกได้เลยครับ"
+                </p>
               </div>
             )}
           </div>

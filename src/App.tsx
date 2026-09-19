@@ -489,6 +489,7 @@ export default function App() {
         onClose={() => setIsLeadsModalOpen(false)}
         sponsor={sponsor}
         session={session}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
       />
 
       {/* Firebase Hosting Deploy Guide Modal */}

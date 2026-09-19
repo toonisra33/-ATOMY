@@ -32,6 +32,7 @@ interface LeadsInboxModalProps {
   onClose: () => void;
   sponsor: SponsorProfile;
   session: AuthSession | null;
+  onOpenLogin?: () => void;
 }
 
 export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
@@ -39,6 +40,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   onClose,
   sponsor,
   session,
+  onOpenLogin,
 }) => {
   const [leads, setLeads] = useState<LeadSubmission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,8 +59,8 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     try {
       const data = await fetchLeads(session.isAdmin);
       setLeads(data);
-    } catch (err) {
-      console.error('Failed to load leads:', err);
+    } catch (err: any) {
+      console.warn('Notice while loading leads:', err?.message || err);
     } finally {
       setLoading(false);
     }
@@ -139,14 +141,28 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">ต้องลงชื่อเข้าใช้</h3>
             <p className="text-sm text-slate-400 mb-8 max-w-sm">
-              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยอีเมลและรหัสผ่านของคุณที่ปุ่ม "เข้าสู่ระบบ" ด้านบนก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังได้
+              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยอีเมลและรหัสผ่านสำหรับแอดมินหรือพาร์ทเนอร์ก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังได้
             </p>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all cursor-pointer"
-            >
-              ปิดหน้าต่าง
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {onOpenLogin && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenLogin();
+                  }}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>เข้าสู่ระบบทันที</span>
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all cursor-pointer"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
           </div>
         ) : (
           // --- Leads Inbox Content ---
@@ -164,7 +180,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                   </span>
                 </h3>
                 <p className="text-[11px] sm:text-xs text-slate-400">
-                  รายชื่อผู้สนใจจากแบบฟอร์ม พร้อมสคริปต์โทรปิดการสมัคร 2 นาที สั่งพิมพ์ "88" ใน LINE
+                  รายชื่อผู้สนใจจากแบบฟอร์ม พร้อมสคริปต์โทรปิดการสมัคร 2 นาที (พิมพ์ 88 ให้สปอนเซอร์คีย์สมัครและเลือกสายงานให้)
                 </p>
               </div>
             </div>

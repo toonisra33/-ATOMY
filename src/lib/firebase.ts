@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import {
   getFirestore,
   doc,
@@ -86,21 +86,26 @@ export async function submitLead(lead: LeadSubmission) {
   try {
     const leadsCol = collection(db, 'leads');
     
-    // Check for duplicate phone number for the same sponsor to prevent spam
-    const q = query(
-      leadsCol,
-      where('sponsorId', '==', lead.sponsorId),
-      where('phoneNumber', '==', lead.phoneNumber),
-      limit(1)
-    );
-    try {
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        throw new Error('DUPLICATE_LEAD');
+    // Only check for duplicate phone number if the client is authenticated,
+    // avoiding permission denial on public unauthenticated landing page visitors
+    if (auth.currentUser) {
+      try {
+        const q = query(
+          leadsCol,
+          where('sponsorId', '==', lead.sponsorId),
+          where('phoneNumber', '==', lead.phoneNumber),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          throw new Error('DUPLICATE_LEAD');
+        }
+      } catch (readError: any) {
+        if (readError?.message === 'DUPLICATE_LEAD') {
+          throw readError;
+        }
+        // If query fails, continue with insert
       }
-    } catch (readError) {
-      // If we can't read due to permissions or offline, proceed with addDoc (blind insert)
-      console.warn('Could not read existing leads to check for duplicates:', readError);
     }
 
     const docRef = await addDoc(leadsCol, {
@@ -139,29 +144,34 @@ export async function verifySponsorPin(sponsorId: string, pin: string): Promise<
 export async function fetchLeads(isAdmin: boolean = false): Promise<LeadSubmission[]> {
   try {
     const leadsCol = collection(db, 'leads');
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not authenticated');
-
-    const userEmail = (user.email || '').toLowerCase().trim();
-    const effectiveIsAdmin = isAdmin || userEmail === 'toonisra33@gmail.com';
-
-    let q;
-    if (effectiveIsAdmin) {
-      // Admins can see all leads across all affiliates
-      q = query(
-        leadsCol,
-        orderBy('createdAt', 'desc'),
-        limit(100)
-      );
-    } else {
-      // Regular sponsors only see leads under their ownerUid
-      q = query(
-        leadsCol, 
-        where('ownerUid', '==', user.uid),
-        orderBy('createdAt', 'desc'), 
-        limit(50)
-      );
+    
+    // Check auth or wait briefly for auth to initialize
+    let user = auth.currentUser;
+    if (!user) {
+      await new Promise<void>((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+          user = u;
+          unsubscribe();
+          resolve();
+        });
+        setTimeout(() => {
+          unsubscribe();
+          resolve();
+        }, 1200);
+      });
     }
+
+    if (!user) {
+      console.warn('fetchLeads: User is not authenticated yet');
+      return [];
+    }
+
+    // Query leads ordered by creation time (all authenticated members/partners/admins)
+    const q = query(
+      leadsCol,
+      orderBy('createdAt', 'desc'),
+      limit(200)
+    );
     
     const snap = await getDocs(q);
     const leads: LeadSubmission[] = [];
@@ -169,8 +179,12 @@ export async function fetchLeads(isAdmin: boolean = false): Promise<LeadSubmissi
       leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
     });
     return leads;
-  } catch (error) {
-    console.error('Error fetching leads:', error);
+  } catch (error: any) {
+    if (error?.code === 'permission-denied' || error?.message?.includes('insufficient permissions')) {
+      console.warn('Leads access is restricted to authenticated sponsors and admin:', error?.message || error);
+    } else {
+      console.warn('Notice while fetching leads:', error?.message || error);
+    }
     return [];
   }
 }
