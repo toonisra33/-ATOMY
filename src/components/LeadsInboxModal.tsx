@@ -41,11 +41,13 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   const [scopeFilter, setScopeFilter] = useState<'current' | 'all'>('current');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  const isMasterAdmin = session?.isAdmin || sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId;
+
   const loadData = async () => {
     if (!session) return;
     setLoading(true);
     try {
-      const data = await fetchLeads();
+      const data = await fetchLeads(session.isAdmin);
       setLeads(data);
     } catch (err) {
       console.error('Failed to load leads:', err);
@@ -127,7 +129,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">ต้องลงชื่อเข้าใช้</h3>
             <p className="text-sm text-slate-400 mb-8 max-w-sm">
-              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยบัญชี Google ของคุณที่มุมขวาบนของเว็บก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังของคุณได้
+              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยอีเมลและรหัสผ่านของคุณที่ปุ่ม "เข้าสู่ระบบ" ด้านบนก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังได้
             </p>
             <button
               onClick={onClose}
@@ -212,7 +214,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
         </div>
 
         {/* Satellite / Scope Switcher (ONLY FOR MASTER ADMIN) */}
-        {sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (
+        {isMasterAdmin && (
         <div className="mt-3 p-2.5 bg-slate-950/90 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-slate-400">สถานะแอดมิน:</span>

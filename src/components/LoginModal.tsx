@@ -8,7 +8,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('toonisra33@gmail.com');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -24,18 +24,27 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     try {
       if (isRegistering) {
         await registerWithEmail(email, password);
-        setMessage('สร้างบัญชีสำเร็จ! (หากเป็นแอดมิน กรุณารอระบบอัปเดตสิทธิ์)');
-        // Auto close after success?
-        setTimeout(() => { onClose(); }, 2000);
+        setMessage('สร้างบัญชีสำเร็จและเข้าสู่ระบบแล้ว!');
+        setTimeout(() => { onClose(); }, 1200);
       } else {
         await loginWithEmail(email, password);
         onClose();
       }
     } catch (error: any) {
       if (isRegistering) {
-         setMessage(error.message?.includes('email-already') ? 'อีเมลนี้มีในระบบแล้ว' : 'ไม่สามารถสร้างบัญชีได้ รหัสผ่านต้อง 6 ตัวขึ้นไป');
+         if (error.code === 'auth/email-already-in-use') {
+           setMessage('อีเมลนี้ถูกลงทะเบียนไว้แล้ว สามารถกด "เข้าสู่ระบบ" ได้ทันที');
+         } else if (error.code === 'auth/weak-password') {
+           setMessage('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษรขึ้นไป');
+         } else {
+           setMessage(error.message || 'ไม่สามารถสร้างบัญชีได้ กรุณาลองใหม่อีกครั้ง');
+         }
       } else {
-         setMessage('อีเมลหรือรหัสผ่านไม่ถูกต้อง หรือบัญชียังไม่ได้รับสิทธิ์');
+         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+           setMessage('อีเมลหรือรหัสผ่านไม่ถูกต้อง (หากยังไม่มีบัญชี ให้กด "เพิ่มบัญชีใหม่" ด้านล่าง)');
+         } else {
+           setMessage('ไม่สามารถเข้าสู่ระบบได้ กรุณาตรวจสอบอีเมลและรหัสผ่าน');
+         }
       }
     } finally {
       setLoading(false);
@@ -64,8 +73,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center gap-3 mb-6">
           <div className="rounded-2xl bg-blue-600 p-3 text-white"><LockKeyhole className="h-5 w-5" /></div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{isRegistering ? 'สร้างบัญชีใหม่' : 'เข้าสู่ระบบ Partner / Admin'}</h2>
-            <p className="text-xs text-slate-500">ข้อมูล Lead เปิดได้เฉพาะบัญชีที่ได้รับอนุญาต</p>
+            <h2 className="text-xl font-bold text-slate-900">{isRegistering ? 'สร้างบัญชีด้วยอีเมลและรหัสผ่าน' : 'เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน'}</h2>
+            <p className="text-xs text-slate-500">{isRegistering ? 'สร้างบัญชีผู้ใช้งานสำหรับ Admin หรือ Partner' : 'เข้าจัดการระบบ Leads, เว็บพ่วง และการตั้งค่า'}</p>
           </div>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">

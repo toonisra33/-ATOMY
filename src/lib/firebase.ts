@@ -134,18 +134,32 @@ export async function verifySponsorPin(sponsorId: string, pin: string): Promise<
   }
 }
 
-export async function fetchLeads(): Promise<LeadSubmission[]> {
+export async function fetchLeads(isAdmin: boolean = false): Promise<LeadSubmission[]> {
   try {
     const leadsCol = collection(db, 'leads');
     const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
 
-    const q = query(
-      leadsCol, 
-      where('ownerUid', '==', user.uid),
-      orderBy('createdAt', 'desc'), 
-      limit(50)
-    );
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const effectiveIsAdmin = isAdmin || userEmail === 'toonisra33@gmail.com';
+
+    let q;
+    if (effectiveIsAdmin) {
+      // Admins can see all leads across all affiliates
+      q = query(
+        leadsCol,
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      );
+    } else {
+      // Regular sponsors only see leads under their ownerUid
+      q = query(
+        leadsCol, 
+        where('ownerUid', '==', user.uid),
+        orderBy('createdAt', 'desc'), 
+        limit(50)
+      );
+    }
     
     const snap = await getDocs(q);
     const leads: LeadSubmission[] = [];

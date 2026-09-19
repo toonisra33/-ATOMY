@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const config = {
-  apiKey: "AIzaSyCozdnZGBDxXclsdhucePqORfmRbPLXfXA",
+  apiKey: "AIzaSyCozdnZGBDxXclsdhucEPqORfmRbPlXfXA",
   authDomain: "atomy-sponserweb.firebaseapp.com",
   projectId: "atomy-sponserweb",
   storageBucket: "atomy-sponserweb.firebasestorage.app",

@@ -11,9 +11,15 @@ import {
 import { AuthSession } from '../types';
 import { auth } from './firebase';
 
+export const ADMIN_EMAILS = [
+  'toonisra33@gmail.com',
+];
+
 async function toSession(user: User): Promise<AuthSession> {
   const token = await user.getIdTokenResult(true);
-  const isAdmin = token.claims.admin === true || token.claims.role === 'admin';
+  const userEmail = (user.email || '').toLowerCase().trim();
+  const isEmailAdmin = ADMIN_EMAILS.includes(userEmail);
+  const isAdmin = token.claims.admin === true || token.claims.role === 'admin' || isEmailAdmin;
   return {
     uid: user.uid,
     email: user.email || '',
