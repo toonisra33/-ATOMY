@@ -11,9 +11,9 @@ interface VideoSectionProps {
 export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineModal }) => {
   const [selectedVideo, setSelectedVideo] = useState<VideoPreset>(VIDEO_PRESETS[0]);
   const [activeChapter, setActiveChapter] = useState<VideoChapter>(VIDEO_CHAPTERS[0]);
-  // Video autoplays with sound immediately upon page arrival
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
+  // Mobile browsers strictly require muted autoplay to start playback without user gesture
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
   const [secondsElapsed, setSecondsElapsed] = useState<number>(0);
   const [videoTimestamp, setVideoTimestamp] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -39,7 +39,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
   const handleUnmuteOnly = () => {
     postToPlayer('unMute');
     postToPlayer('setVolume', [100]);
+    postToPlayer('playVideo');
     setIsMuted(false);
+    setIsPlaying(true);
   };
 
   const handleToggleMute = () => {
@@ -57,26 +59,84 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
       setIsPlaying(false);
     } else {
       postToPlayer('playVideo');
-      handleUnmuteOnly();
       setIsPlaying(true);
     }
   };
 
-  // Ensure audio plays as soon as user enters and touches/interacts with the page
+  // Listen for YouTube Iframe events to ensure timer is 100% synchronized with actual playback
   useEffect(() => {
-    const ensureAudioPlaying = () => {
-      handleUnmuteOnly();
-      postToPlayer('playVideo');
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        if (!event.data) return;
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (!data) return;
+
+        // On player ready, start playback
+        if (data.event === 'onReady') {
+          postToPlayer('playVideo');
+        }
+
+        // On state change: 1 = playing, 2 = paused, 0 = ended, 3 = buffering
+        if (data.event === 'onStateChange') {
+          if (data.info === 1) {
+            setIsPlaying(true);
+          } else if (data.info === 2) {
+            setIsPlaying(false);
+          } else if (data.info === 0) {
+            setIsPlaying(false);
+            setIsCompleted(true);
+          }
+        }
+
+        // Info delivery includes currentTime and playerState
+        if (data.event === 'infoDelivery' && data.info) {
+          if (typeof data.info.playerState === 'number') {
+            if (data.info.playerState === 1) {
+              setIsPlaying(true);
+            } else if (data.info.playerState === 2) {
+              setIsPlaying(false);
+            } else if (data.info.playerState === 0) {
+              setIsPlaying(false);
+              setIsCompleted(true);
+            }
+          }
+          if (typeof data.info.currentTime === 'number') {
+            const cur = Math.floor(data.info.currentTime);
+            if (cur > 0) {
+              setSecondsElapsed(cur);
+            }
+          }
+        }
+      } catch (err) {
+        // Non-JSON message from other sources, ignore
+      }
     };
 
-    // Attempt immediately
-    const t1 = setTimeout(ensureAudioPlaying, 500);
-    const t2 = setTimeout(ensureAudioPlaying, 1500);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
-    // Also trigger on first user gesture anywhere on page to satisfy mobile browser autoplay audio policy
-    const userGestureEvents = ['click', 'touchstart', 'pointerdown', 'keydown', 'scroll'];
+  // Ensure playback starts on page arrival
+  useEffect(() => {
+    const startPlayback = () => {
+      postToPlayer('playVideo');
+      try {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: 'listening' }),
+            '*'
+          );
+        }
+      } catch (e) {}
+    };
+
+    const t1 = setTimeout(startPlayback, 400);
+    const t2 = setTimeout(startPlayback, 1200);
+
+    // Also trigger play/unmute on user interaction
+    const userGestureEvents = ['click', 'touchstart', 'pointerdown'];
     const handleFirstGesture = () => {
-      ensureAudioPlaying();
+      postToPlayer('playVideo');
       userGestureEvents.forEach(evt => window.removeEventListener(evt, handleFirstGesture));
     };
 
@@ -87,7 +147,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
       clearTimeout(t2);
       userGestureEvents.forEach(evt => window.removeEventListener(evt, handleFirstGesture));
     };
-  }, []);
+  }, [selectedVideo]);
 
   // Listen for external trigger to unmute (e.g. from Hero "Watch Video" CTA)
   useEffect(() => {
@@ -99,7 +159,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
     return () => window.removeEventListener('atomy-unmute-video', handleTriggerUnmute);
   }, []);
 
-  // Handle Timer ticking
+  // Handle Timer ticking - ONLY ticks when the video is ACTUALLY playing
   useEffect(() => {
     if (isPlaying) {
       timerRef.current = window.setInterval(() => {
@@ -158,6 +218,21 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
     postToPlayer('pauseVideo');
   };
 
+  const handleIframeLoad = () => {
+    try {
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'listening' }),
+          '*'
+        );
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+          '*'
+        );
+      }
+    } catch (e) {}
+  };
+
   const handleResetTimer = () => {
     setSecondsElapsed(0);
     setVideoTimestamp(0);
@@ -166,6 +241,10 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
     postToPlayer('seekTo', [0, true]);
     postToPlayer('playVideo');
   };
+
+  const originParam = typeof window !== 'undefined' && window.location.origin
+    ? `&origin=${encodeURIComponent(window.location.origin)}`
+    : '';
 
   return (
     <section id="video-15min" className="py-10 sm:py-20 bg-slate-900 text-white relative overflow-hidden">
@@ -202,6 +281,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                   onClick={() => {
                     setSelectedVideo(vid);
                     setVideoTimestamp(0);
+                    setSecondsElapsed(0);
                   }}
                   className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
                     isCurrent
@@ -230,22 +310,35 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                 ref={iframeRef}
                 key={selectedVideo.youtubeId}
                 className="w-full h-full"
-                src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&playsinline=1&enablejsapi=1&rel=0&start=${videoTimestamp}`}
+                src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&mute=1&playsinline=1&enablejsapi=1&rel=0${originParam}&start=${videoTimestamp}`}
                 title={selectedVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
+                onLoad={handleIframeLoad}
               />
 
-              {/* Floating Unmute Banner if currently muted by browser policy */}
+              {/* Floating Unmute Banner if currently muted */}
               {isMuted && (
                 <button
                   type="button"
                   onClick={handleUnmuteOnly}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 bg-blue-600/90 hover:bg-blue-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xl backdrop-blur-md transition-all animate-pulse cursor-pointer border border-blue-400/50"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 bg-blue-600/95 hover:bg-blue-600 text-white px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-2xl backdrop-blur-md transition-all animate-bounce cursor-pointer border border-blue-400"
                   title="แตะเพื่อเปิดเสียง"
                 >
                   <Volume2 className="w-4 h-4 text-sky-200 shrink-0" />
                   <span>แตะเพื่อเปิดเสียง 🔊</span>
+                </button>
+              )}
+
+              {/* Tap to play prompt if video is paused initially */}
+              {!isPlaying && secondsElapsed === 0 && (
+                <button
+                  type="button"
+                  onClick={handleTogglePlay}
+                  className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-20 bg-black/80 hover:bg-black text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 backdrop-blur-md border border-white/20 shadow-lg cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white text-white" />
+                  <span>กดเพื่อเริ่มเล่น</span>
                 </button>
               )}
             </div>
@@ -293,10 +386,15 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                           {formatTime(secondsElapsed)}
                         </span>
                         <span className="text-slate-400 text-xs font-mono">/ 15:00 น.</span>
-                        {isPlaying && (
+                        {isPlaying ? (
                           <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 font-medium">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                            เล่นอัตโนมัติ
+                            กำลังเล่น
+                          </span>
+                        ) : (
+                          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-400 border border-amber-700/60 font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            หยุดชั่วคราว
                           </span>
                         )}
                       </div>
