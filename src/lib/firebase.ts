@@ -70,6 +70,8 @@ export interface LeadSubmission {
   fullName: string;
   phoneNumber: string;
   lineId?: string;
+  age?: string;
+  occupation?: string;
   sponsorId: string;
   sponsorName: string;
   ownerUid?: string;

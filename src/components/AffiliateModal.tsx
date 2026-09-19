@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SponsorProfile } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
-import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2, Upload } from 'lucide-react';
+import { X, Copy, Check, QrCode, Share2, Sparkles, Link as LinkIcon, Lock, Activity, ChevronDown, ChevronUp, Image as ImageIcon, Trash2, Loader2, Upload, Monitor, Smartphone, Download } from 'lucide-react';
 import { saveSponsorProfile } from '../lib/firebase';
 import { setupAllPixels } from '../lib/pixel';
 import { registerWithEmail } from '../lib/auth';
+import { detectDeviceType } from '../lib/device';
 
 interface AffiliateModalProps {
   isOpen: boolean;
@@ -27,6 +28,49 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [detectedDevice, setDetectedDevice] = useState<'desktop' | 'mobile'>(detectDeviceType);
+  const [bannerPreviewMode, setBannerPreviewMode] = useState<'desktop' | 'mobile'>(detectDeviceType);
+  const [bannerKey, setBannerKey] = useState<number>(Date.now());
+  const [isUploadingBanner, setIsUploadingBanner] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const dev = detectDeviceType();
+      setDetectedDevice(dev);
+      setBannerPreviewMode(dev);
+    }
+  }, [isOpen]);
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (uploadEvent) => {
+        const base64 = uploadEvent.target?.result as string;
+        const res = await fetch('/api/admin/upload-banner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, bannerType: type })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setBannerKey(Date.now());
+          alert(type === 'mobile' ? 'อัปโหลดภาพแบนเนอร์ Mobile สำเร็จเรียบร้อย!' : 'อัปโหลดภาพแบนเนอร์ Desktop สำเร็จเรียบร้อย!');
+        } else {
+          alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + (data.error || 'Unknown error'));
+        }
+        setIsUploadingBanner(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการอ่านไฟล์: ' + err.message);
+      setIsUploadingBanner(false);
+    }
+  };
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -401,22 +445,60 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
             {/* Social Share Preview Card (LINE / Facebook / TikTok) */}
             <div className="sm:col-span-2 p-3.5 sm:p-4 bg-slate-900 text-white rounded-xl sm:rounded-2xl border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Share2 className="w-4 h-4 text-sky-400" />
-                  <span className="text-xs sm:text-sm font-bold text-white">
-                    ตัวอย่างรูปพรีวิวเวลาแชร์ลิงก์ (Social Share Preview)
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-sky-400" />
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      ตัวอย่างรูปพรีวิวเวลาแชร์ลิงก์ (Social Share Preview)
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 text-emerald-400 border border-emerald-800/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    ระบบตรวจพบ: {detectedDevice === 'mobile' ? 'มือถือ (เลือกรูป Mobile อัตโนมัติ)' : 'Desktop (เลือกรูป Desktop อัตโนมัติ)'}
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/70 border border-emerald-800/80 px-2 py-0.5 rounded-full">
-                  1200 x 630 HD
-                </span>
+                
+                {/* Switcher */}
+                <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setBannerPreviewMode('desktop')}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+                      bannerPreviewMode === 'desktop'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Monitor className="w-3 h-3" />
+                    <span>Desktop (16:9)</span>
+                    {detectedDevice === 'desktop' && (
+                      <span className="text-[9px] bg-blue-700/80 px-1 py-0.2 rounded text-blue-200">คุณใช้อันนี้</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerPreviewMode('mobile')}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+                      bannerPreviewMode === 'mobile'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Smartphone className="w-3 h-3" />
+                    <span>Mobile (เซฟโซน)</span>
+                    {detectedDevice === 'mobile' && (
+                      <span className="text-[9px] bg-blue-700/80 px-1 py-0.2 rounded text-blue-200">คุณใช้อันนี้</span>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-950 shadow-md">
-                <div className="relative aspect-video sm:aspect-[1200/630] max-h-[170px] sm:max-h-[220px] w-full bg-slate-900 overflow-hidden">
+                <div className={`relative ${bannerPreviewMode === 'desktop' ? 'aspect-video sm:aspect-[1200/630] max-h-[180px] sm:max-h-[220px]' : 'aspect-[4/3] max-h-[220px] sm:max-h-[260px]'} w-full bg-slate-900 overflow-hidden`}>
                   <img
-                    src="/og-image.jpg"
+                    key={`${bannerPreviewMode}-${bannerKey}`}
+                    src={`${bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}?v=${bannerKey}`}
                     alt="Atomy Preview Banner"
                     className="w-full h-full object-cover"
                   />
@@ -431,10 +513,10 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                       </div>
                       <div className="min-w-0 text-left">
                         <div className="text-[11px] font-bold text-white truncate">
-                          {formData.sponsorName || 'สปอนเซอร์ผู้ดูแลสายงาน'}
+                          {formData.sponsorName || 'ที่ปรึกษาธุรกิจ Atomy'}
                         </div>
                         <div className="text-[9px] text-slate-300">
-                          ที่ปรึกษาธุรกิจ Atomy Global
+                          {bannerPreviewMode === 'desktop' ? 'DESKTOP 1200x630' : 'MOBILE SAFE-ZONE'}
                         </div>
                       </div>
                     </div>
@@ -442,20 +524,49 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 </div>
 
                 <div className="p-3 bg-slate-900 border-t border-slate-800 text-left">
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-sky-400">
                     SPONSOR-ATOMY.WEB.APP
                   </div>
                   <div className="text-xs sm:text-sm font-bold text-white mt-0.5 leading-snug">
-                    {formData.sponsorName ? `${formData.sponsorName} - ที่ปรึกษาธุรกิจ Atomy` : 'Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง'}
+                    {formData.sponsorName ? `${formData.sponsorName} - โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ` : 'โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย'}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                    {formData.welcomeNote || 'ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official'}
+                  <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                    {formData.welcomeNote || 'ระบบเรียนรู้ออนไลน์ ดูฟรี 15 นาที พร้อมที่ปรึกษาคอยดูแล'}
                   </p>
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isUploadingBanner ? 'กำลังอัปโหลด...' : `อัปโหลดเปลี่ยนรูป (${bannerPreviewMode === 'mobile' ? 'Mobile' : 'Desktop'})`}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={isUploadingBanner}
+                          onChange={(e) => handleBannerUpload(e, bannerPreviewMode)}
+                        />
+                      </label>
+
+                      <a
+                        href={bannerPreviewMode === 'mobile' ? '/og-image-mobile.jpg' : '/og-image.jpg'}
+                        download={bannerPreviewMode === 'mobile' ? 'atomy-banner-mobile.jpg' : 'atomy-banner-desktop.jpg'}
+                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5 text-sky-400" />
+                        <span>ดาวน์โหลดรูป</span>
+                      </a>
+                    </div>
+
+                    <span className="text-[10px] text-slate-400">
+                      {bannerPreviewMode === 'mobile' ? 'Mobile Safe-Zone' : '1200 x 630 HD Ready'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <p className="text-[10px] text-slate-400 leading-relaxed">
-                💡 เวลาคัดลอกลิงก์นี้ไปส่งในแชท LINE, โพสต์บน Facebook หรือปักหมุดใน Bio TikTok ระบบจะดึงรูปแบนเนอร์ Atomy คุณภาพสูงนี้ขึ้นแสดงเป็นการ์ดตัวอย่างอัตโนมัติ
+                💡 เวลาคัดลอกลิงก์นี้ไปส่งในแชท LINE, โพสต์บน Facebook หรือปักหมุดใน Bio TikTok ระบบจะดึงรูปแบนเนอร์ Atomy คุณภาพสูงและข้อความเชิญชวนนี้ขึ้นแสดงเป็นการ์ดตัวอย่างอัตโนมัติ
               </p>
             </div>
 

@@ -35,6 +35,8 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [prospectLineId, setProspectLineId] = useState("");
+  const [age, setAge] = useState("");
+  const [occupation, setOccupation] = useState("");
   const [hasConsent, setHasConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -94,6 +96,8 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
         fullName: fullName.trim(),
         phoneNumber: phone.trim(),
         lineId: prospectLineId.trim() || "",
+        age: age.trim() || undefined,
+        occupation: occupation.trim() || undefined,
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
         ownerUid: sponsor.ownerUid || "",
@@ -112,6 +116,8 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
       setFullName("");
       setPhone("");
       setProspectLineId("");
+      setAge("");
+      setOccupation("");
       setHasConsent(false);
     } catch (err: any) {
       console.error(err);
@@ -333,7 +339,7 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                         {errorMessage}
                       </div>
                     )}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           ชื่อ-นามสกุล *
@@ -357,6 +363,34 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                           placeholder="เช่น 0812345678"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          อายุ (ปี)
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="เช่น 35"
+                          value={age}
+                          onChange={(e) => setAge(e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          อาชีพปัจจุบัน
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="เช่น พนักงานประจำ, ค้าขาย"
+                          value={occupation}
+                          onChange={(e) => setOccupation(e.target.value)}
                           className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
                         />
                       </div>

@@ -3,20 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง</title>
-    <meta name="description" content="ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ (Atomy) พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official ทันที" />
+    <title>โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย</title>
+    <meta name="description" content="ระบบเรียนรู้ออนไลน์ ดูฟรี 15 นาที พร้อมที่ปรึกษาคอยดูแล" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Atomy Satellite Network" />
-    <meta property="og:title" content="Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง" />
-    <meta property="og:description" content="ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ (Atomy) พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official ทันที" />
-    <meta property="og:image" content="https://sponsor-atomy.web.app/og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Atomy Satellite Funnel Social Share Banner" />
+    <meta property="og:site_name" content="Atomy Business Opportunity" />
+    <meta property="og:title" content="โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย" />
+    <meta property="og:description" content="ระบบเรียนรู้ออนไลน์ ดูฟรี 15 นาที พร้อมที่ปรึกษาคอยดูแล" />
+    <!-- Social Sharing Cards: Desktop (1200x630) & Mobile (1080x720) -->
+    <meta property="og:image" id="og-image-tag" content="https://sponsor-atomy.web.app/og-image.jpg" />
+    <meta property="og:image:secure_url" id="og-image-secure-tag" content="https://sponsor-atomy.web.app/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" id="og-image-width-tag" content="1200" />
+    <meta property="og:image:height" id="og-image-height-tag" content="630" />
+    <meta property="og:image:alt" content="โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Atomy Satellite Funnel - เว็บพ่วงสปอนเซอร์ผู้มุ่งหวัง" />
-    <meta name="twitter:description" content="ระบบเว็บพ่วงส่งต่อสายงานและสปอนเซอร์ผู้มุ่งหวัง ธุรกิจอะโทมี่ (Atomy) พร้อมวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official ทันที" />
-    <meta name="twitter:image" content="https://sponsor-atomy.web.app/og-image.jpg" />
+    <meta name="twitter:title" content="โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย" />
+    <meta name="twitter:description" content="ระบบเรียนรู้ออนไลน์ ดูฟรี 15 นาที พร้อมที่ปรึกษาคอยดูแล" />
+    <meta name="twitter:image" id="twitter-image-tag" content="https://sponsor-atomy.web.app/og-image.jpg" />
+
+    <!-- Automatic Device Detection for Social & Browser Links -->
+    <script>
+      (function() {
+        try {
+          var ua = navigator.userAgent || '';
+          var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(ua) || (window.innerWidth && window.innerWidth < 768);
+          if (isMobile) {
+            var ogImg = document.getElementById('og-image-tag');
+            if (ogImg) ogImg.setAttribute('content', 'https://sponsor-atomy.web.app/og-image-mobile.jpg');
+            var ogImgSec = document.getElementById('og-image-secure-tag');
+            if (ogImgSec) ogImgSec.setAttribute('content', 'https://sponsor-atomy.web.app/og-image-mobile.jpg');
+            var ogW = document.getElementById('og-image-width-tag');
+            if (ogW) ogW.setAttribute('content', '1080');
+            var ogH = document.getElementById('og-image-height-tag');
+            if (ogH) ogH.setAttribute('content', '720');
+            var twImg = document.getElementById('twitter-image-tag');
+            if (twImg) twImg.setAttribute('content', 'https://sponsor-atomy.web.app/og-image-mobile.jpg');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
