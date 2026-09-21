@@ -39,7 +39,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={onScrollToVideo}
-            className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200 cursor-pointer shrink-0"
+            className="p-1.5 sm:p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200 cursor-pointer shrink-0"
             title="ไปที่วิดีโอ 20 นาที"
           >
             <Play className="w-3.5 h-3.5 fill-blue-600 ml-0.5" />
@@ -49,7 +49,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             <a
               href={`tel:${sponsor.phoneNumber}`}
               onClick={() => trackContactEvent('call', sponsor.sponsorId)}
-              className="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors border border-slate-200 cursor-pointer shrink-0"
+              className="p-1.5 sm:p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors border border-slate-200 cursor-pointer shrink-0"
               title="โทรติดต่อ"
             >
               <Phone className="w-3.5 h-3.5" />
@@ -59,10 +59,10 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
           <button
             type="button"
             onClick={onOpenLineModal}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/30 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/30 active:scale-95 cursor-pointer shrink-0 whitespace-nowrap"
           >
             <MessageCircle className="w-3.5 h-3.5 fill-white shrink-0" />
-            <span>กรอกฟอร์มรับสิทธิ์</span>
+            <span>รับสิทธิ์ฟรี</span>
           </button>
         </div>
       </div>
