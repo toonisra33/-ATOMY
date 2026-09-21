@@ -303,6 +303,21 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                ลิงก์หรือรหัสวิดีโอ YouTube (กำหนดวิดีโอบรรยาย 20 นาที)
+              </label>
+              <input
+                type="text"
+                value={formData.customVideoUrl || ''}
+                onChange={(e) => setFormData({ ...formData, customVideoUrl: e.target.value })}
+                placeholder="เช่น https://www.youtube.com/watch?v=... หรือรหัสวิดีโอ (เว้นว่างเพื่อใช้วิดีโอเริ่มต้น 20 นาที)"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                ใส่ลิงก์ YouTube ที่ต้องการ ผู้มุ่งหวังจะต้องรับชมครบ 20 นาทีเท่านั้นโดยไม่สามารถกดเลื่อนข้ามได้
+              </p>
+            </div>
             {/* Account Creation Block */}
             {!ownerUid && (
               <div className="sm:col-span-2 mt-2 bg-blue-50/50 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-blue-200">

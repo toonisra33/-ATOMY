@@ -1,7 +1,7 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
 import { ATOMY_OFFICIAL_LINKS } from '../data/atomyData';
-import { ExternalLink, Globe, ShieldCheck, ShoppingBag, Video, Ticket, MessageCircle, CheckCircle, Info } from 'lucide-react';
+import { ExternalLink, Globe, ShieldCheck, ShoppingBag, Video, Ticket, MessageCircle, CheckCircle, Info, UserCheck } from 'lucide-react';
 
 interface TrafficBridgeSectionProps {
   sponsor: SponsorProfile;
@@ -62,10 +62,10 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
                   </span>
                 </div>
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                  ทัก LINE ติดต่อที่ปรึกษา
+                  กรอกแบบฟอร์มเพื่อรับคำแนะนำ
                 </h4>
                 <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                  ติดต่อที่ปรึกษาผ่าน LINE Official เพื่อรับคำแนะนำการสมัคร สอบถามข้อมูลเบื้องต้น และรับรหัสสปอนเซอร์สำหรับใช้ในการเปิดรหัสสมาชิก
+                  กรอกข้อมูลติดต่อในแบบฟอร์มด้านล่างเพื่อรับรหัสสปอนเซอร์ และทำตามขั้นตอนพิมพ์เลข 88 ใน LINE เพื่อรับสิทธิ์พี่เลี้ยงดูแลฟรี
                 </p>
               </div>
 
@@ -78,10 +78,10 @@ export const TrafficBridgeSection: React.FC<TrafficBridgeSectionProps> = ({ spon
                   <button
                     type="button"
                     onClick={onOpenLineModal}
-                    className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-bold text-blue-700 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
-                    <span>ทักทันที</span>
+                    <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                    <span>กรอกแบบฟอร์ม</span>
                   </button>
                 )}
               </div>

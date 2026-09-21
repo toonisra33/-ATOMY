@@ -21,6 +21,8 @@ import {
   Briefcase,
   PhoneCall,
   Sparkles,
+  Mail,
+  Eye,
 } from 'lucide-react';
 import { LeadSubmission, fetchLeads, updateLeadStatus } from '../lib/firebase';
 import { SponsorProfile, AuthSession } from '../types';
@@ -33,6 +35,7 @@ interface LeadsInboxModalProps {
   sponsor: SponsorProfile;
   session: AuthSession | null;
   onOpenLogin?: () => void;
+  onOpenWelcomePreview?: () => void;
 }
 
 export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
@@ -41,6 +44,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   sponsor,
   session,
   onOpenLogin,
+  onOpenWelcomePreview,
 }) => {
   const [leads, setLeads] = useState<LeadSubmission[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -276,16 +280,35 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                     </button>
                   </div>
 
-                  {/* Refresh Button */}
-                  <button
-                    type="button"
-                    onClick={loadData}
-                    disabled={loading}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-700 shrink-0"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                    <span>รีเฟรช</span>
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Welcome Screen Preview Shortcut */}
+                    {onOpenWelcomePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenWelcomePreview();
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-emerald-700/80 shadow-2xs"
+                        title="ดูตัวอย่างหน้ายินดีต้อนรับและขั้นตอนส่งเลข 88 ที่ผู้มุ่งหวังจะได้รับ"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="hidden sm:inline">ตัวอย่างหน้าต้อนรับ (กด 88)</span>
+                        <span className="sm:hidden">หน้าต้อนรับ</span>
+                      </button>
+                    )}
+
+                    {/* Refresh Button */}
+                    <button
+                      type="button"
+                      onClick={loadData}
+                      disabled={loading}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-slate-700"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                      <span>รีเฟรช</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Satellite / Scope Switcher (ONLY FOR MASTER ADMIN) */}
@@ -459,7 +482,7 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
 
                           {/* Phone & Detail Bar */}
                           <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                               <span className="text-slate-300 font-mono">
                                 เบอร์: <strong>{item.phoneNumber}</strong>
                               </span>
@@ -471,6 +494,24 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                                 {copiedText === item.phoneNumber ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                                 <span>{copiedText === item.phoneNumber ? 'คัดลอกแล้ว' : 'คัดลอกเบอร์'}</span>
                               </button>
+
+                              {item.email && (
+                                <>
+                                  <span className="text-slate-600">|</span>
+                                  <span className="text-slate-300 flex items-center gap-1">
+                                    <Mail className="w-3 h-3 text-sky-400" />
+                                    <span>{item.email}</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(item.email!)}
+                                    className="text-[11px] text-sky-400 hover:underline cursor-pointer flex items-center gap-1"
+                                  >
+                                    {copiedText === item.email ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                    <span>{copiedText === item.email ? 'คัดลอกแล้ว' : 'คัดลอกอีเมล'}</span>
+                                  </button>
+                                </>
+                              )}
                             </div>
 
                             {/* Status Changer */}

@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ sponsor, onOpenAffiliateModal })
               <span className="tracking-tight">ATOMY SATELLITE NETWORK</span>
             </div>
             <p className="text-slate-400 leading-relaxed text-xs sm:text-sm text-pretty mt-2 max-w-xl">
-              ระบบเว็บพ่วงและกรวยสปอนเซอร์ผู้มุ่งหวัง (Affiliate & Satellite Funnel) สำหรับส่งต่อทราฟฟิกและผู้สนใจเข้าสู่ธุรกิจ อะโทมี่ (Atomy) ผ่านสื่อวิดีโอบรรยาย 15 นาที และช่องทางติดต่อ LINE Official
+              ระบบเว็บพ่วงและกรวยสปอนเซอร์ผู้มุ่งหวัง (Affiliate & Satellite Funnel) สำหรับส่งต่อทราฟฟิกและผู้สนใจเข้าสู่ธุรกิจ อะโทมี่ (Atomy) ผ่านสื่อวิดีโอบรรยาย 20 นาที และช่องทางติดต่อ LINE Official
             </p>
             {onOpenAffiliateModal && (
               <div className="mt-4">

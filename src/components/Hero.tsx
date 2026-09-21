@@ -52,20 +52,18 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
                 <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                   <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white ml-0.5" />
                 </div>
-                <span>ดูวิดีโอ 15 นาทีเจาะลึกธุรกิจ</span>
+                <span>ดูวิดีโอ 20 นาทีเจาะลึกธุรกิจ</span>
               </button>
 
-              <a
+              <button
+                type="button"
                 id="hero-btn-line-chat"
-                href={sponsor.lineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackContactEvent('line', sponsor.sponsorId)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-xl shadow-md shadow-emerald-500/20 transition-all active:scale-95 min-h-[46px]"
+                onClick={onOpenLineModal}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-xl shadow-md shadow-emerald-500/20 transition-all active:scale-95 min-h-[46px] cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-white shrink-0" />
-                <span>แอด Line เพื่อสมัครสมาชิกฟรี</span>
-              </a>
+                <span>กรอกฟอร์มรับรหัสฟรี & ทัก LINE</span>
+              </button>
             </div>
 
             {/* Key Assurance Bullets */}
@@ -140,15 +138,14 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
 
               {/* Quick Connect Actions */}
               <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
-                <a
-                  href={sponsor.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors shadow-2xs text-center min-h-[42px]"
+                <button
+                  type="button"
+                  onClick={onOpenLineModal}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors shadow-2xs text-center min-h-[42px] cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4 fill-white shrink-0" />
-                  <span>ทัก LINE สปอนเซอร์</span>
-                </a>
+                  <span>กรอกฟอร์มทัก LINE</span>
+                </button>
 
                 {sponsor.phoneNumber ? (
                   <a

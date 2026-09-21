@@ -447,7 +447,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="font-mono text-purple-400 font-bold shrink-0">4. Lead:</span>
-                  <span>บันทึกเมื่อผู้มุ่งหวังกรอกชื่อ-เบอร์โทรส่งฟอร์มขอรับคำปรึกษา</span>
+                  <span>บันทึกหลังจากบันทึกข้อมูลเข้าฐานข้อมูลสำเร็จและนำผู้มุ่งหวังเข้าสู่หน้ายินดีต้อนรับ (Welcome View) เรียบร้อยแล้วเท่านั้น เพื่อความแม่นยำสูงสุด</span>
                 </li>
               </ul>
             </div>

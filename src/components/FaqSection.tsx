@@ -5,9 +5,10 @@ import { SponsorProfile } from '../types';
 
 interface FaqSectionProps {
   sponsor: SponsorProfile;
+  onOpenLineModal?: () => void;
 }
 
-export const FaqSection: React.FC<FaqSectionProps> = ({ sponsor }) => {
+export const FaqSection: React.FC<FaqSectionProps> = ({ sponsor, onOpenLineModal }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -76,15 +77,24 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ sponsor }) => {
           <p className="text-xs sm:text-sm text-slate-600 mt-1 text-pretty">
             คุณ {sponsor.sponsorName} พร้อมตอบทุกคำถามและให้ข้อมูลอย่างตรงไปตรงมา
           </p>
-          <a
-            href={sponsor.lineUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3.5 sm:mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20 active:scale-95"
-          >
-            <MessageCircle className="w-4 h-4 fill-white" />
-            <span>สอบถามผ่าน LINE โดยตรง</span>
-          </a>
+          {onOpenLineModal ? (
+            <button
+              type="button"
+              onClick={onOpenLineModal}
+              className="mt-3.5 sm:mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              <span>กรอกฟอร์มเพื่อสอบถาม & ทัก LINE</span>
+            </button>
+          ) : (
+            <a
+              href="#line-official"
+              className="mt-3.5 sm:mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20 active:scale-95"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              <span>กรอกฟอร์มเพื่อสอบถาม & ทัก LINE</span>
+            </a>
+          )}
         </div>
 
       </div>

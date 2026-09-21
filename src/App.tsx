@@ -124,7 +124,7 @@ export default function App() {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-// Parse URL query parameters to support dynamic satellite replication & Pixel IDs
+  // Parse URL query parameters to support dynamic satellite replication, Pixel IDs & welcome preview shortcut
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -136,6 +136,17 @@ export default function App() {
       const phone = params.get("phone");
       const team = params.get("team");
       const avatar = params.get("img") || params.get("avatar");
+
+      // Check if user requested shortcut to preview welcome view (Restricted to logged-in members)
+      const preview = params.get("preview");
+      const cachedAuth = localStorage.getItem("atomy_user_session");
+      if (cachedAuth && (preview === "welcome" || window.location.hash === "#welcome")) {
+        setCtaStep("welcome");
+        setTimeout(() => {
+          const el = document.getElementById("line-official");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 400);
+      }
 
       // Pixel parameters from affiliate URL or ad campaigns
       const fbp = params.get("fbp") || params.get("fb_pixel");
@@ -232,7 +243,19 @@ export default function App() {
     }
   };
 
+  // Step for LineCtaSection (allows external buttons & shortcuts to switch to Welcome view)
+  const [ctaStep, setCtaStep] = useState<'form' | 'welcome'>('form');
+
+  const scrollToWelcomeSection = () => {
+    setCtaStep('welcome');
+    const el = document.getElementById("line-official");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const scrollToLineSection = () => {
+    setCtaStep('form');
     const el = document.getElementById("line-official");
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
@@ -254,6 +277,7 @@ export default function App() {
         accountEmail={session?.email}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onLogout={logout}
+        onOpenLineModal={scrollToLineSection}
         onOpenAffiliateModal={() => setIsAffiliateModalOpen(true)}
         onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
         onOpenPixelModal={() => setIsPixelModalOpen(true)}
@@ -275,7 +299,10 @@ export default function App() {
         {/* Primary Line Official CTA Section */}
         <LineCtaSection
           sponsor={sponsor}
+          isAuthenticated={!!session}
           onOpenLeadsModal={() => setIsLeadsModalOpen(true)}
+          externalStep={ctaStep}
+          onStepChange={setCtaStep}
         />
 
         {/* Business Highlights (Why Atomy) */}
@@ -288,7 +315,10 @@ export default function App() {
         />
 
         {/* FAQs */}
-        <FaqSection sponsor={sponsor} />
+        <FaqSection
+          sponsor={sponsor}
+          onOpenLineModal={scrollToLineSection}
+        />
       </main>
 
       
@@ -506,7 +536,11 @@ export default function App() {
       />
 
       {/* Mobile Sticky Action Bar */}
-      <StickyBottomBar sponsor={sponsor} onScrollToVideo={scrollToVideo} />
+      <StickyBottomBar
+        sponsor={sponsor}
+        onScrollToVideo={scrollToVideo}
+        onOpenLineModal={scrollToLineSection}
+      />
 
       {/* Satellite & Affiliate Link Generator Modal */}
       <AffiliateModal
@@ -536,6 +570,7 @@ export default function App() {
         sponsor={sponsor}
         session={session}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenWelcomePreview={scrollToWelcomeSection}
       />
 
       {/* Firebase Hosting Deploy Guide Modal */}

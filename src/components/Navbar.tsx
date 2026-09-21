@@ -10,6 +10,7 @@ interface NavbarProps {
   accountEmail?: string;
   onOpenLogin: () => void;
   onLogout: () => void;
+  onOpenLineModal?: () => void;
   onOpenAffiliateModal?: () => void;
   onOpenDeployGuide?: () => void;
   onOpenPixelModal?: () => void;
@@ -24,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   accountEmail,
   onOpenLogin,
   onLogout,
+  onOpenLineModal,
   onOpenAffiliateModal,
   onOpenDeployGuide,
   onOpenPixelModal,
@@ -68,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
             <a href="#video-15min" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              วิดีโอ 15 นาที
+              วิดีโอ 20 นาที
             </a>
             <a href="#highlights" className="hover:text-blue-600 transition-colors">
               จุดเด่นธุรกิจ
@@ -83,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Leads Inbox Button */}
+            {/* Leads Inbox Button (Only for authenticated members) */}
             {isAuthenticated && onOpenLeadsModal && (
               <button
                 id="nav-btn-leads-inbox"
@@ -148,17 +150,28 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Direct Line Official CTA */}
-            <a
-              id="nav-btn-line-cta"
-              href={sponsor.lineUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-lg transition-all shadow-md shadow-emerald-600/20 active:scale-95 shrink-0"
-            >
-              <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white shrink-0" />
-              <span className="hidden xs:inline">แอด LINE</span>
-            </a>
+            {/* Register / Connect CTA */}
+            {onOpenLineModal ? (
+              <button
+                type="button"
+                id="nav-btn-line-cta"
+                onClick={onOpenLineModal}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-lg transition-all shadow-md shadow-emerald-600/20 active:scale-95 shrink-0 cursor-pointer"
+                title="กรอกแบบฟอร์มเพื่อรับรหัสสมาชิกและคำแนะนำฟรี"
+              >
+                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white shrink-0" />
+                <span className="hidden xs:inline">รับรหัสฟรี</span>
+              </button>
+            ) : (
+              <a
+                id="nav-btn-line-cta"
+                href="#line-official"
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] rounded-lg transition-all shadow-md shadow-emerald-600/20 active:scale-95 shrink-0"
+              >
+                <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white shrink-0" />
+                <span className="hidden xs:inline">รับรหัสฟรี</span>
+              </a>
+            )}
           </div>
         </div>
       </div>

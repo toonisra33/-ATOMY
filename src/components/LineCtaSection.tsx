@@ -13,55 +13,56 @@ import {
   UserCheck,
   Loader2,
   Users,
+  CheckCircle2,
+  Lock,
+  Eye,
+  ArrowLeft,
 } from "lucide-react";
 import { submitLead } from "../lib/firebase";
 import { trackLeadEvent, trackContactEvent } from "../lib/pixel";
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
+  isAuthenticated?: boolean;
   onOpenLeadsModal?: () => void;
+  externalStep?: 'form' | 'welcome';
+  onStepChange?: (step: 'form' | 'welcome') => void;
 }
 
 export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   sponsor,
+  isAuthenticated = false,
   onOpenLeadsModal,
+  externalStep,
+  onStepChange,
 }) => {
-  const [copiedLineId, setCopiedLineId] = useState<boolean>(false);
-  const [copiedSponsorId, setCopiedSponsorId] = useState<boolean>(false);
-  const [copiedMessage, setCopiedMessage] = useState<boolean>(false);
-  const [showQrModal, setShowQrModal] = useState<boolean>(false);
+  // Step in CTA section: 'form' | 'welcome'
+  const [internalStep, setInternalStep] = useState<'form' | 'welcome'>('form');
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
+  const currentStep = externalStep !== undefined ? externalStep : internalStep;
 
-  // Firestore Lead Form state
+  const setCurrentStep = (step: 'form' | 'welcome') => {
+    setInternalStep(step);
+    if (onStepChange) {
+      onStepChange(step);
+    }
+  };
+
+  // Form states
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [prospectLineId, setProspectLineId] = useState("");
   const [age, setAge] = useState("");
   const [occupation, setOccupation] = useState("");
-  const [hasConsent, setHasConsent] = useState(false);
+  const [hasConsent, setHasConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const prefilledMessage = `สวัสดีครับ/ค่ะ สนใจสมัครสมาชิก Atomy รับลิงก์สมัครสมาชิก ดูคลิปบรรยาย 15 นาทีเรียบร้อยแล้ว ต้องการคำแนะนำเปิดรหัสสมาชิกฟรีครับ/ค่ะ`;
-
-  const copyToClipboard = (
-    text: string,
-    type: "line" | "sponsor" | "message",
-  ) => {
-    navigator.clipboard.writeText(text);
-    if (type === "line") {
-      setCopiedLineId(true);
-      trackContactEvent("line", sponsor.sponsorId);
-      setTimeout(() => setCopiedLineId(false), 2000);
-    } else if (type === "sponsor") {
-      setCopiedSponsorId(true);
-      trackContactEvent("line", sponsor.sponsorId);
-      setTimeout(() => setCopiedSponsorId(false), 2000);
-    } else if (type === "message") {
-      setCopiedMessage(true);
-      setTimeout(() => setCopiedMessage(false), 2000);
-    }
-  };
+  // Post-submission / Welcome view states
+  const [showQrCode, setShowQrCode] = useState<boolean>(false);
+  const [copiedCode88, setCopiedCode88] = useState<boolean>(false);
+  const [copiedLineId, setCopiedLineId] = useState<boolean>(false);
 
   const getAttributionParams = () => {
     if (typeof window === "undefined") return {};
@@ -81,20 +82,23 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phone.trim()) {
-      setErrorMessage("กรุณาระบุชื่อและเบอร์โทรศัพท์");
+      setErrorMessage("กรุณาระบุชื่อ-นามสกุล และเบอร์โทรศัพท์ติดต่อ");
       return;
     }
     if (!hasConsent) {
-      setErrorMessage("กรุณายอมรับนโยบายความเป็นส่วนตัว (PDPA) ก่อนส่งข้อมูล");
+      setErrorMessage("กรุณายินยอมให้ทีมงานติดต่อกลับตามนโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)");
       return;
     }
 
     setIsSubmitting(true);
     setErrorMessage("");
+
     try {
+      // 1. บันทึกข้อมูลเข้า Cloud Firestore ให้เรียบร้อยก่อน
       await submitLead({
         fullName: fullName.trim(),
         phoneNumber: phone.trim(),
+        email: email.trim() || undefined,
         lineId: prospectLineId.trim() || "",
         age: age.trim() || undefined,
         occupation: occupation.trim() || undefined,
@@ -105,29 +109,25 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
         hasConsent: true,
       });
 
-      // Fire Pixel Lead Conversion Event across Meta, TikTok, and Google
+      // 2. สำคัญที่สุด: ยิง Pixel Lead Event หลังบันทึกข้อมูลสำเร็จและกำลังเข้าสู่หน้ายินดีต้อนรับเท่านั้น
       trackLeadEvent({
         fullName: fullName.trim(),
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
       });
 
-      setSubmitSuccess(true);
-      setFullName("");
-      setPhone("");
-      setProspectLineId("");
-      setAge("");
-      setOccupation("");
-      setHasConsent(false);
+      // 3. เปลี่ยนหน้าไปที่หน้ายินดีต้อนรับ (Welcome View สำหรับผู้มุ่งหวังจริง)
+      setIsPreviewMode(false);
+      setCurrentStep('welcome');
     } catch (err: any) {
-      console.error(err);
+      console.error('Lead error:', err);
       if (err.message === "DUPLICATE_LEAD") {
-        setErrorMessage(
-          "เบอร์โทรศัพท์นี้ได้ฝากข้อมูลไว้แล้ว ทางทีมงานจะรีบติดต่อกลับโดยเร็วที่สุดครับ",
-        );
+        // แม้เคยฝากเบอร์ไว้แล้ว ก็พาไปหน้ายินดีต้อนรับเพื่อรับคำแนะนำกด 88 ได้เลย
+        setIsPreviewMode(false);
+        setCurrentStep('welcome');
       } else {
         setErrorMessage(
-          "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง หรือติดต่อทาง LINE โดยตรง",
+          "ไม่สามารถบันทึกข้อมูลได้ชั่วคราว กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่อีกครั้ง",
         );
       }
     } finally {
@@ -135,371 +135,464 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
     }
   };
 
+  const copy88 = () => {
+    navigator.clipboard.writeText('88');
+    setCopiedCode88(true);
+    setTimeout(() => setCopiedCode88(false), 2000);
+  };
+
+  const copySponsorLine = () => {
+    navigator.clipboard.writeText(sponsor.lineId);
+    setCopiedLineId(true);
+    trackContactEvent("line", sponsor.sponsorId);
+    setTimeout(() => setCopiedLineId(false), 2000);
+  };
+
   const lineQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(sponsor.lineUrl)}`;
 
   return (
     <section
       id="line-official"
-      className="py-10 sm:py-24 bg-gradient-to-b from-white via-emerald-50/40 to-slate-50 relative"
+      className="py-10 sm:py-20 bg-gradient-to-b from-white via-slate-50 to-blue-50/30 relative"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Main Card Container */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-10 md:p-12 shadow-2xl shadow-emerald-500/10 border-2 border-emerald-500/30 relative overflow-hidden">
-          {/* Top Decorative Banner */}
-          <div className="absolute -right-12 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-10 md:p-12 shadow-2xl shadow-blue-500/5 border-2 border-blue-500/20 relative overflow-hidden">
+          {/* Subtle Glow Accents */}
+          <div className="absolute -right-16 -top-16 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="text-center max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#06C755]/10 text-[#05963f] text-xs sm:text-sm font-semibold mb-3">
-              <MessageCircle className="w-3.5 h-3.5 fill-[#06C755] shrink-0" />
-              <span>ช่องทางติดต่อหลักผ่าน LINE Official</span>
-            </div>
-
-            <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-snug">
-              <span className="inline-block">เริ่มต้นก้าวแรก:</span>{" "}
-              <span className="text-[#06C755] inline-block">
-                แอด LINE สปอนเซอร์
-              </span>{" "}
-              <span className="inline-block">เพื่อสมัครฟรี</span>
-            </h2>
-            <p className="mt-2.5 sm:mt-3 text-slate-600 text-xs sm:text-base leading-relaxed text-pretty">
-              การสมัครสมาชิก Atomy จำเป็นต้องมีผู้แนะนำ{" "}
-              <strong className="font-semibold text-slate-800">
-                ลิงก์สมัครสมาชิก
-              </strong>{" "}
-              เพื่อรับสิทธิ์ทีมงานและพี่เลี้ยงดูแลตลอดเส้นทางธุรกิจ
-            </p>
-          </div>
-
-          <div className="mt-8 sm:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto lg:max-w-none w-full">
-              {/* Sponsor Profile & Quick Contact Summary */}
-              <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-50/60 via-slate-50 to-emerald-50/40 rounded-xl sm:rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <div className="relative shrink-0">
-                  <img
-                    src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
-                    alt={sponsor.sponsorName}
-                    className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover border-2 border-emerald-500 shadow-md shadow-emerald-500/20"
-                  />
-                  <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-4 h-4 rounded-full border-2 border-white" title="พร้อมให้คำปรึกษา" />
+          {/* VIEW 1: LEAD REGISTRATION FORM */}
+          {currentStep === 'form' && (
+            <div>
+              {/* Header */}
+              <div className="text-center max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs sm:text-sm font-semibold mb-3 border border-blue-200">
+                  <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>แบบฟอร์มขอรับคำแนะนำเปิดรหัสสมาชิกฟรี</span>
                 </div>
-                <div className="min-w-0 flex-1 text-center sm:text-left">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
-                      {sponsor.sponsorName}
-                    </h4>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-300">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>ผู้ดูแลสายงาน (Official Consultant)</span>
-                    </span>
+
+                <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                  <span>กรอกแบบฟอร์มเพื่อรับ</span>{" "}
+                  <span className="text-blue-600 inline-block">ลิงก์สมัครสมาชิก Atomy</span>
+                </h2>
+                <p className="mt-2 sm:mt-3 text-slate-600 text-xs sm:text-base leading-relaxed text-pretty">
+                  กรุณากรอกข้อมูลติดต่อด้านล่างนี้ให้ครบถ้วน เพื่อให้สปอนเซอร์{" "}
+                  <strong className="font-bold text-slate-800">{sponsor.sponsorName}</strong>{" "}
+                  และทีมงานส่งต่อรหัสผู้แนะนำ ลิงก์สมัครตรง และวิธีรับสิทธิ์พี่เลี้ยงดูแลฟรีตลอดชีพ
+                </p>
+              </div>
+
+              {/* Sponsor Mini Banner & Leads Inbox Button */}
+              <div className="mt-6 p-4 sm:p-5 bg-gradient-to-r from-blue-50/70 via-slate-50 to-emerald-50/40 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                  <div className="relative shrink-0">
+                    <img
+                      src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
+                      alt={sponsor.sponsorName}
+                      className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-blue-500/20"
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white" title="พร้อมให้คำแนะนำ" />
                   </div>
-                  <p className="text-xs sm:text-sm text-emerald-700 font-semibold mt-1 break-words">
-                    {sponsor.sponsorPosition} • {sponsor.teamName}
-                  </p>
-                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed text-pretty">
-                    ยินดีให้คำปรึกษา แนะนำการสมัครสมาชิก และส่งต่อเครื่องมือการทำงานฟรีตลอดชีพ
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-base font-bold text-slate-900 truncate">
+                        {sponsor.sponsorName}
+                      </h4>
+                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full">
+                        ผู้แนะนำ
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      {sponsor.sponsorPosition} • {sponsor.teamName}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Primary Action Button Grid */}
-              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row items-stretch justify-center gap-3 sm:gap-3.5">
-                {/* Direct LINE Link Button */}
-                <a
-                  id="btn-main-line-cta"
-                  href={sponsor.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackContactEvent("line", sponsor.sponsorId)}
-                  className="flex-1 inline-flex items-center justify-center gap-2.5 px-4 sm:px-8 py-3.5 sm:py-4 bg-[#06C755] hover:bg-[#05b34c] text-white text-sm sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-600/30 transition-all active:scale-95 text-center min-h-[48px]"
-                >
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white shrink-0" />
-                  <span>คลิกเพื่อแอด LINE Official ทันที</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-0.5 shrink-0" />
-                </a>
-
-                {/* Open QR Code Button */}
-                <button
-                  id="btn-show-qr-code"
-                  onClick={() => setShowQrModal(true)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 sm:py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-base font-semibold rounded-xl sm:rounded-2xl transition-colors border border-slate-200 cursor-pointer shadow-2xs min-h-[48px]"
-                >
-                  <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 shrink-0" />
-                  <span>สแกน QR Code</span>
-                </button>
-              </div>
-
-              {/* Copy LINE ID quick bar */}
-              <div className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs sm:text-sm text-slate-600">
-                <span className="flex items-center gap-1.5">
-                  <span>LINE ID:</span>
-                  <strong className="text-slate-900 font-mono bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-slate-200">
-                    {sponsor.lineId}
-                  </strong>
-                </span>
-                <button
-                  onClick={() => copyToClipboard(sponsor.lineId, "line")}
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-medium hover:underline cursor-pointer"
-                >
-                  {copiedLineId ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>คัดลอกแล้ว!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>คัดลอก LINE ID</span>
-                    </>
-                  )}
-                </button>
-
-                {sponsor.phoneNumber && (
-                  <span className="flex items-center gap-1 text-slate-500">
-                    <span>• โทร:</span>
-                    <a
-                      href={`tel:${sponsor.phoneNumber}`}
-                      className="text-blue-600 font-semibold hover:underline"
+                {/* Member-Only Toolbar: Preview & Leads Box (Hidden from general public prospects) */}
+                {isAuthenticated && (
+                  <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto shrink-0">
+                    {/* Shortcut to preview Welcome View (Members only) */}
+                    <button
+                      type="button"
+                      id="btn-shortcut-preview-welcome"
+                      onClick={() => {
+                        setIsPreviewMode(true);
+                        setCurrentStep('welcome');
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+                      title="คลิกเพื่อดูตัวอย่างหน้ายินดีต้อนรับและขั้นตอนส่งเลข 88 ที่ผู้มุ่งหวังจะเห็นหลังส่งฟอร์ม (แสดงเฉพาะสมาชิกในระบบ)"
                     >
-                      {sponsor.phoneNumber}
-                    </a>
-                  </span>
+                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>ตัวอย่างหน้ายินดีต้อนรับ (กด 88)</span>
+                    </button>
+
+                    {onOpenLeadsModal && (
+                      <button
+                        type="button"
+                        onClick={onOpenLeadsModal}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 shadow-2xs transition-colors cursor-pointer"
+                        title="กล่องรายชื่อผู้มุ่งหวังสำหรับสปอนเซอร์ (แสดงเฉพาะสมาชิกในระบบ)"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600" />
+                        <span>กล่องรายชื่อ (Leads)</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {/* Pre-composed Message Box for Convenience */}
-              <div className="mt-6 sm:mt-8 p-3.5 sm:p-5 bg-emerald-50/60 rounded-xl sm:rounded-2xl border border-emerald-200/80 text-left">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[11px] sm:text-xs font-semibold text-emerald-900 flex items-center gap-1.5">
-                    <Send className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span>ข้อความแนะนำส่งหาสปอนเซอร์ใน LINE:</span>
-                  </span>
-                  <button
-                    onClick={() => copyToClipboard(prefilledMessage, "message")}
-                    className="text-[11px] sm:text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer bg-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-emerald-300 shadow-2xs shrink-0"
-                  >
-                    {copiedMessage ? (
-                      <Check className="w-3 h-3 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                    <span>{copiedMessage ? "คัดลอกแล้ว" : "คัดลอก"}</span>
-                  </button>
-                </div>
-                <p className="text-xs sm:text-sm text-emerald-950 bg-white/90 p-2.5 sm:p-3 rounded-xl border border-emerald-200/60 font-mono leading-relaxed">
-                  "{prefilledMessage}"
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl mx-auto lg:max-w-none w-full">
-              {/* Quick Consultation Request Form (Firebase Firestore Integration) */}
-              <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-slate-50/90 rounded-xl sm:rounded-2xl border border-slate-200 text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900">
-                      หรือฝากข้อมูลให้ {sponsor.sponsorName} ติดต่อกลับ
-                    </h3>
+              {/* Form Card */}
+              <div className="mt-6 max-w-2xl mx-auto">
+                {errorMessage && (
+                  <div className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <span>{errorMessage}</span>
                   </div>
-                  {onOpenLeadsModal && (
-                    <button
-                      type="button"
-                      onClick={onOpenLeadsModal}
-                      className="self-start sm:self-auto inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border border-blue-200 shadow-2xs transition-colors cursor-pointer"
-                      title="ดูรายชื่อที่กรอกเข้ามาในระบบ"
-                    >
-                      <Users className="w-3.5 h-3.5 text-blue-600" />
-                      <span>เปิดดูกล่องรายชื่อ (Leads Inbox)</span>
-                    </button>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 mb-3.5 leading-relaxed text-pretty">
-                  ข้อมูลจะถูกบันทึกเข้า Cloud Firestore และส่งสัญญาณ Pixel ทันที
-                  เพื่อให้ที่ปรึกษาติดต่อแนะนำการสมัครสมาชิกฟรี
-                </p>
+                )}
 
-                {submitSuccess ? (
-                  <div className="p-3.5 sm:p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs sm:text-sm flex items-center gap-3">
-                    <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                <form onSubmit={handleLeadSubmit} className="space-y-3.5 sm:space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <div className="font-bold">
-                        ส่งข้อมูลสำเร็จเรียบร้อยแล้ว!
-                      </div>
-                      <div className="text-xs text-emerald-700 mt-0.5">
-                        {sponsor.sponsorName}{" "}
-                        จะติดต่อกลับเพื่อให้ข้อมูลและแนะนำการสมัครสมาชิกโดยเร็วที่สุด
-                      </div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        ชื่อ-นามสกุลของคุณ <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="เช่น สมชาย ใจดี"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        เบอร์โทรศัพท์ติดต่อ <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="เช่น 0812345678"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
                     </div>
                   </div>
-                ) : (
-                  <form onSubmit={handleLeadSubmit} className="space-y-3">
-                    {errorMessage && (
-                      <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-lg">
-                        {errorMessage}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          ชื่อ-นามสกุล *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="เช่น สมชาย ใจดี"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          เบอร์โทรศัพท์ติดต่อ *
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          placeholder="เช่น 0812345678"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
-                        />
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          อายุ (ปี)
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="เช่น 35"
-                          value={age}
-                          onChange={(e) => setAge(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          อาชีพปัจจุบัน
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="เช่น พนักงานประจำ, ค้าขาย"
-                          value={occupation}
-                          onChange={(e) => setOccupation(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          LINE ID (ถ้ามี)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="เช่น somchai.line"
-                          value={prospectLineId}
-                          onChange={(e) => setProspectLineId(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* PDPA Consent Checkbox */}
-                    <div className="flex items-start gap-2 mt-3 mb-4">
-                      <input
-                        type="checkbox"
-                        id="pdpa-consent"
-                        checked={hasConsent}
-                        onChange={(e) => setHasConsent(e.target.checked)}
-                        className="mt-1 w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-                      />
-                      <label
-                        htmlFor="pdpa-consent"
-                        className="text-[10px] sm:text-xs text-slate-500 leading-relaxed cursor-pointer select-none"
-                      >
-                        ข้าพเจ้ายินยอมให้เก็บรวบรวมและใช้ข้อมูลส่วนบุคคล
-                        เพื่อให้ทีมงานติดต่อกลับและให้คำแนะนำเกี่ยวกับการสมัครสมาชิก
-                        Atomy (ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล PDPA)
+                  {/* Email & LINE ID */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        อีเมล (สำหรับส่งข้อมูลและรหัสสมาชิก)
                       </label>
+                      <input
+                        type="email"
+                        placeholder="เช่น somchai@gmail.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
                     </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        LINE ID (แนะนำเพื่อความสะดวกรวดเร็ว)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="เช่น somchai.line"
+                        value={prospectLineId}
+                        onChange={(e) => setProspectLineId(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
+                    </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        อายุ (ปี)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="เช่น 35"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        อาชีพปัจจุบัน
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="เช่น พนักงานประจำ, ค้าขาย"
+                        value={occupation}
+                        onChange={(e) => setOccupation(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* PDPA Consent Checkbox */}
+                  <div className="flex items-start gap-2.5 pt-1.5">
+                    <input
+                      type="checkbox"
+                      id="section-pdpa-consent"
+                      checked={hasConsent}
+                      onChange={(e) => setHasConsent(e.target.checked)}
+                      className="mt-1 w-4 h-4 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label
+                      htmlFor="section-pdpa-consent"
+                      className="text-[11px] sm:text-xs text-slate-500 leading-relaxed cursor-pointer select-none"
+                    >
+                      ข้าพเจ้ายินยอมให้ทีมงานจัดเก็บข้อมูลส่วนบุคคลเพื่อการติดต่อกลับ แนะนำวิธีการสมัครสมาชิก Atomy และส่งคู่มือการสร้างรายได้ (ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล PDPA)
+                    </label>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm min-h-[44px]"
+                      className="w-full py-3.5 sm:py-4 px-6 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 disabled:opacity-50 text-white font-extrabold text-sm sm:text-base rounded-xl shadow-xl shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-2.5 min-h-[48px] active:scale-[0.99]"
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>กำลังส่งข้อมูล...</span>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>กำลังบันทึกข้อมูลเข้าระบบ...</span>
                         </>
                       ) : (
                         <>
-                          <span>ส่งข้อมูลเพื่อขอคำแนะนำ</span>
-                          <ArrowRight className="w-4 h-4" />
+                          <span>กดยืนยันข้อมูล & รับขั้นตอนแอด LINE สปอนเซอร์</span>
+                          <ArrowRight className="w-5 h-5" />
                         </>
                       )}
                     </button>
-                  </form>
-                )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Guarantees */}
+              <div className="mt-8 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs text-slate-500 text-center">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>ไม่มีค่าแรกเข้า 0 บาท สมัครฟรี 100%</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>รับสิทธิ์เข้าห้องเรียนออนไลน์และเครื่องมือฟรี</span>
+                </span>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Guarantees */}
-          <div className="mt-5 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-100 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[11px] sm:text-xs text-slate-500 text-center">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
-              <span>การันตีไม่มีการบังคับซื้อสินค้า</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
-              <span>รับสิทธิ์เข้าห้องเรียนออนไลน์ฟรี</span>
-            </span>
-          </div>
+          {/* VIEW 2: WELCOME & LINE STEP-BY-STEP (ขั้นตอนกด 88) */}
+          {currentStep === 'welcome' && (
+            <div className="animate-in fade-in zoom-in-95 duration-200">
+              {/* Preview Mode Alert Bar & Switch Back Button (ONLY shown when in preview mode) */}
+              {isPreviewMode && (
+                <div className="mb-6 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-300/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs">
+                  <div className="flex items-center gap-2.5 text-emerald-950 font-medium text-center sm:text-left">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-700 shrink-0">
+                      <Eye className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-800">โหมดแสดงตัวอย่างหน้ายินดีต้อนรับ (Welcome Screen):</span>{' '}
+                      <span className="text-slate-600">นี่คือหน้าที่ผู้มุ่งหวังจะเห็นทันทีหลังกดส่งฟอร์ม เพื่อรับขั้นตอนแอด LINE & ส่งเลข 88</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    id="btn-welcome-back-to-form"
+                    onClick={() => {
+                      setIsPreviewMode(false);
+                      setCurrentStep('form');
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-bold rounded-xl border border-slate-300 shadow-2xs cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>กลับไปดูหน้าแบบฟอร์ม</span>
+                  </button>
+                </div>
+              )}
+
+              {/* For authenticated members testing real submission: allow quick switch back */}
+              {!isPreviewMode && isAuthenticated && (
+                <div className="mb-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviewMode(false);
+                      setCurrentStep('form');
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>กลับไปหน้าแบบฟอร์ม (โหมดทดสอบสมาชิก)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Header: Congratulations / Welcome */}
+              <div className="text-center max-w-xl mx-auto">
+                <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3.5 shadow-lg shadow-emerald-500/20">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200 inline-block mb-2">
+                  ✓ บันทึกข้อมูลเข้าสู่ระบบสำเร็จแล้ว
+                </span>
+
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                  ยินดีต้อนรับสู่ครอบครัว Atomy Global!
+                </h2>
+
+                <p className="mt-2.5 text-xs sm:text-base text-slate-600 leading-relaxed text-pretty">
+                  ขอแสดงความยินดีกับการเริ่มต้นก้าวสำคัญ! ข้อมูลของคุณได้รับการบันทึกเรียบร้อยแล้ว สปอนเซอร์{" "}
+                  <strong className="text-slate-900 font-bold">{sponsor.sponsorName}</strong>{" "}
+                  พร้อมส่งมอบลิงก์สมัครสมาชิกและพาคุณเริ่มสร้างรายได้อย่างมืออาชีพ
+                </p>
+              </div>
+
+              {/* LINE CHAT PREVIEW MOCKUP: แสดงขั้นตอนการกด 88 เพื่อฝากข้อมูล */}
+              <div className="mt-6 max-w-xl mx-auto bg-gradient-to-b from-[#7ECEF4]/25 via-sky-50 to-[#6BB7E2]/20 p-4 sm:p-6 rounded-2xl border border-sky-300/80 shadow-inner">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-sky-200">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#06C755] text-white flex items-center justify-center text-xs font-black shadow-xs">
+                      L
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-900">
+                      ตัวอย่างหน้าจอแชท LINE Official สปอนเซอร์
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold text-sky-900 bg-white/90 px-2.5 py-0.5 rounded-full border border-sky-200">
+                    ขั้นตอนง่ายใน 3 วินาที
+                  </span>
+                </div>
+
+                {/* Simulated LINE Chat Feed */}
+                <div className="space-y-3 font-sans">
+                  {/* Sponsor Greeting Bubble */}
+                  <div className="flex items-start gap-2.5">
+                    <img
+                      src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
+                      alt={sponsor.sponsorName}
+                      className="w-8 h-8 rounded-full object-cover border border-emerald-500 shrink-0"
+                    />
+                    <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-xs border border-slate-200 max-w-[85%] text-slate-800 text-xs sm:text-sm">
+                      <p className="font-semibold text-slate-900 mb-1">{sponsor.sponsorName}</p>
+                      <p className="leading-relaxed">
+                        สวัสดีครับ! หากต้องการรับลิงก์สมัครสมาชิก Atomy ฟรี และสิทธิ์เข้าร่วมทีม กรุณาพิมพ์เลข{" "}
+                        <strong className="text-blue-600 font-black text-sm sm:text-base">88</strong>{" "}
+                        ส่งเข้ามาในแชทนี้ได้เลยครับ!
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Prospect Response Bubble: Typing 88 */}
+                  <div className="flex items-end justify-end gap-1.5 pt-1">
+                    <span className="text-[10px] text-slate-400 font-mono">อ่านแล้ว</span>
+                    <div className="bg-[#06C755] text-white font-black text-base sm:text-lg px-4 py-2 rounded-2xl rounded-tr-none shadow-md flex items-center gap-2 animate-pulse">
+                      <span>88</span>
+                      <Send className="w-4 h-4 fill-white" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Copy 88 Helper */}
+                <div className="mt-4 pt-3 border-t border-sky-200/80 flex items-center justify-between gap-2 text-xs">
+                  <span className="text-slate-700 font-medium">
+                    เพียงแอด LINE แล้วส่งตัวเลข <strong className="text-blue-700 font-bold">88</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copy88}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 text-blue-700 font-bold rounded-lg border border-blue-300 shadow-2xs cursor-pointer text-xs"
+                  >
+                    {copiedCode88 ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedCode88 ? 'คัดลอกเลข 88 แล้ว' : 'คัดลอกเลข 88'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS: Add LINE & Scan QR Code */}
+              <div className="mt-6 max-w-xl mx-auto space-y-3">
+                {/* Button 1: Direct LINE Link */}
+                <a
+                  id="btn-welcome-add-line-direct"
+                  href={sponsor.lineUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackContactEvent('line', sponsor.sponsorId)}
+                  className="w-full py-4 px-6 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2.5 text-center min-h-[50px] active:scale-[0.99]"
+                >
+                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white shrink-0" />
+                  <span>คลิกเพื่อแอด LINE สปอนเซอร์ทันที</span>
+                  <ArrowRight className="w-5 h-5 shrink-0" />
+                </a>
+
+                {/* Button 2: Toggle QR Code Scan */}
+                <button
+                  type="button"
+                  id="btn-welcome-toggle-qr"
+                  onClick={() => setShowQrCode(!showQrCode)}
+                  className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl transition-colors border border-slate-300 flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
+                >
+                  <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                  <span>{showQrCode ? 'ซ่อน QR Code' : 'หรือ สแกน QR Code เพื่อแอด LINE สปอนเซอร์'}</span>
+                </button>
+
+                {/* QR Code Container */}
+                {showQrCode && (
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150 shadow-inner">
+                    <p className="text-xs sm:text-sm text-slate-700 font-medium mb-3">
+                      เปิดกล้องมือถือหรือแอป LINE สแกน QR Code เพื่อเพิ่มเพื่อนได้ทันที:
+                    </p>
+                    <div className="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
+                      <img
+                        src={lineQrUrl}
+                        alt="LINE QR Code"
+                        className="w-52 h-52 mx-auto rounded-xl"
+                      />
+                    </div>
+                    <div className="mt-3.5 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-600">
+                      <span>LINE ID: <strong className="font-mono text-slate-900 font-bold">{sponsor.lineId}</strong></span>
+                      <button
+                        type="button"
+                        onClick={copySponsorLine}
+                        className="text-blue-600 hover:underline flex items-center gap-1 cursor-pointer font-bold ml-1"
+                      >
+                        {copiedLineId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedLineId ? 'คัดลอกแล้ว' : 'คัดลอก LINE ID'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reset to edit form if needed */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+                <span>มีข้อสงสัยสอบถามโทร: <strong className="text-slate-700">{sponsor.phoneNumber || '081-234-5678'}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep('form')}
+                  className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>กลับไปดูหน้ากรอกแบบฟอร์ม</span>
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
-
-      {/* QR Code Modal for Mobile Scanning */}
-      {showQrModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-slate-900">
-              สแกน QR Code ด้วยมือถือ
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              เปิดแอป LINE บนมือถือ แล้วสแกนเพื่อเพิ่มเพื่อนกับ{" "}
-              {sponsor.sponsorName}
-            </p>
-
-            <div className="mt-5 p-4 bg-slate-50 rounded-2xl border border-slate-200 inline-block shadow-inner">
-              <img
-                src={lineQrUrl}
-                alt="LINE QR Code"
-                className="w-52 h-52 mx-auto rounded-lg"
-              />
-            </div>
-
-            <div className="mt-4 text-xs font-mono text-slate-600">
-              LINE ID:{" "}
-              <strong className="text-slate-900 font-bold">
-                {sponsor.lineId}
-              </strong>
-            </div>
-
-            <button
-              onClick={() => setShowQrModal(false)}
-              className="mt-6 w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm rounded-xl transition-colors cursor-pointer"
-            >
-              ปิดหน้าต่าง
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 };

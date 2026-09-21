@@ -19,11 +19,11 @@ export const DEFAULT_SPONSOR: SponsorProfile = {
 
 export const VIDEO_PRESETS: VideoPreset[] = [
   {
-    id: 'atomy-15min-intro',
-    title: 'เจาะลึกธุรกิจ Atomy ใน 15 นาที: แผนการตลาด และโมเดล Masstige',
-    subtitle: 'คลิปบรรยายพิเศษฉบับกระชับสำหรับผู้มุ่งหวังและผู้สนใจเริ่มต้นธุรกิจ',
-    durationLabel: '15 นาที',
-    youtubeId: 'h9eRrJ0V5N8', // https://www.youtube.com/watch?v=h9eRrJ0V5N8
+    id: 'atomy-20min-intro',
+    title: 'เจาะลึกธุรกิจ Atomy ใน 20 นาที: แผนการตลาด โมเดล Masstige และการสร้าง Passive Income',
+    subtitle: 'คลิปบรรยายพิเศษเจาะลึกสำหรับผู้มุ่งหวังและผู้สนใจเริ่มต้นธุรกิจแบบไม่มีค่าแรกเข้า',
+    durationLabel: '20 นาที',
+    youtubeId: 'h9eRrJ0V5N8', // Default YouTube video ID or custom link
     thumbnailUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80',
     speaker: 'บรรยายโดย อิศราวัฒน์ ปวินทกานต์ (คุณทูน)',
     description: 'ภาพรวมของธุรกิจอะโทมี่ แหล่งที่มาของรายได้ ระบบไบนารีระดับโลก และความมั่นคงของบริษัทระดับโลกจากเกาหลีใต้',
@@ -41,35 +41,35 @@ export const VIDEO_CHAPTERS: VideoChapter[] = [
   },
   {
     id: 2,
-    timeSeconds: 180, // 3:00
-    timestamp: '03:00',
+    timeSeconds: 240, // 4:00
+    timestamp: '04:00',
     title: 'กลยุทธ์ Masstige (Absolute Quality, Absolute Price)',
     description: 'คุณภาพสูงสุดในราคาที่ทุกคนจับต้องได้ ทำให้เกิดการซื้อซ้ำจากผู้บริโภคจริง 100%',
     highlight: 'ไม่ต้องตื๊อขาย ลูกค้าซื้อใช้เพราะสินค้าดีจริงในชีวิตประจำวัน',
   },
   {
     id: 3,
-    timeSeconds: 390, // 6:30
-    timestamp: '06:30',
+    timeSeconds: 540, // 9:00
+    timestamp: '09:00',
     title: 'แผนการตลาดแบบ Global One Market (Binary System)',
     description: 'เชื่อมโยงเครือข่ายทั่วโลกในรหัสเดียว รหัสเดียวต่อสายงานได้ทุกประเทศทั่วโลก',
     highlight: 'ไม่มีจำกัดชั้นลึก (Unlimited Depth) ขยายได้ทั่วโลกแบบไร้พรมแดน',
   },
   {
     id: 4,
-    timeSeconds: 600, // 10:00
-    timestamp: '10:00',
+    timeSeconds: 840, // 14:00
+    timestamp: '14:00',
     title: 'คะแนน PV ไม่มีวันหมดอายุ & รายได้ Passive Income',
     description: 'คะแนนสะสมส่วนตัว (Personal PV) อยู่ตลอดชีพ ไม่มีการตัดทิ้ง ไม่ต้องรักษายอดรายเดือน',
     highlight: 'ไม่มีค่าแรกเข้ารายปี ไม่มีค่าธรรมเนียมสมัครสมาชิกใดๆ ทั้งสิ้น',
   },
   {
     id: 5,
-    timeSeconds: 780, // 13:00
-    timestamp: '13:00',
-    title: 'ก้าวแรกในการสมัคร & รับรหัสสปอนเซอร์เพื่อเริ่มต้นฟรี',
+    timeSeconds: 1080, // 18:00
+    timestamp: '18:00',
+    title: 'ก้าวแรกในการสมัคร & กรอกแบบฟอร์มเพื่อรับรหัสสปอนเซอร์',
     description: 'วิธีเข้าร่วมทีม รับสิทธิ์การเป็นหุ้นส่วนธุรกิจ และแนวทางการทำงานร่วมกับโค้ชพี่เลี้ยง',
-    highlight: 'แอด Line Official เพื่อขอรับรหัสสปอนเซอร์และสิทธิ์เข้ากลุ่มเรียนรู้ฟรี',
+    highlight: 'กรอกแบบฟอร์มฝากข้อมูลเพื่อรับรหัสสปอนเซอร์และสิทธิ์เข้ากลุ่มเรียนรู้ฟรี',
   },
 ];
 

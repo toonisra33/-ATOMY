@@ -15,6 +15,8 @@ export interface SponsorProfile {
   fbPixelId?: string;
   tiktokPixelId?: string;
   googleTagId?: string;
+  customVideoUrl?: string; // e.g. custom YouTube URL or video ID
+  customVideoMinutes?: number; // e.g. 20 minutes
   pinHash?: string; // 4-6 digit PIN for sponsor authentication
   updatedAt?: string;
 }
