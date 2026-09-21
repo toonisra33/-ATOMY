@@ -23,8 +23,10 @@ import {
   Sparkles,
   Mail,
   Eye,
+  FileSpreadsheet,
+  Download,
 } from 'lucide-react';
-import { LeadSubmission, fetchLeads, updateLeadStatus, seedSampleLeads, getLocalLeads } from '../lib/firebase';
+import { LeadSubmission, fetchLeads, updateLeadStatus, seedSampleLeads, getLocalLeads, exportLeadsToExcelCSV } from '../lib/firebase';
 import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { CallScriptView } from './CallScriptView';
@@ -153,7 +155,45 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     return true;
   });
 
+  const uncontactedLeads = leads.filter((l) => (l.status || 'new') === 'new');
   const newCount = filteredLeads.filter((l) => (l.status || 'new') === 'new').length;
+
+  const handleExportUncontactedExcel = () => {
+    if (uncontactedLeads.length === 0) {
+      alert('ขณะนี้ไม่มีรายชื่อผู้มุ่งหวังในสถานะ "ยังไม่ได้รับการติดต่อ (รอติดต่อ)" สำหรับส่งออก');
+      return;
+    }
+    exportLeadsToExcelCSV(
+      uncontactedLeads,
+      `รายชื่อผู้มุ่งหวังรอติดต่อ_${sponsor.sponsorName.replace(/\s+/g, '_')}`
+    );
+  };
+
+  const handleExportAllExcel = () => {
+    if (leads.length === 0) {
+      alert('ไม่มีรายชื่อสำหรับส่งออก');
+      return;
+    }
+    exportLeadsToExcelCSV(
+      leads,
+      `รายชื่อผู้มุ่งหวังทั้งหมด_${sponsor.sponsorName.replace(/\s+/g, '_')}`
+    );
+  };
+
+  const handleResetAllToNew = async () => {
+    if (!confirm('ต้องการปรับสถานะรายชื่อผู้มุ่งหวังทั้งหมดกลับเป็น "ยังไม่ได้รับการติดต่อ (รอติดต่อ)" ใช่หรือไม่?')) {
+      return;
+    }
+    const updated = leads.map(l => ({ ...l, status: 'new' as const }));
+    setLeads(updated);
+    for (const item of leads) {
+      if (item.id) {
+        await updateLeadStatus(item.id, 'new');
+      }
+    }
+    setSeedSuccessMsg('ปรับสถานะรายชื่อทั้งหมดเป็น "ยังไม่ได้รับการติดต่อ" เรียบร้อยแล้ว');
+    setTimeout(() => setSeedSuccessMsg(null), 3500);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -418,11 +458,45 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                   <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="ค้นหาตามชื่อ, เบอร์โทรศัพท์, LINE, อายุ, อาชีพ หรือสปอนเซอร์..."
+                    placeholder="ค้นหาตามชื่อ, เบอร์โทรศัพท์, LINE, อายุ, อาชีพ, ความสนใจ หรือสปอนเซอร์..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                </div>
+
+                {/* Export Excel & Quick Management Toolbar */}
+                <div className="mt-2.5 p-2 sm:p-2.5 bg-slate-950/90 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleExportUncontactedExcel}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-sm hover:scale-[1.02] active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                      title="ดาวน์โหลดไฟล์ Excel (.csv ภาษาไทย UTF-8) เฉพาะรายชื่อที่ยังไม่ได้รับการติดต่อ เปิดได้ทันที"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-100" />
+                      <span>ดาวน์โหลด Excel รอติดต่อ ({uncontactedLeads.length})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleExportAllExcel}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer border border-slate-700 whitespace-nowrap"
+                      title="ดาวน์โหลดไฟล์ Excel รายชื่อผู้มุ่งหวังทั้งหมดทุกสถานะ"
+                    >
+                      <Download className="w-3.5 h-3.5 text-slate-400" />
+                      <span>ดาวน์โหลดทั้งหมด ({leads.length})</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleResetAllToNew}
+                    className="text-[11px] text-slate-400 hover:text-amber-300 transition-colors cursor-pointer underline decoration-slate-700 hover:decoration-amber-400 ml-auto whitespace-nowrap"
+                    title="ปรับทุกรายชื่อเป็นสถานะ 'ยังไม่ได้รับการติดต่อ' เพื่อให้คุณสามารถเริ่มปรับสถานะและคัดกรองเองได้"
+                  >
+                    ปรับสถานะทั้งหมดเป็นรอติดต่อ
+                  </button>
                 </div>
 
                 {/* Leads List */}
@@ -555,13 +629,26 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                           </div>
 
                           {/* Notes/Interests from prospect */}
-                          {item.notes && (
-                            <div className="mt-2 text-xs bg-slate-900/90 text-slate-300 p-2.5 rounded-xl border border-slate-800/90 flex items-start gap-2">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                              <div className="leading-relaxed">
-                                <strong className="text-amber-300 font-medium mr-1">ความสนใจ/หมายเหตุ:</strong>
-                                <span>{item.notes}</span>
-                              </div>
+                          {(item.interest || item.notes) && (
+                            <div className="mt-2.5 space-y-1.5">
+                              {item.interest && (
+                                <div className="text-xs bg-sky-950/70 text-sky-200 p-2 rounded-xl border border-sky-800/60 flex items-start gap-2">
+                                  <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
+                                  <div className="leading-relaxed">
+                                    <strong className="text-sky-300 font-semibold mr-1">ความสนใจที่ปรึกษา:</strong>
+                                    <span>{item.interest}</span>
+                                  </div>
+                                </div>
+                              )}
+                              {item.notes && (
+                                <div className="text-xs bg-slate-900/90 text-slate-300 p-2 rounded-xl border border-slate-800/90 flex items-start gap-2">
+                                  <MessageCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                  <div className="leading-relaxed">
+                                    <strong className="text-amber-300 font-medium mr-1">หมายเหตุเพิ่มเติม/เวลาสะดวก:</strong>
+                                    <span>{item.notes}</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 

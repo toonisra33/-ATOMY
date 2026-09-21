@@ -241,6 +241,24 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
               )}
             </div>
 
+            {/* Interest & Notes of selected lead */}
+            {(selectedLead.interest || selectedLead.notes) && (
+              <div className="w-full pt-1.5 border-t border-blue-900/40 space-y-1">
+                {selectedLead.interest && (
+                  <div className="flex items-start gap-1.5 text-xs text-sky-300">
+                    <span className="text-sky-400 font-semibold shrink-0">🎯 ความสนใจ:</span>
+                    <span>{selectedLead.interest}</span>
+                  </div>
+                )}
+                {selectedLead.notes && (
+                  <div className="flex items-start gap-1.5 text-xs text-amber-300">
+                    <span className="text-amber-400 font-semibold shrink-0">📝 หมายเหตุ:</span>
+                    <span>{selectedLead.notes}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               {prospectPhone && (
                 <a

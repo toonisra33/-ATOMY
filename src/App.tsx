@@ -19,6 +19,7 @@ import { AffiliateModal } from "./components/AffiliateModal";
 import { PixelStatusModal } from "./components/PixelStatusModal";
 import { DeployGuideModal } from "./components/DeployGuideModal";
 import { LeadsInboxModal } from "./components/LeadsInboxModal";
+import { LeadsPage } from "./components/LeadsPage";
 import { LoginModal } from "./components/LoginModal";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
@@ -264,6 +265,28 @@ export default function App() {
 
   if (currentPath === "/privacy") {
     return <PrivacyPolicyPage />;
+  }
+
+  const isLeadsPage =
+    currentPath === "/leads" ||
+    (typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("view") === "leads" ||
+        window.location.hash === "#leads"));
+
+  if (isLeadsPage) {
+    return (
+      <>
+        <LeadsPage
+          sponsor={sponsor}
+          session={session}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+        />
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+        />
+      </>
+    );
   }
 
   return (

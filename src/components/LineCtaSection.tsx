@@ -17,6 +17,8 @@ import {
   Lock,
   Eye,
   ArrowLeft,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { submitLead } from "../lib/firebase";
 import { trackLeadEvent, trackContactEvent } from "../lib/pixel";
@@ -27,6 +29,17 @@ interface LineCtaSectionProps {
   onOpenLeadsModal?: () => void;
   externalStep?: 'form' | 'welcome';
   onStepChange?: (step: 'form' | 'welcome') => void;
+}
+
+interface SubmittedLeadData {
+  fullName: string;
+  phone: string;
+  email?: string;
+  lineId?: string;
+  age?: string;
+  occupation?: string;
+  interest?: string;
+  notes?: string;
 }
 
 export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
@@ -55,11 +68,15 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   const [prospectLineId, setProspectLineId] = useState("");
   const [age, setAge] = useState("");
   const [occupation, setOccupation] = useState("");
+  const [interest, setInterest] = useState("สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)");
+  const [notes, setNotes] = useState("");
   const [hasConsent, setHasConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   // Post-submission / Welcome view states
+  const [submittedData, setSubmittedData] = useState<SubmittedLeadData | null>(null);
+  const [copiedApplication, setCopiedApplication] = useState<boolean>(false);
   const [showQrCode, setShowQrCode] = useState<boolean>(false);
   const [copiedCode88, setCopiedCode88] = useState<boolean>(false);
   const [copiedLineId, setCopiedLineId] = useState<boolean>(false);
@@ -94,6 +111,18 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
     setErrorMessage("");
 
     try {
+      const payload: SubmittedLeadData = {
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        email: email.trim() || undefined,
+        lineId: prospectLineId.trim() || undefined,
+        age: age.trim() || undefined,
+        occupation: occupation.trim() || undefined,
+        interest: interest.trim() || undefined,
+        notes: notes.trim() || undefined,
+      };
+      setSubmittedData(payload);
+
       // 1. บันทึกข้อมูลเข้า Cloud Firestore ให้เรียบร้อยก่อน
       await submitLead({
         fullName: fullName.trim(),
@@ -102,6 +131,8 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
         lineId: prospectLineId.trim() || "",
         age: age.trim() || undefined,
         occupation: occupation.trim() || undefined,
+        interest: interest.trim() || undefined,
+        notes: notes.trim() || undefined,
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
         ownerUid: sponsor.ownerUid || "",
@@ -133,6 +164,45 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getApplicationText = () => {
+    const data = submittedData || {
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      lineId: prospectLineId.trim(),
+      email: email.trim(),
+      age: age.trim(),
+      occupation: occupation.trim(),
+      interest: interest.trim(),
+      notes: notes.trim(),
+    };
+
+    const val = (v?: string) => (v && v.trim() ? v.trim() : "-");
+
+    const lines = [
+      "📋 ข้อมูลลงทะเบียนสมัครสมาชิก Atomy (รหัส 88)",
+      "━━━━━━━━━━━━━━━━",
+      `👤 ชื่อ-นามสกุล: ${val(data.fullName || fullName)}`,
+      `📞 เบอร์โทรศัพท์: ${val(data.phone || phone)}`,
+      `📧 อีเมล: ${val(data.email || email)}`,
+      `💬 LINE ID: ${val(data.lineId || prospectLineId)}`,
+      `🎂 อายุ: ${data.age || age ? `${data.age || age} ปี` : "-"}`,
+      `💼 อาชีพ: ${val(data.occupation || occupation)}`,
+      `🎯 ความสนใจ: ${val(data.interest || interest)}`,
+      `📝 หมายเหตุ/เวลาสะดวก: ${val(data.notes || notes)}`,
+      "━━━━━━━━━━━━━━━━",
+      `🤝 สปอนเซอร์ผู้ดูแล: ${sponsor.sponsorName} (${sponsor.sponsorId})`,
+    ];
+
+    return lines.join("\n");
+  };
+
+  const copyApplicationData = () => {
+    const text = getApplicationText();
+    navigator.clipboard.writeText(text);
+    setCopiedApplication(true);
+    setTimeout(() => setCopiedApplication(false), 2500);
   };
 
   const copy88 = () => {
@@ -245,17 +315,17 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                         <span>ตัวอย่างหน้าต้อนรับ</span>
                       </button>
 
-                      {onOpenLeadsModal && (
-                        <button
-                          type="button"
-                          onClick={onOpenLeadsModal}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 shadow-2xs transition-colors cursor-pointer whitespace-nowrap"
-                          title="กล่องรายชื่อผู้มุ่งหวังสำหรับสปอนเซอร์ (แสดงเฉพาะสมาชิกในระบบ)"
-                        >
-                          <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span>กล่องรายชื่อ (Leads)</span>
-                        </button>
-                      )}
+                      <a
+                        href="/leads"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 shadow-2xs transition-colors cursor-pointer whitespace-nowrap"
+                        title="เปิดหน้าจัดการรายชื่อผู้มุ่งหวังในแท็บใหม่เต็มจอ"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>กล่องรายชื่อ (Leads)</span>
+                        <ExternalLink className="w-3 h-3 text-blue-500 opacity-80" />
+                      </a>
                     </div>
                   )}
                 </div>
@@ -354,6 +424,38 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                         className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors"
                       />
                     </div>
+                  </div>
+
+                  {/* ความสนใจที่ต้องการปรึกษา */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      ความสนใจเบื้องต้นที่คุณต้องการปรึกษา <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={interest}
+                      onChange={(e) => setInterest(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[46px] transition-colors cursor-pointer"
+                    >
+                      <option value="สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)">💼 สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)</option>
+                      <option value="สนใจทดลองใช้สินค้าเกาหลีระดับพรีเมียม (ผู้บริโภค)">✨ สนใจทดลองใช้สินค้าเกาหลีระดับพรีเมียม (ผู้บริโภค)</option>
+                      <option value="สนใจระบบการตลาดออนไลน์และเว็บไซต์ขยายสายงาน">🌐 สนใจระบบการตลาดออนไลน์และเว็บไซต์ขยายสายงาน</option>
+                      <option value="สนใจศึกษาแผนการตลาดและสร้าง Passive Income">📈 สนใจศึกษาแผนการตลาดและสร้าง Passive Income</option>
+                      <option value="อื่นๆ / ต้องการคำแนะนำจากที่ปรึกษา">💬 อื่นๆ / ต้องการคำแนะนำจากที่ปรึกษา</option>
+                    </select>
+                  </div>
+
+                  {/* หมายเหตุเพิ่มเติม */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      หมายเหตุเพิ่มเติม / ช่วงเวลาที่สะดวกรับสาย (ถ้ามี)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="เช่น สะดวกคุยช่วงค่ำหลัง 18:00 น. หรือวันเสาร์-อาทิตย์ / มีคำถามเรื่องการเปิดรหัส"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="w-full px-3.5 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors resize-none"
+                    />
                   </div>
 
                   {/* PDPA Consent Checkbox */}
@@ -458,13 +560,13 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
               )}
 
               {/* Header: Congratulations / Welcome */}
-              <div className="text-center max-w-xl mx-auto">
+              <div className="text-center max-w-2xl mx-auto">
                 <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3.5 shadow-lg shadow-emerald-500/20">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200 inline-block mb-2">
-                  ✓ บันทึกข้อมูลเข้าสู่ระบบสำเร็จแล้ว
+                  ✓ บันทึกข้อมูลของคุณเข้าสู่ระบบเรียบร้อยแล้ว
                 </span>
 
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
@@ -472,66 +574,155 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                 </h2>
 
                 <p className="mt-2.5 text-xs sm:text-base text-slate-600 leading-relaxed text-pretty">
-                  ขอแสดงความยินดีกับการเริ่มต้นก้าวสำคัญ! ข้อมูลของคุณได้รับการบันทึกเรียบร้อยแล้ว สปอนเซอร์{" "}
+                  ขอแสดงความยินดีกับการเริ่มต้นก้าวสำคัญ! ข้อมูลของคุณถูกส่งถึงสปอนเซอร์{" "}
                   <strong className="text-slate-900 font-bold">{sponsor.sponsorName}</strong>{" "}
-                  พร้อมส่งมอบลิงก์สมัครสมาชิกและพาคุณเริ่มสร้างรายได้อย่างมืออาชีพ
+                  เรียบร้อยแล้ว คัดลอกข้อมูลด้านล่าง แล้วกดแอด LINE สปอนเซอร์เพื่อรับรหัสสมาชิกได้ทันที:
                 </p>
               </div>
 
-              {/* LINE CHAT PREVIEW MOCKUP: แสดงขั้นตอนการกด 88 เพื่อฝากข้อมูล */}
-              <div className="mt-6 max-w-xl mx-auto bg-gradient-to-b from-[#7ECEF4]/25 via-sky-50 to-[#6BB7E2]/20 p-4 sm:p-6 rounded-2xl border border-sky-300/80 shadow-inner">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-sky-200">
+              {/* CARD 1: DYNAMIC FORM DATA EXTRACTION & ONE-CLICK COPY BOX */}
+              <div className="mt-6 max-w-2xl mx-auto bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/90 p-4 sm:p-6 rounded-2xl border-2 border-blue-400/60 shadow-lg relative">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-blue-200/80">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#06C755] text-white flex items-center justify-center text-xs font-black shadow-xs">
-                      L
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/30">
+                      <FileText className="w-4 h-4" />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-slate-900">
-                      ตัวอย่างหน้าจอแชท LINE Official สปอนเซอร์
-                    </span>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                        ข้อมูลใบสมัครของคุณ (ดึงจากแบบฟอร์มอัตโนมัติ)
+                      </h3>
+                      <p className="text-[11px] text-blue-700 font-medium">
+                        คัดลอกเพื่อนำไปกด "วาง (Paste)" ใน LINE สปอนเซอร์ได้ทันที ไม่ต้องเสียเวลาพิมพ์ใหม่
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold text-sky-900 bg-white/90 px-2.5 py-0.5 rounded-full border border-sky-200">
-                    ขั้นตอนง่ายใน 3 วินาที
+                  <span className="self-start sm:self-center text-[10.5px] font-bold text-emerald-800 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300 shrink-0">
+                    ✓ ดึงข้อมูลสำเร็จ
                   </span>
                 </div>
 
-                {/* Simulated LINE Chat Feed */}
-                <div className="space-y-3 font-sans">
+                {/* Structured Data Preview Grid */}
+                <div className="bg-white/95 rounded-xl p-3.5 sm:p-4 border border-blue-200 shadow-inner text-xs sm:text-sm text-slate-700 space-y-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">ชื่อ-นามสกุล:</span>
+                      <strong className="text-slate-900 font-bold">{submittedData?.fullName || fullName || "-"}</strong>
+                    </div>
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">เบอร์โทรศัพท์:</span>
+                      <strong className="text-blue-700 font-bold font-mono">{submittedData?.phone || phone || "-"}</strong>
+                    </div>
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">อีเมล:</span>
+                      <span className="text-slate-800 font-medium">{submittedData?.email || email || "-"}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">LINE ID:</span>
+                      <strong className="text-emerald-700 font-mono font-semibold">{submittedData?.lineId || prospectLineId || "-"}</strong>
+                    </div>
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">อายุ:</span>
+                      <span className="text-slate-800">{submittedData?.age ? `${submittedData.age} ปี` : age ? `${age} ปี` : "-"}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                      <span className="text-slate-500 shrink-0">อาชีพ:</span>
+                      <span className="text-slate-800">{submittedData?.occupation || occupation || "-"}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 text-xs">
+                    <span className="text-slate-500 font-medium">ความสนใจ:</span>{" "}
+                    <span className="text-blue-900 font-semibold">{submittedData?.interest || interest || "-"}</span>
+                  </div>
+
+                  <div className="text-xs">
+                    <span className="text-slate-500 font-medium">หมายเหตุ / เวลาที่สะดวก:</span>{" "}
+                    <span className="text-slate-700">{submittedData?.notes || notes || "-"}</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+                    <span>ผู้แนะนำ: <strong className="text-slate-700">{sponsor.sponsorName}</strong> ({sponsor.sponsorId})</span>
+                    <span className="text-slate-500 font-medium bg-blue-50 px-2 py-0.5 rounded text-blue-700">รหัสสมัคร: 88</span>
+                  </div>
+                </div>
+
+                {/* Big Copy Button */}
+                <div className="mt-3.5">
+                  <button
+                    type="button"
+                    onClick={copyApplicationData}
+                    className={`w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 ${
+                      copiedApplication
+                        ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/25'
+                    }`}
+                  >
+                    {copiedApplication ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-200" />
+                        <span>✓ คัดลอกข้อมูลใบสมัครแล้ว! พร้อมนำไปกด "วาง (Paste)" ใน LINE</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>คัดลอกข้อมูลใบสมัครทั้งหมด (นำไปวางใน LINE สปอนเซอร์)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* MOCKUP: LINE CHAT PREVIEW (แสดงตัวอย่างการกด 88) */}
+              <div className="mt-6 max-w-2xl mx-auto bg-gradient-to-b from-[#7ECEF4]/20 to-[#6BB7E2]/15 p-4 sm:p-5 rounded-2xl border border-sky-200">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-sky-200/80">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#06C755] text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                      L
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-800">
+                      ตัวอย่างหน้าแชท LINE Official สปอนเซอร์
+                    </span>
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-semibold text-sky-800 bg-white/80 px-2.5 py-0.5 rounded-full">
+                    เปิดระบบง่ายใน 3 วินาที
+                  </span>
+                </div>
+
+                {/* Chat Bubble Simulation */}
+                <div className="space-y-3 text-xs sm:text-sm font-sans">
                   {/* Sponsor Greeting Bubble */}
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <img
                       src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                       alt={sponsor.sponsorName}
-                      className="w-8 h-8 rounded-full object-cover border border-emerald-500 shrink-0"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-emerald-500 shrink-0"
                     />
-                    <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-xs border border-slate-200 max-w-[85%] text-slate-800 text-xs sm:text-sm">
-                      <p className="font-semibold text-slate-900 mb-1">{sponsor.sponsorName}</p>
+                    <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-xs border border-slate-200 max-w-[85%] text-slate-800">
                       <p className="leading-relaxed">
-                        สวัสดีครับ! หากต้องการรับลิงก์สมัครสมาชิก Atomy ฟรี และสิทธิ์เข้าร่วมทีม กรุณาพิมพ์เลข{" "}
-                        <strong className="text-blue-600 font-black text-sm sm:text-base">88</strong>{" "}
-                        ส่งเข้ามาในแชทนี้ได้เลยครับ!
+                        สวัสดีครับ ยินดีต้อนรับสู่ Atomy! เมื่อแอดไลน์แล้ว พิมพ์ตัวเลข <strong className="text-blue-600 font-black text-base">88</strong> ส่งเข้ามาในแชทนี้ได้เลย เพื่อรับสิทธิ์เปิดรหัสสมาชิกและรับคำแนะนำเริ่มต้นฟรีทันทีครับ
                       </p>
                     </div>
                   </div>
 
-                  {/* Prospect Response Bubble: Typing 88 */}
-                  <div className="flex items-end justify-end gap-1.5 pt-1">
+                  {/* User Response Bubble (Typing 88) */}
+                  <div className="flex items-end justify-end gap-1.5">
                     <span className="text-[10px] text-slate-400 font-mono">อ่านแล้ว</span>
-                    <div className="bg-[#06C755] text-white font-black text-base sm:text-lg px-4 py-2 rounded-2xl rounded-tr-none shadow-md flex items-center gap-2 animate-pulse">
+                    <div className="bg-[#06C755] text-white font-black text-lg px-4 py-1.5 rounded-2xl rounded-tr-none shadow-xs flex items-center gap-2 animate-pulse">
                       <span>88</span>
                       <Send className="w-4 h-4 fill-white" />
                     </div>
                   </div>
                 </div>
 
-                {/* Quick Copy 88 Helper */}
-                <div className="mt-4 pt-3 border-t border-sky-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="text-slate-700 font-medium whitespace-nowrap">
-                    แอด LINE แล้วส่งตัวเลข <strong className="text-blue-700 font-bold text-sm">88</strong>
+                {/* Step Guide Callout & Copy 88 */}
+                <div className="mt-3.5 pt-3 border-t border-sky-200/60 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+                  <span className="text-slate-700 font-medium">
+                    เพียงแอด LINE แล้วส่งรหัส <strong className="text-blue-700 font-bold">88</strong>
                   </span>
                   <button
                     type="button"
                     onClick={copy88}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-50 text-blue-700 font-bold rounded-lg border border-blue-300 shadow-2xs cursor-pointer text-xs shrink-0 whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-blue-700 font-semibold rounded-lg border border-blue-300 shadow-2xs cursor-pointer text-xs"
                   >
                     {copiedCode88 ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedCode88 ? 'คัดลอกเลข 88 แล้ว' : 'คัดลอกเลข 88'}</span>
@@ -540,54 +731,51 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
               </div>
 
               {/* ACTION BUTTONS: Add LINE & Scan QR Code */}
-              <div className="mt-6 max-w-xl mx-auto space-y-2.5">
-                {/* Button 1: Direct LINE Link */}
+              <div className="mt-6 max-w-2xl mx-auto space-y-3">
+                {/* Button 1: Click to Add LINE */}
                 <a
-                  id="btn-welcome-add-line-direct"
+                  id="btn-welcome-add-line-main"
                   href={sponsor.lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackContactEvent('line', sponsor.sponsorId)}
-                  className="w-full py-3.5 sm:py-4 px-3 sm:px-6 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold text-sm xs:text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-center min-h-[48px] active:scale-[0.99]"
+                  className="w-full py-4 px-6 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold text-base sm:text-lg rounded-2xl shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 text-center min-h-[52px] active:scale-[0.99]"
                 >
-                  <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white shrink-0" />
-                  <span className="whitespace-nowrap tracking-tight">คลิกแอด LINE สปอนเซอร์ทันที</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <MessageCircle className="w-6 h-6 fill-white shrink-0" />
+                  <span>คลิกแอด LINE สปอนเซอร์ทันที</span>
+                  <ArrowRight className="w-5 h-5 shrink-0" />
                 </a>
 
-                {/* Button 2: Toggle QR Code Scan */}
+                {/* Button 2: QR Code Scan Toggle */}
                 <button
                   type="button"
-                  id="btn-welcome-toggle-qr"
                   onClick={() => setShowQrCode(!showQrCode)}
-                  className="w-full py-2.5 sm:py-3 px-3 sm:px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm rounded-xl sm:rounded-2xl transition-colors border border-slate-300 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                  className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs sm:text-sm rounded-xl transition-colors border border-slate-300 flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
                 >
-                  <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 shrink-0" />
-                  <span className="whitespace-nowrap">{showQrCode ? 'ซ่อน QR Code' : 'หรือ สแกน QR Code แอด LINE'}</span>
+                  <QrCode className="w-4 h-4 text-slate-700" />
+                  <span>{showQrCode ? 'ซ่อน QR Code สำหรับแอดไลน์' : 'หรือ สแกน QR Code จากหน้าจอคอมพิวเตอร์'}</span>
                 </button>
 
                 {/* QR Code Container */}
                 {showQrCode && (
-                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150 shadow-inner">
-                    <p className="text-xs sm:text-sm text-slate-700 font-medium mb-3">
-                      เปิดกล้องมือถือหรือแอป LINE สแกน QR Code เพื่อเพิ่มเพื่อนได้ทันที:
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-center animate-in fade-in zoom-in-95 duration-150">
+                    <p className="text-xs sm:text-sm text-slate-600 mb-3 font-medium">
+                      ใช้กล้องมือถือหรือแอป LINE สแกน QR Code เพื่อแอดสปอนเซอร์:
                     </p>
-                    <div className="p-3 bg-white rounded-2xl border border-slate-200 inline-block shadow-md">
-                      <img
-                        src={lineQrUrl}
-                        alt="LINE QR Code"
-                        className="w-52 h-52 mx-auto rounded-xl"
-                      />
-                    </div>
-                    <div className="mt-3.5 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-600">
-                      <span>LINE ID: <strong className="font-mono text-slate-900 font-bold">{sponsor.lineId}</strong></span>
+                    <img
+                      src={lineQrUrl}
+                      alt="LINE QR Code"
+                      className="w-52 h-52 mx-auto rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm"
+                    />
+                    <div className="mt-3 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-600">
+                      <span>LINE ID: <strong className="font-mono text-slate-900">{sponsor.lineId}</strong></span>
                       <button
                         type="button"
                         onClick={copySponsorLine}
-                        className="text-blue-600 hover:underline flex items-center gap-1 cursor-pointer font-bold ml-1"
+                        className="text-blue-600 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
                       >
                         {copiedLineId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedLineId ? 'คัดลอกแล้ว' : 'คัดลอก LINE ID'}</span>
+                        <span>{copiedLineId ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
                       </button>
                     </div>
                   </div>

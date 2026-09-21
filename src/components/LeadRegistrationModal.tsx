@@ -43,6 +43,8 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
   const [lineId, setLineId] = useState('');
   const [age, setAge] = useState('');
   const [occupation, setOccupation] = useState('');
+  const [interest, setInterest] = useState('สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)');
+  const [notes, setNotes] = useState('');
   const [hasConsent, setHasConsent] = useState(true);
 
   // States
@@ -51,6 +53,19 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
   const [showQrCode, setShowQrCode] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLineId, setCopiedLineId] = useState(false);
+  const [copiedApp, setCopiedApp] = useState(false);
+
+  // Store user-submitted data for instant 1-click copy to LINE
+  const [submittedData, setSubmittedData] = useState<{
+    fullName: string;
+    phoneNumber: string;
+    email?: string;
+    lineId?: string;
+    age?: string;
+    occupation?: string;
+    interest?: string;
+    notes?: string;
+  } | null>(null);
 
   if (!isOpen) return null;
 
@@ -90,21 +105,29 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
     setIsSubmitting(true);
     setErrorMessage('');
 
+    const leadPayload = {
+      fullName: fullName.trim(),
+      phoneNumber: phone.trim(),
+      email: email.trim() || undefined,
+      lineId: lineId.trim() || '',
+      age: age.trim() || undefined,
+      occupation: occupation.trim() || undefined,
+      interest: interest.trim() || undefined,
+      notes: notes.trim() || undefined,
+    };
+
     try {
       // 1. Save data securely to Cloud Firestore FIRST
       await submitLead({
-        fullName: fullName.trim(),
-        phoneNumber: phone.trim(),
-        email: email.trim() || undefined,
-        lineId: lineId.trim() || '',
-        age: age.trim() || undefined,
-        occupation: occupation.trim() || undefined,
+        ...leadPayload,
         sponsorId: sponsor.sponsorId,
         sponsorName: sponsor.sponsorName,
         ownerUid: sponsor.ownerUid || '',
         attribution: getAttributionParams(),
         hasConsent: true,
       });
+
+      setSubmittedData(leadPayload);
 
       // 2. CRITICAL REQUIREMENT: Fire Pixel Lead event ONLY AFTER successful save & reaching Welcome view
       trackLeadEvent({
@@ -118,6 +141,7 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
     } catch (err: any) {
       console.error('Lead submission error:', err);
       if (err.message === 'DUPLICATE_LEAD') {
+        setSubmittedData(leadPayload);
         // Even for duplicate phone, still guide them to the welcome page
         setStep('welcome');
       } else {
@@ -126,6 +150,40 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const copyApplicationData = () => {
+    const data = submittedData || {
+      fullName,
+      phoneNumber: phone,
+      lineId,
+      email,
+      age,
+      occupation,
+      interest,
+      notes,
+    };
+
+    const val = (v?: string) => (v && v.trim() ? v.trim() : "-");
+
+    const text = [
+      "📋 ข้อมูลลงทะเบียนสมัครสมาชิก Atomy (รหัส 88)",
+      "━━━━━━━━━━━━━━━━",
+      `👤 ชื่อ-นามสกุล: ${val(data.fullName || fullName)}`,
+      `📞 เบอร์โทรศัพท์: ${val(data.phoneNumber || phone)}`,
+      `📧 อีเมล: ${val(data.email || email)}`,
+      `💬 LINE ID: ${val(data.lineId || lineId)}`,
+      `🎂 อายุ: ${data.age || age ? `${data.age || age} ปี` : "-"}`,
+      `💼 อาชีพ: ${val(data.occupation || occupation)}`,
+      `🎯 ความสนใจ: ${val(data.interest || interest)}`,
+      `📝 หมายเหตุ/เวลาสะดวก: ${val(data.notes || notes)}`,
+      "━━━━━━━━━━━━━━━━",
+      `🤝 สปอนเซอร์ผู้ดูแล: ${sponsor.sponsorName} (${sponsor.sponsorId})`,
+    ].join("\n");
+
+    navigator.clipboard.writeText(text);
+    setCopiedApp(true);
+    setTimeout(() => setCopiedApp(false), 2500);
   };
 
   const copyCode88 = () => {
@@ -286,6 +344,38 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
                 </div>
               </div>
 
+              {/* ความสนใจที่ต้องการปรึกษา */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  ความสนใจเบื้องต้นที่คุณต้องการปรึกษา <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={interest}
+                  onChange={(e) => setInterest(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] transition-colors cursor-pointer"
+                >
+                  <option value="สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)">💼 สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)</option>
+                  <option value="สนใจทดลองใช้สินค้าเกาหลีระดับพรีเมียม (ผู้บริโภค)">✨ สนใจทดลองใช้สินค้าเกาหลีระดับพรีเมียม (ผู้บริโภค)</option>
+                  <option value="สนใจระบบการตลาดออนไลน์และเว็บไซต์ขยายสายงาน">🌐 สนใจระบบการตลาดออนไลน์และเว็บไซต์ขยายสายงาน</option>
+                  <option value="สนใจศึกษาแผนการตลาดและสร้าง Passive Income">📈 สนใจศึกษาแผนการตลาดและสร้าง Passive Income</option>
+                  <option value="อื่นๆ / ต้องการคำแนะนำจากที่ปรึกษา">💬 อื่นๆ / ต้องการคำแนะนำจากที่ปรึกษา</option>
+                </select>
+              </div>
+
+              {/* หมายเหตุเพิ่มเติม */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  หมายเหตุเพิ่มเติม / ช่วงเวลาที่สะดวกรับสาย (ถ้ามี)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="เช่น สะดวกคุยช่วงค่ำหลัง 18:00 น. หรือวันหยุดเสาร์-อาทิตย์ / มีคำถามเรื่องการเปิดรหัส"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-300 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors resize-none"
+                />
+              </div>
+
               {/* PDPA Consent */}
               <div className="flex items-start gap-2.5 pt-1">
                 <input
@@ -353,8 +443,79 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
               </p>
             </div>
 
+            {/* DYNAMIC FORM DATA EXTRACTION & ONE-CLICK COPY BOX */}
+            <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-blue-50/80 border border-blue-200 text-left shadow-xs">
+              <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-blue-200/80">
+                <div className="flex items-center gap-1.5 text-blue-950 font-bold text-xs sm:text-sm">
+                  <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>ข้อมูลใบสมัครของคุณ (ดึงจากแบบฟอร์มเรียบร้อย)</span>
+                </div>
+                <span className="text-[10px] bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded-full shrink-0">
+                  ไม่ต้องพิมพ์ใหม่
+                </span>
+              </div>
+
+              <div className="bg-white/90 rounded-xl p-3 border border-blue-100 text-xs text-slate-700 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">ชื่อ-นามสกุล:</span>
+                    <strong className="text-slate-900 font-bold">{submittedData?.fullName || fullName || '-'}</strong>
+                  </div>
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">เบอร์โทร:</span>
+                    <strong className="text-blue-700 font-bold font-mono">{submittedData?.phoneNumber || phone || '-'}</strong>
+                  </div>
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">อีเมล:</span>
+                    <span className="text-slate-800 font-medium">{submittedData?.email || email || '-'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">LINE ID:</span>
+                    <strong className="text-emerald-700 font-mono font-semibold">{submittedData?.lineId || lineId || '-'}</strong>
+                  </div>
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">อายุ:</span>
+                    <span className="text-slate-800">{submittedData?.age ? `${submittedData.age} ปี` : age ? `${age} ปี` : '-'}</span>
+                  </div>
+                  <div className="flex items-baseline justify-between sm:justify-start sm:gap-2">
+                    <span className="text-slate-500 shrink-0">อาชีพ:</span>
+                    <span className="text-slate-800">{submittedData?.occupation || occupation || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="pt-1.5 border-t border-slate-100 text-xs">
+                  <span className="text-slate-500 font-medium">ความสนใจ:</span>{" "}
+                  <span className="text-blue-900 font-semibold">{submittedData?.interest || interest || '-'}</span>
+                </div>
+
+                <div className="text-xs">
+                  <span className="text-slate-500 font-medium">หมายเหตุ/เวลาสะดวก:</span>{" "}
+                  <span className="text-slate-700">{submittedData?.notes || notes || '-'}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                id="btn-modal-copy-extracted-lead"
+                onClick={copyApplicationData}
+                className="mt-2.5 w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
+              >
+                {copiedApp ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-200 shrink-0" />
+                    <span>✓ คัดลอกข้อมูลทั้งหมดเรียบร้อยแล้ว! (พร้อมกดวางใน LINE)</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-white shrink-0" />
+                    <span>คัดลอกข้อมูลใบสมัครทั้งหมด (นำไปวางใน LINE)</span>
+                  </>
+                )}
+              </button>
+            </div>
+
             {/* MOCKUP: LINE CHAT PREVIEW (แสดงตัวอย่างการกด 88) */}
-            <div className="mt-5 bg-gradient-to-b from-[#7ECEF4]/20 to-[#6BB7E2]/15 p-3.5 sm:p-4 rounded-2xl border border-sky-200">
+            <div className="mt-4 bg-gradient-to-b from-[#7ECEF4]/20 to-[#6BB7E2]/15 p-3.5 sm:p-4 rounded-2xl border border-sky-200">
               <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-sky-200/80">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#06C755] text-white flex items-center justify-center text-xs font-bold shadow-xs">

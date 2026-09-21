@@ -1,6 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut } from 'lucide-react';
+import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink } from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
@@ -85,18 +85,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Leads Inbox Button */}
-            {onOpenLeadsModal && (
-              <button
-                id="nav-btn-leads-inbox"
-                onClick={onOpenLeadsModal}
-                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
-                title="ดูรายชื่อผู้มุ่งหวังที่กรอกฟอร์มเข้ามา (Leads Inbox)"
-              >
-                <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span className="hidden md:inline">รายชื่อ Lead</span>
-              </button>
-            )}
+            {/* Leads Inbox Button - Opens in dedicated new tab */}
+            <a
+              id="nav-btn-leads-inbox"
+              href="/leads"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
+              title="เปิดหน้าจัดการรายชื่อผู้มุ่งหวังในแท็บใหม่เต็มจอ (Leads Hub)"
+            >
+              <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span className="hidden md:inline">รายชื่อ Lead</span>
+              <ExternalLink className="w-3 h-3 text-blue-500 hidden sm:inline opacity-70" />
+            </a>
 
             {/* Install / Check Pixel Button */}
             {isAuthenticated && onOpenPixelModal && (

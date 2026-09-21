@@ -32,11 +32,19 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-const recaptchaKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || firebaseConfigData.recaptchaSiteKey;
-if (recaptchaKey && typeof window !== 'undefined') {
+const rawRecaptchaKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || firebaseConfigData.recaptchaSiteKey;
+const isValidRecaptchaKey = Boolean(
+  rawRecaptchaKey &&
+  typeof rawRecaptchaKey === 'string' &&
+  !rawRecaptchaKey.includes('YOUR_') &&
+  !rawRecaptchaKey.includes('RECAPTCHA') &&
+  rawRecaptchaKey.trim().length > 10
+);
+
+if (isValidRecaptchaKey && typeof window !== 'undefined') {
   try {
     initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+      provider: new ReCaptchaEnterpriseProvider(rawRecaptchaKey),
       isTokenAutoRefreshEnabled: true
     });
   } catch (e) {
@@ -73,6 +81,7 @@ export interface LeadSubmission {
   lineId?: string;
   age?: string;
   occupation?: string;
+  interest?: string;
   sponsorId: string;
   sponsorName: string;
   ownerUid?: string;
@@ -253,8 +262,9 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'kong_somchai',
     age: '35',
     occupation: 'พนักงานบริษัทเอกชน (ไอที)',
+    interest: 'สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)',
     status: 'new',
-    notes: 'สนใจสร้างรายได้เสริมควบคู่กับงานประจำ มีเวลาช่วงค่ำและวันหยุด ไม่ชอบตื๊อขายของ อยากศึกษาโมเดลเว็บไซต์ช่วยทำงานอัตโนมัติ',
+    notes: 'สะดวกรับสายช่วงค่ำหลัง 18:30 น. สนใจโมเดลเว็บไซต์ช่วยทำงานอัตโนมัติ ไม่ชอบตื๊อขายของ',
     hasConsent: true,
   },
   {
@@ -264,8 +274,9 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'nam_waranya',
     age: '42',
     occupation: 'ธุรกิจส่วนตัว / ค้าขายออนไลน์',
+    interest: 'สนใจทดลองใช้สินค้าเกาหลีระดับพรีเมียม (ผู้บริโภค)',
     status: 'new',
-    notes: 'เคยขายของออนไลน์แต่เหนื่อยกับการสต็อกของและแพ็คส่งเอง ชอบคอนเซ็ปต์สินค้าเกาหลีระดับพรีเมียม ซื้อกินซื้อใช้สร้างเครือข่าย',
+    notes: 'เคยขายของออนไลน์แต่เหนื่อยกับการสต็อกของ ชอบคอนเซ็ปต์ซื้อกินซื้อใช้สร้างเครือข่าย สนใจชุด Absolute สกินแคร์',
     hasConsent: true,
   },
   {
@@ -275,7 +286,8 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'bomb_eng99',
     age: '29',
     occupation: 'วิศวกรไฟฟ้า',
-    status: 'contacted',
+    interest: 'สนใจศึกษาแผนการตลาดและสร้าง Passive Income',
+    status: 'new',
     notes: 'ดูคลิปบรรยาย 20 นาทีจบแล้ว สนใจเรื่องโมเดลไบนารี่ 2 สายงาน และระบบ Global สะสมคะแนน PV ไม่จำกัดชั้นลึก',
     hasConsent: true,
   },
@@ -286,8 +298,9 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'pook_patcha',
     age: '38',
     occupation: 'แม่บ้าน / ดูแลครอบครัว',
+    interest: 'สนใจสร้างรายได้เสริมควบคู่กับงานประจำ (ธุรกิจ)',
     status: 'new',
-    notes: 'อยากหารายได้เสริมระหว่างดูแลลูกที่บ้าน ใช้สกินแคร์และของใช้ในบ้านอยู่แล้ว พร้อมเริ่มเรียนรู้งานผ่านระบบมือถือ',
+    notes: 'สะดวกคุยช่วงบ่าย อยากหารายได้เสริมระหว่างดูแลลูกที่บ้าน พร้อมเริ่มเรียนรู้งานผ่านมือถือ',
     hasConsent: true,
   },
   {
@@ -297,8 +310,9 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'kru_m_atomy',
     age: '46',
     occupation: 'ข้าราชการครู',
-    status: 'completed',
-    notes: 'มองหาโอกาสเกษียณล่วงหน้า อยากสร้าง Passive Income ระยะยาว ชอบที่ไม่บังคับรักษายอดรายเดือน และสมัครสมาชิกฟรี',
+    interest: 'สนใจศึกษาแผนการตลาดและสร้าง Passive Income',
+    status: 'new',
+    notes: 'มองหาโอกาสเกษียณล่วงหน้า ชอบที่ไม่บังคับรักษายอดรายเดือน และสมัครสมาชิกฟรี',
     hasConsent: true,
   },
   {
@@ -308,11 +322,88 @@ export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 
     lineId: 'fah_chonthicha',
     age: '27',
     occupation: 'ฟรีแลนซ์การตลาดออนไลน์',
-    status: 'contacted',
+    interest: 'สนใจขยายทีมงานด้วยระบบเว็บไซต์และเครื่องมือออนไลน์',
+    status: 'new',
     notes: 'ชอบระบบการตลาดดิจิทัล อยากใช้ลิงก์และระบบเว็บพ่วงสปอนเซอร์ของทีม Atomy Freedomlife ขยายสายงานต่อ',
     hasConsent: true,
   },
 ];
+
+/**
+ * ส่งออกรายชื่อผู้มุ่งหวังเป็นไฟล์ Excel (.csv with UTF-8 BOM)
+ * เปิดในโปรแกรม Microsoft Excel ภาษาไทยได้ทันทีโดยไม่เพี้ยน
+ */
+export function exportLeadsToExcelCSV(leads: LeadSubmission[], filenamePrefix: string = 'atomy_uncontacted_leads'): void {
+  if (typeof window === 'undefined' || !leads || leads.length === 0) {
+    alert('ไม่มีข้อมูลรายชื่อสำหรับส่งออก');
+    return;
+  }
+
+  // กำหนดหัวตาราง (Headers) สำหรับไฟล์ Excel
+  const headers = [
+    'ลำดับ',
+    'สถานะ',
+    'ชื่อ-นามสกุล',
+    'เบอร์โทรศัพท์',
+    'LINE ID',
+    'อีเมล',
+    'ความสนใจ',
+    'หมายเหตุเพิ่มเติม',
+    'อายุ',
+    'อาชีพ',
+    'วันที่ลงทะเบียน',
+    'ชื่อสปอนเซอร์',
+    'รหัสสปอนเซอร์'
+  ];
+
+  const escapeCSV = (val: any) => {
+    if (val === null || val === undefined) return '""';
+    const stringVal = String(val).replace(/"/g, '""');
+    return `"${stringVal}"`;
+  };
+
+  const statusLabel = (s?: string) => {
+    if (s === 'contacted') return 'ติดต่อแล้ว';
+    if (s === 'completed') return 'ปิดการสมัครแล้ว';
+    return 'ยังไม่ได้รับการติดต่อ (รอติดต่อ)';
+  };
+
+  const rows = leads.map((item, index) => {
+    const formattedDate = item.createdAt 
+      ? new Date(item.createdAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) 
+      : '-';
+
+    return [
+      index + 1,
+      statusLabel(item.status),
+      item.fullName || '-',
+      item.phoneNumber || '-',
+      item.lineId || '-',
+      item.email || '-',
+      item.interest || 'สนใจสร้างรายได้เสริมควบคู่กับงานประจำ',
+      item.notes || '-',
+      item.age || '-',
+      item.occupation || '-',
+      formattedDate,
+      item.sponsorName || '-',
+      item.sponsorId || '-'
+    ].map(escapeCSV).join(',');
+  });
+
+  // UTF-8 BOM (\uFEFF) เพื่อให้ Excel บน Windows/Mac เปิดภาษาไทยถูกต้อง ไม่เป็นภาษาต่างดาว
+  const csvContent = '\uFEFF' + [headers.map(escapeCSV).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  
+  const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filenamePrefix}_${nowStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export async function seedSampleLeads(sponsorId: string, sponsorName: string): Promise<LeadSubmission[]> {
   const createdLeads: LeadSubmission[] = [];
