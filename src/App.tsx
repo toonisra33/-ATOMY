@@ -293,6 +293,8 @@ export default function App() {
       <TrainingDay1Page
         sponsor={sponsor}
         initialDay={targetDay}
+        session={session}
+        isAdmin={session?.isAdmin === true || (session?.email ? session.email.toLowerCase() === 'toonisra33@gmail.com' : false)}
         onBackToHome={() => {
           window.history.pushState({}, "", "/");
           setCurrentPath("/");

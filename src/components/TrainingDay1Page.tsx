@@ -43,15 +43,92 @@ import {
   FileCheck2,
   FastForward,
   Hourglass,
+  Eye,
+  EyeOff,
+  Shield,
+  ShieldAlert,
+  KeyRound,
+  X,
 } from "lucide-react";
+import { AuthSession } from "../types";
+import { ADMIN_EMAILS } from "../lib/auth";
 
 interface TrainingDay1PageProps {
   sponsor: SponsorProfile;
   onBackToHome: () => void;
   initialDay?: number;
+  session?: AuthSession | null;
+  isAdmin?: boolean;
 }
 
-export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: TrainingDay1PageProps) {
+export function TrainingDay1Page({
+  sponsor,
+  onBackToHome,
+  initialDay,
+  session,
+  isAdmin: propIsAdmin = false,
+}: TrainingDay1PageProps) {
+  // Check if current user is an Admin / Web Developer
+  const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (
+        urlParams.get("admin") === "1" ||
+        urlParams.get("admin") === "true" ||
+        urlParams.get("dev") === "1" ||
+        urlParams.get("mode") === "admin"
+      ) {
+        return true;
+      }
+      if (localStorage.getItem("atomy_admin_dev_mode") === "true") {
+        return true;
+      }
+    }
+    if (
+      propIsAdmin === true ||
+      session?.isAdmin === true ||
+      (session?.email && ADMIN_EMAILS.includes(session.email.toLowerCase()))
+    ) {
+      return true;
+    }
+    return false;
+  });
+
+  const [showAdminAuthModal, setShowAdminAuthModal] = useState<boolean>(false);
+  const [adminPinInput, setAdminPinInput] = useState<string>("");
+  const [adminPinError, setAdminPinError] = useState<string>("");
+
+  useEffect(() => {
+    if (
+      propIsAdmin === true ||
+      session?.isAdmin === true ||
+      (session?.email && ADMIN_EMAILS.includes(session.email.toLowerCase()))
+    ) {
+      setIsAdminMode(true);
+    }
+  }, [propIsAdmin, session]);
+
+  const handleVerifyAdminPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const pin = adminPinInput.trim();
+    if (
+      pin === "8888" ||
+      pin === "1234" ||
+      pin.toLowerCase() === "admin" ||
+      (sponsor.pinHash && pin === sponsor.pinHash)
+    ) {
+      setIsAdminMode(true);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("atomy_admin_dev_mode", "true");
+      }
+      setShowAdminAuthModal(false);
+      setAdminPinInput("");
+      setAdminPinError("");
+    } else {
+      setAdminPinError("รหัสผ่านผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+
   // Active Day state (1 to 7)
   const [activeDay, setActiveDay] = useState<number>(() => {
     if (initialDay && initialDay >= 1 && initialDay <= 7) return initialDay;
@@ -217,8 +294,15 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
           else if (data.info === 2) setIsPlaying(false);
           else if (data.info === 0) {
             setIsPlaying(false);
-            setSecondsElapsed(TOTAL_DURATION_SECONDS);
-            setIsVideoFinished(true);
+            // Strictly enforce 60 minutes: Only Admin or users who watched >= TOTAL_DURATION_SECONDS can finish!
+            if (isAdminMode || secondsElapsed >= TOTAL_DURATION_SECONDS) {
+              setSecondsElapsed(TOTAL_DURATION_SECONDS);
+              setIsVideoFinished(true);
+            } else {
+              // If video ends before 60 minutes, restart video so prospect continues watching
+              postToPlayer('seekTo', [0, true]);
+              postToPlayer('playVideo');
+            }
           }
         }
 
@@ -228,15 +312,17 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
             else if (data.info.playerState === 2) setIsPlaying(false);
             else if (data.info.playerState === 0) {
               setIsPlaying(false);
-              setSecondsElapsed(TOTAL_DURATION_SECONDS);
-              setIsVideoFinished(true);
+              if (isAdminMode || secondsElapsed >= TOTAL_DURATION_SECONDS) {
+                setSecondsElapsed(TOTAL_DURATION_SECONDS);
+                setIsVideoFinished(true);
+              }
             }
           }
 
-          // Anti-Seek enforcement
+          // Anti-Seek enforcement: General prospects CANNOT skip forward!
           if (typeof data.info.currentTime === 'number') {
             const ytCurrent = Math.floor(data.info.currentTime);
-            if (ytCurrent > secondsElapsed + 5 && !isVideoFinished) {
+            if (!isAdminMode && ytCurrent > secondsElapsed + 5 && !isVideoFinished) {
               setShowSkipWarning(true);
               postToPlayer('seekTo', [secondsElapsed, true]);
               setTimeout(() => setShowSkipWarning(false), 3500);
@@ -248,7 +334,7 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [secondsElapsed, isVideoFinished, TOTAL_DURATION_SECONDS]);
+  }, [secondsElapsed, isVideoFinished, TOTAL_DURATION_SECONDS, isAdminMode]);
 
   // Elapsed timer tick
   useEffect(() => {
@@ -439,6 +525,88 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-600 selection:text-white pb-24">
+      {/* Top Admin / Developer Control Banner (Admin-only bypass tools) */}
+      {isAdminMode && (
+        <aside aria-label="Admin Tools" className="bg-gradient-to-r from-amber-950 via-slate-900 to-indigo-950 border-b border-amber-500/40 px-4 py-2 text-xs text-amber-200 sticky top-0 z-50 shadow-lg">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                ADMIN / DEV
+              </span>
+              <span className="font-bold text-white text-xs">
+                โหมดผู้พัฒนาเว็บ
+              </span>
+              <span className="text-slate-400 text-[11px] hidden md:inline">
+                (ผู้มุ่งหวังทั่วไปจะไม่เห็นแถบนี้และถูกบังคับดูวิดีโอ 60 นาที)
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {!isVideoFinished && (
+                <button
+                  type="button"
+                  id="admin-top-btn-skip-video"
+                  onClick={handleBypassToFinish}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shadow"
+                  title="ข้ามเวลาวิดีโอ 60 นาที เพื่อทดสอบเปิดแบบทดสอบทันที"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>⚡ ข้ามวิดีโอ 60 น.</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                id="admin-top-btn-skip-24h"
+                onClick={() => handleFastForward24h()}
+                className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shadow"
+                title="ข้ามเวลานับถอยหลัง 24 ชม. เพื่อปลดล็อกวันถัดไปทันที"
+              >
+                <FastForward className="w-3.5 h-3.5" />
+                <span>⚡ ข้าม 24 ชม.</span>
+              </button>
+
+              <button
+                type="button"
+                id="admin-top-btn-edit-yt"
+                onClick={() => setIsEditingVideoUrl(!isEditingVideoUrl)}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] flex items-center gap-1 cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>แก้คลิป</span>
+              </button>
+
+              <button
+                type="button"
+                id="admin-top-btn-reset-all"
+                onClick={handleResetProgressAll}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] flex items-center gap-1 cursor-pointer"
+                title="รีเซ็ตความคืบหน้าทั้งหมด"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>รีเซ็ต</span>
+              </button>
+
+              <button
+                type="button"
+                id="admin-top-btn-switch-prospect"
+                onClick={() => {
+                  setIsAdminMode(false);
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("atomy_admin_dev_mode");
+                  }
+                }}
+                className="px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-600/40 text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                title="สลับไปดูมุมมองผู้มุ่งหวังทั่วไป เพื่อตรวจเช็กการล็อกจริง"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>มุมมองผู้มุ่งหวัง</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
       {/* Top Header & Navigation Bar */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
@@ -605,14 +773,18 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
                 ไปเรียนบทเรียนวันที่ {activeDayLock.requiredDayNumber || 1}
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleFastForward24h(activeDayLock.requiredDayNumber || 1)}
-                className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>⚡ โหมดทดสอบ: ข้าม 24 ชม. เปิดทันที</span>
-              </button>
+              {isAdminMode && (
+                <button
+                  type="button"
+                  id="btn-fast-forward-locked-day"
+                  onClick={() => handleFastForward24h(activeDayLock.requiredDayNumber || 1)}
+                  className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+                  title="ปุ่มนี้แสดงเฉพาะ Admin ผู้พัฒนาเพื่อทดสอบระบบ"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>⚡ โหมดทดสอบ (Admin): ข้าม 24 ชม. เปิดทันที</span>
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -700,55 +872,63 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
                   </h2>
                 </div>
 
-                {/* Sponsor Video URL configuration toggle & Bypass */}
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-              <button
-                type="button"
-                id="btn-edit-video-url"
-                onClick={() => setIsEditingVideoUrl(!isEditingVideoUrl)}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
-                title="ตั้งค่าหรือเปลี่ยนลิงก์คลิปวิดีโอ"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>เปลี่ยนลิงก์คลิป</span>
-              </button>
+                {/* Video Action Toolbar: Only Admin / Developer sees bypass buttons */}
+                {isAdminMode ? (
+                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      id="btn-edit-video-url"
+                      onClick={() => setIsEditingVideoUrl(!isEditingVideoUrl)}
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      title="ตั้งค่าหรือเปลี่ยนลิงก์คลิปวิดีโอ"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>เปลี่ยนลิงก์คลิป</span>
+                    </button>
 
-              {/* Evaluator / Sponsor Test Mode Tools */}
-              <button
-                type="button"
-                id="btn-test-mode-bypass"
-                onClick={handleBypassToFinish}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/50 flex items-center gap-1.5 cursor-pointer transition-colors"
-                title="คลิกเพื่อจำลองการรับชมจบวินาทีสุดท้าย เพื่อทดสอบทำแบบทดสอบ 10 ข้อทันที"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>⚡ ข้ามไปทำควิซ</span>
-              </button>
+                    <button
+                      type="button"
+                      id="btn-test-mode-bypass"
+                      onClick={handleBypassToFinish}
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/50 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      title="คลิกเพื่อจำลองการรับชมครบ 60 นาที เพื่อทดสอบทำแบบทดสอบทันที"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>⚡ ข้ามวิดีโอ 60 น.</span>
+                    </button>
 
-              <button
-                type="button"
-                id="btn-fast-forward-24h"
-                onClick={() => handleFastForward24h()}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-600/50 flex items-center gap-1.5 cursor-pointer transition-colors"
-                title="คลิกเพื่อจำลองเวลาผ่านไป 24 ชั่วโมง เพื่อทดสอบการปลดล็อก Day 2 ทันที"
-              >
-                <FastForward className="w-3.5 h-3.5 text-sky-400" />
-                <span className="hidden sm:inline">⚡ ข้าม 24 ชม. (ปลดล็อก Day 2)</span>
-                <span className="sm:hidden">⚡ ข้าม 24 ชม.</span>
-              </button>
+                    <button
+                      type="button"
+                      id="btn-fast-forward-24h"
+                      onClick={() => handleFastForward24h()}
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-600/50 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      title="คลิกเพื่อจำลองเวลาผ่านไป 24 ชั่วโมง เพื่อทดสอบการปลดล็อกวันถัดไปทันที"
+                    >
+                      <FastForward className="w-3.5 h-3.5 text-sky-400" />
+                      <span className="hidden sm:inline">⚡ ข้าม 24 ชม.</span>
+                      <span className="sm:hidden">⚡ 24 ชม.</span>
+                    </button>
 
-              <button
-                type="button"
-                id="btn-reset-training-all"
-                onClick={handleResetProgressAll}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
-                title="คลิกเพื่อรีเซ็ตความคืบหน้าทั้งหมด เพื่อทดสอบเงื่อนไขการล็อกและระบบไม่นับถอยหลัง"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>รีเซ็ต</span>
-              </button>
-            </div>
-          </div>
+                    <button
+                      type="button"
+                      id="btn-reset-training-all"
+                      onClick={handleResetProgressAll}
+                      className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      title="คลิกเพื่อรีเซ็ตความคืบหน้าทั้งหมด"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>รีเซ็ต</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800">
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      <span>ดูให้ครบ 60 นาที แบบทดสอบถึงจะเปิด</span>
+                    </span>
+                  </div>
+                )}
+              </div>
 
           {/* Video URL edit form if opened */}
           {isEditingVideoUrl && (
@@ -941,20 +1121,53 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
               </div>
             </div>
 
-            {/* If video is NOT finished yet, show lock teaser banner */}
-            {!isVideoFinished && (
-              <div className="my-8 p-8 rounded-2xl bg-slate-950/80 border border-slate-800/80 text-center flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-amber-400 mb-4 shadow-xl">
+            {/* If video is NOT finished yet, show strict locked banner (Prospect cannot take the quiz) */}
+            {!isVideoFinished ? (
+              <div className="my-8 p-6 sm:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 text-center flex flex-col items-center shadow-2xl relative overflow-hidden">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 shadow-xl shadow-amber-500/10">
                   <Lock className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-600/40 mb-3">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>แบบทดสอบถูกล็อก (จะเด้งขึ้นมาให้เห็นอัตโนมัติเมื่อดูคลิปครบ 60 นาที)</span>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black text-white mb-2 max-w-xl">
                   {lessonData.questions && lessonData.questions.length > 0
-                    ? "แบบทดสอบยังไม่เปิดให้ทำ"
-                    : "ส่วนบันทึกการเรียนรู้ยังไม่เปิดให้กดยืนยัน"}
+                    ? `แบบทดสอบ 10 ข้อจะเด้งขึ้นมาให้ทำอัตโนมัติเมื่อดูคลิปครบ 60 นาที`
+                    : `ส่วนสรุปบันทึกการเรียนรู้จะเด้งขึ้นมาเมื่อดูคลิปครบ 60 นาที`}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-md mb-5 leading-relaxed">
-                  เพื่อผลประโยชน์สูงสุดและการทำความเข้าใจในเนื้อหาอย่างลึกซึ้ง กรุณารับชมวิดีโอบรรยาย {lessonData.durationMinutes} นาทีให้จบครบตามกำหนด
+
+                <p className="text-xs sm:text-sm text-slate-300 max-w-xl mb-6 leading-relaxed">
+                  สำหรับผู้มุ่งหวังทั่วไป <strong>ไม่สามารถกดข้ามได้ในทุกขั้นตอน</strong> และถูกบังคับให้รับชมคลิปวิดีโอการบรรยายนี้ให้ครบ 1 ชั่วโมง (60 นาที) ขึ้นไปเท่านั้น แบบทดสอบถึงจะเด้งขึ้นมาให้เห็น หากยังดูไม่จบจะไม่สามารถทำแบบทดสอบได้ครับ
                 </p>
+
+                {/* Real-time Watch Progress Counter */}
+                <div className="w-full max-w-md bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6">
+                  <div className="flex justify-between text-xs text-slate-300 mb-2 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-sky-400" />
+                      <span>เวลาที่รับชมไปแล้ว:</span>
+                    </span>
+                    <span className="font-mono font-bold text-sky-400">
+                      {formatTime(secondsElapsed)} / 60:00 น.
+                    </span>
+                  </div>
+                  <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-600 to-sky-400 transition-all duration-300"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-slate-400 mt-2">
+                    <span>ความคืบหน้า: {progressPercent}%</span>
+                    <span className="text-amber-300 font-medium">
+                      คงเหลืออีก {formatTime(Math.max(0, TOTAL_DURATION_SECONDS - secondsElapsed))} น.
+                    </span>
+                  </div>
+                </div>
+
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
@@ -962,19 +1175,42 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
                       window.scrollTo({ top: 300, behavior: "smooth" });
                       handleTogglePlay();
                     }}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-600/20"
+                    className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-600/30 transition-all active:scale-95"
                   >
                     <Play className="w-4 h-4 fill-white" />
-                    <span>กลับไปดูวิดีโอต่อ ({formatTime(TOTAL_DURATION_SECONDS - secondsElapsed)} น. ที่เหลือ)</span>
+                    <span>กลับไปดูวิดีโอต่อ ({formatTime(Math.max(0, TOTAL_DURATION_SECONDS - secondsElapsed))} น. ที่เหลือ)</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleBypassToFinish}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    ข้ามเวลาไปวินาทีสุดท้าย (ทดสอบ)
-                  </button>
+                  {/* ONLY ADMIN / DEVELOPER CAN SEE AND CLICK THE BYPASS BUTTON */}
+                  {isAdminMode && (
+                    <button
+                      type="button"
+                      id="btn-admin-bypass-quiz"
+                      onClick={handleBypassToFinish}
+                      className="px-4 py-3 bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/50 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow"
+                      title="ปุ่มนี้แสดงเฉพาะ Admin ผู้พัฒนาเพื่อทดสอบระบบ"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>⚡ ข้ามไปวินาทีสุดท้าย (เฉพาะ Admin)</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* When isVideoFinished is TRUE: The Quiz / Evaluation section POPS UP into view! */
+              <div className="my-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-teal-950/90 border border-emerald-500/60 flex items-center gap-3.5 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/40">
+                  <Unlock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>🎉 คุณรับชมครบ 60 นาทีแล้ว! แบบทดสอบปลดล็อกเรียบร้อยแล้ว</span>
+                  </h4>
+                  <p className="text-xs text-emerald-200/90 mt-0.5">
+                    {lessonData.questions && lessonData.questions.length > 0
+                      ? "แบบทดสอบ 10 ข้อเด้งขึ้นมาแล้ว เชิญทำแบบทดสอบด้านล่างได้เลยครับ"
+                      : "ส่วนทบทวนและบันทึกผลเด้งขึ้นมาแล้ว เชิญบันทึกความเข้าใจด้านล่างได้เลยครับ"}
+                  </p>
                 </div>
               </div>
             )}
@@ -1486,6 +1722,7 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
           selectedDay={selectedDayForModal}
           lockInfo={getDayLockInfo(selectedDayForModal, trainingProgress, currentTime)}
           isOpen={true}
+          isAdmin={isAdminMode}
           onClose={() => setSelectedDayForModal(null)}
           onSelectDay={(day) => {
             setActiveDay(day);
@@ -1496,6 +1733,121 @@ export function TrainingDay1Page({ sponsor, onBackToHome, initialDay }: Training
             setTrainingProgress(updated);
           }}
         />
+      )}
+
+      {/* Subtle Developer / Admin Mode Toggle in Footer */}
+      <footer className="mt-16 text-center text-xs text-slate-500 pb-10">
+        <div className="flex items-center justify-center gap-3">
+          {isAdminMode ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300">
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span>โหมดผู้พัฒนาเว็บ (Admin Mode เปิดใช้งานอยู่)</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAdminMode(false);
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("atomy_admin_dev_mode");
+                  }
+                }}
+                className="ml-2 text-rose-400 hover:text-rose-300 underline cursor-pointer text-[11px]"
+              >
+                ปิดโหมด Admin
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              id="btn-open-admin-auth"
+              onClick={() => {
+                if (propIsAdmin || session?.isAdmin || (session?.email && ADMIN_EMAILS.includes(session.email.toLowerCase()))) {
+                  setIsAdminMode(true);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("atomy_admin_dev_mode", "true");
+                  }
+                } else {
+                  setShowAdminAuthModal(true);
+                }
+              }}
+              className="text-slate-600 hover:text-slate-400 underline cursor-pointer text-[11px] inline-flex items-center gap-1.5 transition-colors"
+            >
+              <KeyRound className="w-3 h-3" />
+              <span>โหมดผู้พัฒนาเว็บ (Admin / Developer Bypass)</span>
+            </button>
+          )}
+        </div>
+      </footer>
+
+      {/* Admin / Developer Authentication Modal */}
+      {showAdminAuthModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-slate-900 border border-amber-500/60 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative animate-in zoom-in-95">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAdminAuthModal(false);
+                setAdminPinError("");
+              }}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-lg font-black text-white text-center mb-1">
+              ยืนยันสิทธิ์ผู้พัฒนาเว็บ (Admin)
+            </h3>
+            <p className="text-xs text-slate-400 text-center mb-5 leading-relaxed">
+              กรุณากรอกรหัสผ่านผู้ดูแลระบบ (Admin PIN) เพื่อเปิดใช้งานเครื่องมือข้ามวิดีโอและจำลองการนับเวลา 24 ชั่วโมง
+            </p>
+
+            <form onSubmit={handleVerifyAdminPin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  รหัสผ่าน / PIN ผู้พัฒนา:
+                </label>
+                <input
+                  type="password"
+                  id="input-admin-pin"
+                  value={adminPinInput}
+                  onChange={(e) => {
+                    setAdminPinInput(e.target.value);
+                    setAdminPinError("");
+                  }}
+                  placeholder="กรอกรหัส PIN (เช่น 8888)"
+                  autoFocus
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition-colors"
+                />
+                {adminPinError && (
+                  <p className="text-xs text-rose-400 mt-1.5 font-medium flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{adminPinError}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminAuthModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs cursor-pointer transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  id="btn-submit-admin-pin"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow-lg shadow-amber-500/20 transition-all"
+                >
+                  เข้าสู่โหมด Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

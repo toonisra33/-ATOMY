@@ -31,6 +31,7 @@ interface TrainingDayModalProps {
   onClose: () => void;
   onRefresh: () => void;
   onSelectDay?: (dayNumber: number) => void;
+  isAdmin?: boolean;
 }
 
 export function TrainingDayModal({
@@ -40,6 +41,7 @@ export function TrainingDayModal({
   onClose,
   onRefresh,
   onSelectDay,
+  isAdmin = false,
 }: TrainingDayModalProps) {
   if (!isOpen) return null;
 
@@ -210,38 +212,40 @@ export function TrainingDayModal({
           </div>
         )}
 
-        {/* Sponsor / Evaluator Test Mode Section */}
-        <div className="pt-4 border-t border-slate-800">
-          <div className="text-[11px] font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>เครื่องมือทดสอบระบบ (สำหรับสปอนเซอร์ / ผู้ประเมิน):</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                simulateFastForwardDay(lockInfo.requiredDayNumber);
-                onRefresh();
-              }}
-              className="px-3 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/50 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-            >
-              <FastForward className="w-3.5 h-3.5 text-amber-400" />
-              <span>⚡ ข้ามเวลา 24 ชม. (ปลดล็อกทันที)</span>
-            </button>
+        {/* Admin / Web Developer Test Mode Section */}
+        {isAdmin && (
+          <div className="pt-4 border-t border-slate-800">
+            <div className="text-[11px] font-bold text-amber-400 mb-2 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>เครื่องมือทดสอบระบบ (เฉพาะ Admin / ผู้พัฒนาเว็บ):</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  simulateFastForwardDay(lockInfo.requiredDayNumber);
+                  onRefresh();
+                }}
+                className="px-3 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-600/50 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <FastForward className="w-3.5 h-3.5 text-amber-400" />
+                <span>⚡ ข้ามเวลา 24 ชม. (ปลดล็อกทันที)</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                resetAllTrainingProgress();
-                onRefresh();
-              }}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>🔄 รีเซ็ตสถานะเป็นศูนย์</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetAllTrainingProgress();
+                  onRefresh();
+                }}
+                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>🔄 รีเซ็ตสถานะเป็นศูนย์</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Bottom Close Button */}
         <div className="mt-5 text-center">
