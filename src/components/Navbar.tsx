@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>เว็บพ่วงสปอนเซอร์</span>
         </span>
         <span className="text-white/90 whitespace-nowrap text-xs sm:text-sm">คุณกำลังเข้าชมเว็บของ:</span>
-        <span className="font-bold underline decoration-sky-300 text-white break-words text-xs sm:text-sm">
+        <span className="font-bold underline decoration-sky-300 text-white whitespace-nowrap text-xs sm:text-sm">
           {sponsor.sponsorName}
         </span>
       </div>

@@ -26,8 +26,10 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             className="w-9 h-9 rounded-full object-cover border-2 border-emerald-500 shrink-0 shadow-xs"
           />
           <div className="min-w-0 flex-1">
-            <span className="text-[10px] text-slate-500 font-medium block leading-none mb-0.5">ผู้แนะนำ:</span>
-            <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight break-words line-clamp-2">
+            <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium block leading-none mb-0.5 whitespace-nowrap">
+              ผู้แนะนำ:
+            </span>
+            <p className="text-[10.5px] xs:text-[11px] sm:text-xs font-bold text-slate-900 leading-tight whitespace-nowrap truncate tracking-tight">
               {sponsor.sponsorName}
             </p>
           </div>

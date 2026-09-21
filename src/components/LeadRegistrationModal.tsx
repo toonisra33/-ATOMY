@@ -182,10 +182,10 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
                 />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">ผู้แนะนำประจำสายงาน:</span>
-                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 leading-snug break-words">
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 leading-snug whitespace-nowrap truncate">
                     {sponsor.sponsorName}
                   </p>
-                  <p className="text-[11px] text-slate-600 mt-0.5 break-words">
+                  <p className="text-[11px] text-slate-600 mt-0.5 whitespace-nowrap truncate">
                     {sponsor.sponsorPosition} • {sponsor.teamName}
                   </p>
                 </div>

@@ -185,37 +185,37 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
               </div>
 
               {/* Sponsor Mini Banner & Member-Only Tools */}
-              <div className="mt-6 p-4 sm:p-5 bg-gradient-to-r from-slate-50 via-blue-50/40 to-slate-50 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <div className="mt-6 p-3.5 sm:p-5 bg-gradient-to-r from-slate-50 via-blue-50/40 to-slate-50 rounded-2xl border border-slate-200/90 shadow-2xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   {/* Sponsor Identity Card */}
-                  <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                    <div className="relative shrink-0 mt-0.5 sm:mt-0">
+                  <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                    <div className="relative shrink-0">
                       <img
                         src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
                         alt={sponsor.sponsorName}
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-blue-500/90 shadow-md shadow-blue-500/15"
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-blue-500/90 shadow-md shadow-blue-500/15"
                       />
                       <div
-                        className="absolute -bottom-1 -right-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white ring-1 ring-emerald-400"
+                        className="absolute -bottom-1 -right-1 bg-emerald-500 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-white ring-1 ring-emerald-400"
                         title="พร้อมให้คำแนะนำและดูแลตลอดชีพ"
                       />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-100/90 px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] font-bold text-blue-800 bg-blue-100/90 px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                           <span>ผู้แนะนำประจำสายงาน</span>
                         </span>
                       </div>
 
-                      {/* Full Sponsor Name - Never Truncated */}
-                      <h4 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug break-words">
+                      {/* Full Sponsor Name - Strictly Single Line */}
+                      <h4 className="text-[13px] xs:text-sm sm:text-base md:text-lg font-extrabold text-slate-900 leading-tight whitespace-nowrap tracking-tight">
                         {sponsor.sponsorName}
                       </h4>
 
                       {/* Position & Team Credentials */}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-600 mt-1 leading-normal">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-slate-600 mt-1 leading-normal">
                         <span className="font-semibold text-slate-800">{sponsor.sponsorPosition}</span>
                         {sponsor.teamName && (
                           <>
