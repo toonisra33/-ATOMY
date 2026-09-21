@@ -1,6 +1,7 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
 import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink, GraduationCap } from 'lucide-react';
+import { getStoredTrainingProgress } from '../lib/trainingProgress';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
@@ -32,6 +33,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLeadsModal,
 }) => {
   const hasPixel = Boolean(sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId);
+
+  const [isDay1Passed, setIsDay1Passed] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const progress = getStoredTrainingProgress();
+    return progress[1]?.isQuizPassed === true || localStorage.getItem("atomy_training_day_1_passed") === "true";
+  });
+
+  React.useEffect(() => {
+    const checkStatus = () => {
+      const progress = getStoredTrainingProgress();
+      setIsDay1Passed(progress[1]?.isQuizPassed === true || localStorage.getItem("atomy_training_day_1_passed") === "true");
+    };
+    window.addEventListener("storage", checkStatus);
+    const interval = setInterval(checkStatus, 2000);
+    return () => {
+      window.removeEventListener("storage", checkStatus);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const shouldShowTrainingTab = isDay1Passed || isAdmin;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -68,11 +90,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Links (Anchor Links) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="/day1" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200">
-              <GraduationCap className="w-4 h-4 text-blue-600" />
-              <span>บทเรียน 7 วัน (Day 1)</span>
-              <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-bold">ใหม่</span>
-            </a>
+            {/* Show 7-Day Training ONLY after Day 1 has been passed (or for Admin) */}
+            {shouldShowTrainingTab && (
+              <a href="/day1" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200">
+                <GraduationCap className="w-4 h-4 text-blue-600" />
+                <span>บทเรียน 7 วัน</span>
+                <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-bold">VIP</span>
+              </a>
+            )}
             <a href="#video-15min" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
               วิดีโอ 20 นาที
@@ -90,29 +115,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* 7-Day Training Button for mobile */}
-            <a
-              id="nav-btn-day1-mobile"
-              href="/day1"
-              className="inline-flex md:hidden items-center gap-1 px-2 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
-              title="เข้าสู่บทเรียน 7 วัน (เริ่มต้นวันที่ 1)"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>บทเรียน Day 1</span>
-            </a>
-            {/* Leads Inbox Button - Opens in dedicated new tab */}
-            <a
-              id="nav-btn-leads-inbox"
-              href="/leads"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
-              title="เปิดหน้าจัดการรายชื่อผู้มุ่งหวังในแท็บใหม่เต็มจอ (Leads Hub)"
-            >
-              <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span className="hidden md:inline">รายชื่อ Lead</span>
-              <ExternalLink className="w-3 h-3 text-blue-500 hidden sm:inline opacity-70" />
-            </a>
+            {/* 7-Day Training Button replaces Leads from top, shown for authenticated members only */}
+            {isAuthenticated && (
+              <a
+                id="nav-btn-training-top"
+                href="/day1"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
+                title="เข้าสู่ระบบบทเรียน 7 วัน (7-Day Leadership Onboarding)"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>บทเรียน 7 วัน</span>
+              </a>
+            )}
 
             {/* Install / Check Pixel Button */}
             {isAuthenticated && onOpenPixelModal && (

@@ -88,19 +88,7 @@ export function TrainingDayModal({
         </p>
 
         {/* Lock / Unlock / Countdown Condition Card */}
-        {isDay1 ? (
-          <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-500/40 flex items-start gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-400 flex items-center justify-center shrink-0">
-              <Play className="w-5 h-5 fill-blue-400" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-white">บทเรียนเริ่มต้น</h4>
-              <p className="text-xs text-slate-300 mt-0.5">
-                บทเรียนนี้เปิดให้เรียนรู้ได้ทันที คุณกำลังอยู่ในหน้านี้แล้ว
-              </p>
-            </div>
-          </div>
-        ) : lockInfo.status === "UNLOCKED" ? (
+        {lockInfo.status === "UNLOCKED" ? (
           <div className="p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/50 flex items-start gap-3.5 mb-5">
             <div className="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <Unlock className="w-6 h-6" />
@@ -114,7 +102,9 @@ export function TrainingDayModal({
                 พร้อมเข้าสู่บทเรียนวันที่ {selectedDay}
               </h4>
               <p className="text-xs text-emerald-200/80 mt-1">
-                คุณผ่านเกณฑ์และเวลาครบ 24 ชั่วโมงเรียบร้อยแล้ว สามารถเข้าเรียนรู้เนื้อหาบทเรียนได้ทันที
+                {isDay1
+                  ? "ครบ 24 ชั่วโมงหลังลงทะเบียนแล้ว สามารถเข้าศึกษาบทเรียนวันที่ 1 ได้ทันที"
+                  : "คุณผ่านเกณฑ์และเวลาครบ 24 ชั่วโมงเรียบร้อยแล้ว สามารถเข้าเรียนรู้เนื้อหาบทเรียนได้ทันที"}
               </p>
             </div>
           </div>

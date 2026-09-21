@@ -15,8 +15,11 @@ import {
   resetAllTrainingProgress,
   SEVEN_DAYS_OVERVIEW,
   DayLockInfo,
+  recordEmailDispatch,
+  getProspectLearnerSession,
 } from "../lib/trainingProgress";
 import { TrainingDayModal } from "./TrainingDayModal";
+import { TrainingEmailHubModal } from "./TrainingEmailHubModal";
 import {
   ArrowLeft,
   GraduationCap,
@@ -49,6 +52,7 @@ import {
   ShieldAlert,
   KeyRound,
   X,
+  Mail,
 } from "lucide-react";
 import { AuthSession } from "../types";
 import { ADMIN_EMAILS } from "../lib/auth";
@@ -235,6 +239,7 @@ export function TrainingDay1Page({
   const [score, setScore] = useState<number>(0);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
+  const [isEmailHubOpen, setIsEmailHubOpen] = useState<boolean>(false);
 
   // Helper to post messages to YouTube iframe API
   const postToPlayer = (command: string, args: any[] = []) => {
@@ -436,6 +441,18 @@ export function TrainingDay1Page({
         quizPassedAt: Date.now(),
       });
       setTrainingProgress(updated);
+
+      // Trigger email dispatch for next day's 24h drip campaign
+      if (activeDay < 7) {
+        const learner = getProspectLearnerSession();
+        recordEmailDispatch(
+          activeDay + 1,
+          learner?.fullName || "คุณผู้มุ่งหวังคนพิเศษ",
+          learner?.email || "",
+          'day_completion'
+        );
+      }
+
       setShowSuccessModal(true);
     } else {
       // Scroll to first wrong answer
@@ -456,6 +473,17 @@ export function TrainingDay1Page({
       quizPassedAt: Date.now(),
     });
     setTrainingProgress(updated);
+
+    if (activeDay < 7) {
+      const learner = getProspectLearnerSession();
+      recordEmailDispatch(
+        activeDay + 1,
+        learner?.fullName || "คุณผู้มุ่งหวังคนพิเศษ",
+        learner?.email || "",
+        'day_completion'
+      );
+    }
+
     setShowSuccessModal(true);
   };
 
@@ -633,8 +661,19 @@ export function TrainingDay1Page({
             </div>
           </div>
 
-          {/* Sponsor Tag & Status */}
+          {/* Sponsor Tag & Status & Email Hub */}
           <div className="flex items-center gap-2 sm:gap-3 text-right">
+            <button
+              type="button"
+              id="btn-open-email-hub"
+              onClick={() => setIsEmailHubOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 text-xs font-bold transition-colors cursor-pointer"
+              title="ดูเนื้อหาอีเมลและระบบนับเวลาถอยหลัง 24 ชม. ทั้ง 7 วัน"
+            >
+              <Mail className="w-3.5 h-3.5 text-blue-400" />
+              <span className="hidden xs:inline">อีเมล 7 วัน</span>
+            </button>
+
             <div className="hidden sm:flex flex-col text-xs">
               <span className="text-slate-400">สปอนเซอร์ผู้ดูแล:</span>
               <span className="font-bold text-sky-400">{sponsor.sponsorName}</span>
@@ -743,13 +782,17 @@ export function TrainingDay1Page({
             {activeDayLock.status === "COUNTDOWN_RUNNING" ? (
               <div className="bg-slate-950/90 border border-blue-500/40 rounded-2xl p-6 mb-6">
                 <div className="text-xs text-slate-400 mb-2 font-medium">
-                  ระบบกำลังนับถอยหลัง 24 ชั่วโมงเพื่อปลดล็อกบทเรียนนี้:
+                  {activeDay === 1
+                    ? "ระบบกำลังนับถอยหลัง 24 ชั่วโมง สู่บทเรียนวันที่ 1:"
+                    : "ระบบกำลังนับถอยหลัง 24 ชั่วโมงเพื่อปลดล็อกบทเรียนนี้:"}
                 </div>
                 <div className="font-mono text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-sky-400 to-blue-400 tracking-widest mb-2">
                   {activeDayLock.formattedCountdown}
                 </div>
                 <div className="text-xs text-slate-400">
-                  คุณผ่านบทเรียนวันที่ {activeDayLock.requiredDayNumber} เรียบร้อยแล้ว ระบบกำลังจับเวลาตามกติกา 24 ชั่วโมง
+                  {activeDay === 1
+                    ? "คุณได้ลงทะเบียนเข้าร่วมระบบแล้ว ระบบจะส่งอีเมลบทเรียนฉบับแรกพร้อมปลดล็อกห้องเรียน Day 1 เมื่อครบ 24 ชั่วโมงหลังส่งแบบฟอร์ม"
+                    : `คุณผ่านบทเรียนวันที่ ${activeDayLock.requiredDayNumber} เรียบร้อยแล้ว ระบบกำลังจับเวลาตามกติกา 24 ชั่วโมง`}
                 </div>
               </div>
             ) : (
@@ -759,25 +802,37 @@ export function TrainingDay1Page({
                   <span>เงื่อนไขการปลดล็อก:</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  คุณต้องผ่านบทเรียนและทำแบบทดสอบวันที่ {activeDayLock.requiredDayNumber} ให้สำเร็จก่อน ระบบจึงจะเริ่มนับถอยหลัง 24 ชั่วโมงเพื่อปลดล็อกบทเรียนวันที่ {activeDay} ครับ
+                  {activeDay === 1
+                    ? "บทเรียนวันที่ 1 จะเปิดให้อัตโนมัติเมื่อครบกำหนด 24 ชั่วโมงหลังการส่งแบบฟอร์มลงทะเบียน โดยระบบจะจัดส่งอีเมลพร้อมลิงก์เข้าสู่ห้องเรียนให้คุณครับ"
+                    : `คุณต้องผ่านบทเรียนและทำแบบทดสอบวันที่ ${activeDayLock.requiredDayNumber} ให้สำเร็จก่อน ระบบจึงจะเริ่มนับถอยหลัง 24 ชั่วโมงเพื่อปลดล็อกบทเรียนวันที่ ${activeDay} ครับ`}
                 </p>
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setActiveDay(activeDayLock.requiredDayNumber || 1)}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm cursor-pointer shadow-lg shadow-blue-500/20"
-              >
-                ไปเรียนบทเรียนวันที่ {activeDayLock.requiredDayNumber || 1}
-              </button>
+              {activeDay > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveDay(activeDayLock.requiredDayNumber || 1)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm cursor-pointer shadow-lg shadow-blue-500/20"
+                >
+                  ไปเรียนบทเรียนวันที่ {activeDayLock.requiredDayNumber || 1}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onBackToHome}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm cursor-pointer border border-slate-700 transition-colors"
+                >
+                  กลับสู่หน้าหลัก
+                </button>
+              )}
 
               {isAdminMode && (
                 <button
                   type="button"
                   id="btn-fast-forward-locked-day"
-                  onClick={() => handleFastForward24h(activeDayLock.requiredDayNumber || 1)}
+                  onClick={() => handleFastForward24h(activeDay === 1 ? 1 : (activeDayLock.requiredDayNumber || 1))}
                   className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-600/40 font-bold text-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all"
                   title="ปุ่มนี้แสดงเฉพาะ Admin ผู้พัฒนาเพื่อทดสอบระบบ"
                 >
@@ -1705,6 +1760,19 @@ export function TrainingDay1Page({
 
               <button
                 type="button"
+                id="btn-modal-preview-email"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setIsEmailHubOpen(true);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold text-xs border border-blue-500/40 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Mail className="w-4 h-4 text-blue-400" />
+                <span>ดูตัวอย่างอีเมลบทเรียนวันที่ {nextDay || activeDay} ที่ระบบเตรียมส่ง</span>
+              </button>
+
+              <button
+                type="button"
                 id="btn-close-success-modal"
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
@@ -1734,6 +1802,14 @@ export function TrainingDay1Page({
           }}
         />
       )}
+
+      {/* 7-Day Automated Email Curriculum Hub Modal */}
+      <TrainingEmailHubModal
+        isOpen={isEmailHubOpen}
+        onClose={() => setIsEmailHubOpen(false)}
+        sponsor={sponsor}
+        currentDay={activeDay}
+      />
 
       {/* Subtle Developer / Admin Mode Toggle in Footer */}
       <footer className="mt-16 text-center text-xs text-slate-500 pb-10">

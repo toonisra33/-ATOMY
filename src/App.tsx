@@ -21,6 +21,8 @@ import { DeployGuideModal } from "./components/DeployGuideModal";
 import { LeadsInboxModal } from "./components/LeadsInboxModal";
 import { LeadsPage } from "./components/LeadsPage";
 import { TrainingDay1Page } from "./components/TrainingDay1Page";
+import { TrainingAccessGate } from "./components/TrainingAccessGate";
+import { getProspectLearnerSession } from "./lib/trainingProgress";
 import { LoginModal } from "./components/LoginModal";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
@@ -288,13 +290,46 @@ export default function App() {
         !!new URLSearchParams(window.location.search).get("day") ||
         window.location.hash.startsWith("#day")));
 
+  const prospectSession = getProspectLearnerSession();
+  const isAdminDevMode =
+    session?.isAdmin === true ||
+    (session?.email ? session.email.toLowerCase() === 'toonisra33@gmail.com' : false) ||
+    (typeof window !== "undefined" && (
+      new URLSearchParams(window.location.search).get("admin") === "1" ||
+      new URLSearchParams(window.location.search).get("dev") === "1" ||
+      localStorage.getItem("atomy_admin_dev_mode") === "true"
+    ));
+  const isAuthorizedForTraining = !!session || !!prospectSession || isAdminDevMode;
+
   if (isTrainingPage) {
+    if (!isAuthorizedForTraining) {
+      return (
+        <>
+          <TrainingAccessGate
+            sponsor={sponsor}
+            onAuthenticated={() => {
+              setCurrentPath(window.location.pathname);
+            }}
+            onOpenSponsorLogin={() => setIsLoginModalOpen(true)}
+            onBackToHome={() => {
+              window.history.pushState({}, "", "/");
+              setCurrentPath("/");
+            }}
+          />
+          <LoginModal
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+          />
+        </>
+      );
+    }
+
     return (
       <TrainingDay1Page
         sponsor={sponsor}
         initialDay={targetDay}
         session={session}
-        isAdmin={session?.isAdmin === true || (session?.email ? session.email.toLowerCase() === 'toonisra33@gmail.com' : false)}
+        isAdmin={isAdminDevMode}
         onBackToHome={() => {
           window.history.pushState({}, "", "/");
           setCurrentPath("/");

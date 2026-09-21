@@ -76,7 +76,89 @@ export const SEVEN_DAYS_OVERVIEW = [
   },
 ];
 
+export interface ProspectLearnerSession {
+  fullName: string;
+  phoneNumber: string;
+  email?: string;
+  lineId?: string;
+  registeredAt: number;
+}
+
+export interface EmailDispatchRecord {
+  id: string;
+  dayNumber: number;
+  recipientName: string;
+  recipientEmail: string;
+  dispatchedAt: number;
+  triggerReason: 'registration' | '24h_unlock' | 'manual_resend' | 'day_completion';
+  status: 'sent' | 'opened';
+}
+
 const STORAGE_KEY = "atomy_7day_training_progress_v1";
+const PROSPECT_LEARNER_KEY = "atomy_prospect_learner_session";
+const EMAIL_DISPATCHES_KEY = "atomy_email_dispatches_v1";
+
+export function getProspectLearnerSession(): ProspectLearnerSession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PROSPECT_LEARNER_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error("Failed to parse prospect learner session", e);
+  }
+  return null;
+}
+
+export function saveProspectLearnerSession(session: ProspectLearnerSession): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PROSPECT_LEARNER_KEY, JSON.stringify(session));
+  } catch (e) {
+    console.error("Failed to save prospect learner session", e);
+  }
+}
+
+export function clearProspectLearnerSession(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(PROSPECT_LEARNER_KEY);
+}
+
+export function getEmailDispatches(): EmailDispatchRecord[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(EMAIL_DISPATCHES_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error("Failed to parse email dispatches", e);
+  }
+  return [];
+}
+
+export function recordEmailDispatch(
+  dayNumber: number,
+  recipientName: string,
+  recipientEmail: string,
+  triggerReason: 'registration' | '24h_unlock' | 'manual_resend' | 'day_completion'
+): EmailDispatchRecord[] {
+  if (typeof window === "undefined") return [];
+  const current = getEmailDispatches();
+  const newRecord: EmailDispatchRecord = {
+    id: `email-${dayNumber}-${Date.now()}`,
+    dayNumber,
+    recipientName,
+    recipientEmail: recipientEmail || "registered-user@email.com",
+    dispatchedAt: Date.now(),
+    triggerReason,
+    status: 'sent',
+  };
+  const updated = [newRecord, ...current];
+  try {
+    localStorage.setItem(EMAIL_DISPATCHES_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error("Failed to save email dispatch", e);
+  }
+  return updated;
+}
 
 export function getStoredTrainingProgress(): Record<number, DayProgress> {
   if (typeof window === "undefined") return {};
@@ -161,8 +243,55 @@ export function getDayLockInfo(
   allProgress: Record<number, DayProgress> = getStoredTrainingProgress(),
   now: number = Date.now()
 ): DayLockInfo {
-  // Day 1 is always available to start
+  // Day 1 has a 24-hour countdown after lead form registration
   if (targetDay <= 1) {
+    const day1Prog = allProgress[1];
+    // If Day 1 was already passed, it is permanently unlocked
+    if (day1Prog?.isQuizPassed) {
+      return {
+        status: 'UNLOCKED',
+        isUnlocked: true,
+        remainingMs: 0,
+        remainingHours: 0,
+        remainingMinutes: 0,
+        remainingSeconds: 0,
+        formattedCountdown: '00:00:00',
+        unlockTimestamp: null,
+        requiredDayNumber: 0,
+      };
+    }
+
+    // Check if registered prospect has 24h countdown from registeredAt
+    const prospect = getProspectLearnerSession();
+    if (prospect && prospect.registeredAt) {
+      const unlockTimestamp = prospect.registeredAt + FUNNEL_UNLOCK_DELAY_MS;
+      const remainingMs = Math.max(0, unlockTimestamp - now);
+
+      if (remainingMs > 0) {
+        const totalSeconds = Math.floor(remainingMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const formattedCountdown = `${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        return {
+          status: 'COUNTDOWN_RUNNING',
+          isUnlocked: false,
+          remainingMs,
+          remainingHours: hours,
+          remainingMinutes: minutes,
+          remainingSeconds: seconds,
+          formattedCountdown,
+          unlockTimestamp,
+          requiredDayNumber: 0,
+        };
+      }
+    }
+
+    // Unlocked once 24h elapsed (or direct testing)
     return {
       status: 'UNLOCKED',
       isUnlocked: true,
@@ -172,7 +301,7 @@ export function getDayLockInfo(
       remainingSeconds: 0,
       formattedCountdown: '00:00:00',
       unlockTimestamp: null,
-      requiredDayNumber: 1,
+      requiredDayNumber: 0,
     };
   }
 
@@ -236,10 +365,27 @@ export function getDayLockInfo(
 }
 
 /**
+ * Fast-forwards the 24-hour waiting countdown for Day 1 after lead registration
+ */
+export function simulateFastForwardDay1Registration() {
+  if (typeof window === "undefined") return;
+  const prospect = getProspectLearnerSession();
+  if (prospect) {
+    prospect.registeredAt = Date.now() - (FUNNEL_UNLOCK_DELAY_MS + 1000 * 60);
+    saveProspectLearnerSession(prospect);
+  }
+}
+
+/**
  * Fast-forward simulator for testing (skips 24 hours so next day unlocks immediately)
  */
 export function simulateFastForwardDay(dayNumber: number) {
   if (typeof window === "undefined") return;
+
+  if (dayNumber <= 1) {
+    simulateFastForwardDay1Registration();
+  }
+
   const progress = getStoredTrainingProgress();
   const currentDayProg = progress[dayNumber] || {
     dayNumber,
