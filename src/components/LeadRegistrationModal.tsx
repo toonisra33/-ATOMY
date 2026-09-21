@@ -173,20 +173,21 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
               </p>
             </div>
 
-              {/* Sponsor mini ribbon with Welcome Preview Shortcut */}
-              <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <img
-                    src={sponsor.avatarUrl}
-                    alt={sponsor.sponsorName}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500 shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <span className="text-[10px] text-slate-500 font-medium block">ผู้แนะนำของคุณ:</span>
-                    <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                      {sponsor.sponsorName} ({sponsor.sponsorPosition})
-                    </p>
-                  </div>
+              {/* Sponsor mini ribbon */}
+              <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center gap-3">
+                <img
+                  src={sponsor.avatarUrl}
+                  alt={sponsor.sponsorName}
+                  className="w-11 h-11 rounded-full object-cover border-2 border-emerald-500 shrink-0 shadow-xs"
+                />
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">ผู้แนะนำประจำสายงาน:</span>
+                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 leading-snug break-words">
+                    {sponsor.sponsorName}
+                  </p>
+                  <p className="text-[11px] text-slate-600 mt-0.5 break-words">
+                    {sponsor.sponsorPosition} • {sponsor.teamName}
+                  </p>
                 </div>
               </div>
 

@@ -141,7 +141,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
   };
 
   const handleTestViewContentEvent = () => {
-    trackContentEngagement('วิดีโอ 15 นาที โมเดลธุรกิจ', sponsor.sponsorId);
+    trackContentEngagement('วิดีโอ 20 นาที โมเดลธุรกิจ', sponsor.sponsorId);
     setTestSent("ยิง Event 'ViewContent' สำเร็จ!");
     setTimeout(() => setTestSent(null), 3000);
   };
@@ -439,7 +439,7 @@ export const PixelStatusModal: React.FC<PixelStatusModalProps> = ({
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="font-mono text-purple-400 font-bold shrink-0">2. ViewContent:</span>
-                  <span>บันทึกเมื่อผู้มุ่งหวังเริ่มดูวิดีโอ 15 นาที หรือเลื่อนอ่านรายละเอียดธุรกิจ</span>
+                  <span>บันทึกเมื่อผู้มุ่งหวังเริ่มดูวิดีโอ 20 นาที หรือเลื่อนอ่านรายละเอียดธุรกิจ</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="font-mono text-purple-400 font-bold shrink-0">3. Contact:</span>

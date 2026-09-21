@@ -36,13 +36,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
       {/* Top Affiliate Notification Ribbon */}
-      <div className="bg-gradient-to-r from-blue-700 via-sky-600 to-blue-700 text-white text-xs sm:text-sm py-1.5 px-3 sm:px-4 text-center flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 font-medium">
-        <span className="inline-flex items-center gap-1 bg-white/20 text-white px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold shrink-0">
-          <Sparkles className="w-3 h-3 text-yellow-300" />
+      <div className="bg-gradient-to-r from-blue-700 via-sky-600 to-blue-700 text-white text-xs sm:text-sm py-1.5 px-3 sm:px-4 text-center flex flex-wrap items-center justify-center gap-x-2 gap-y-1 font-medium shadow-inner">
+        <span className="inline-flex items-center gap-1 bg-white/20 text-white px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 whitespace-nowrap">
+          <Sparkles className="w-3 h-3 text-yellow-300 shrink-0" />
           <span>เว็บพ่วงสปอนเซอร์</span>
         </span>
-        <span className="text-white/90">คุณกำลังเข้าชมเว็บของ:</span>
-        <span className="font-bold underline decoration-sky-300 text-white break-words">
+        <span className="text-white/90 whitespace-nowrap text-xs sm:text-sm">คุณกำลังเข้าชมเว็บของ:</span>
+        <span className="font-bold underline decoration-sky-300 text-white break-words text-xs sm:text-sm">
           {sponsor.sponsorName}
         </span>
       </div>

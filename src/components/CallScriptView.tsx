@@ -100,9 +100,9 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
 
   const fullSpokenScript = `สวัสดีครับคุณ ${prospectName} ... ผม ${sponsorName} ที่ปรึกษาจากระบบ Atomy นะครับ ที่คุณ ${prospectName} ได้ฝากข้อมูลสร้างรายได้เสริมไว้ในหน้าเว็บครับ สะดวกคุยสั้นๆ สัก 1-2 นาทีไหมครับ?
 
-พอดีในระบบมีคลิปบรรยายสั้นๆ 15 นาที ไม่แน่ใจว่าคุณ ${prospectName} ได้มีโอกาสกดดูหรือยังครับ?
+พอดีในระบบมีคลิปบรรยายสั้นๆ 20 นาที ไม่แน่ใจว่าคุณ ${prospectName} ได้มีโอกาสกดดูหรือยังครับ?
 (ถ้าดูแล้ว) : ยอดเยี่ยมเลยครับ ชอบตรงที่ไม่ต้องสต็อกของ หรือชอบตรงที่สร้างรายได้ต่อเนื่องแบบ Passive ครับ?
-(ถ้ายังไม่ได้ดู) : ไม่เป็นไรเลยครับ ดีแล้วที่โทรมาบอกก่อน เพราะคลิปแค่ 15 นาที อธิบายวิธีเปลี่ยนของใช้ในบ้านให้เป็นเงินหลักหมื่นหลักแสนไว้อย่างชัดเจนเลยครับ
+(ถ้ายังไม่ได้ดู) : ไม่เป็นไรเลยครับ ดีแล้วที่โทรมาบอกก่อน เพราะคลิปแค่ 20 นาที อธิบายวิธีเปลี่ยนของใช้ในบ้านให้เป็นเงินหลักหมื่นหลักแสนไว้อย่างชัดเจนเลยครับ
 
 ที่ผมรีบติดต่อคุณ ${prospectName} วันนี้ เพราะทีมงานกำลังรันผังองค์กรสายงานรอบใหม่ และมี 3 สิทธิประโยชน์ฟรีพิเศษ ที่ไม่อยากให้เสียโอกาสครับ:
 1. สมัครฟรี 100% ไม่มีค่าแรกเข้า ไม่มีต่ออายุรายปี ไม่มีความเสี่ยงแม้แต่บาทเดียว
@@ -308,7 +308,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
                 2
               </span>
               <h5 className="text-xs sm:text-sm font-bold text-white">
-                เช็คการดูคลิป 15 นาที + ล็อคจุดเด่นที่ชอบ
+                เช็คการดูคลิป 20 นาที + ล็อคจุดเด่นที่ชอบ
               </h5>
             </div>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800">
@@ -317,7 +317,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
           </div>
           <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs sm:text-sm text-slate-200 leading-relaxed space-y-2">
             <p>
-              "พอดีในระบบมีคลิปบรรยายสั้นๆ 15 นาที ไม่แน่ใจว่าคุณ <span className="font-bold text-emerald-400">{prospectName}</span> ได้มีโอกาสกดดูหรือยังครับ?"
+              "พอดีในระบบมีคลิปบรรยายสั้นๆ 20 นาที ไม่แน่ใจว่าคุณ <span className="font-bold text-emerald-400">{prospectName}</span> ได้มีโอกาสกดดูหรือยังครับ?"
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1.5 border-t border-slate-800/80 text-[11px] sm:text-xs">
               <div className="bg-emerald-950/30 p-2 rounded-lg border border-emerald-900/50">
@@ -329,7 +329,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
               <div className="bg-amber-950/30 p-2 rounded-lg border border-amber-900/50">
                 <strong className="text-amber-400 block mb-1">⏳ กรณี: ยังไม่ได้ดู / ยังดูไม่จบ</strong>
                 <p className="text-slate-300">
-                  "ไม่เป็นไรเลยครับ ดีแล้วที่โทรมาบอกก่อน เพราะคลิปแค่ 15 นาที แต่อธิบายวิธีเปลี่ยนของใช้ในบ้านให้เป็นเงินแสนไว้ชัดเจนมากครับ"
+                  "ไม่เป็นไรเลยครับ ดีแล้วที่โทรมาบอกก่อน เพราะคลิปแค่ 20 นาที แต่อธิบายวิธีเปลี่ยนของใช้ในบ้านให้เป็นเงินแสนไว้ชัดเจนมากครับ"
                 </p>
               </div>
             </div>
@@ -515,7 +515,7 @@ export const CallScriptView: React.FC<CallScriptViewProps> = ({
             </button>
             {expandedFaq === 1 && (
               <div className="px-3 pb-3 text-slate-300 text-[11px] sm:text-xs leading-relaxed border-t border-slate-800/60 pt-2 bg-slate-900/90">
-                💬 <strong>ตอบ:</strong> "เข้าใจเลยครับ คนในทีมกว่า 90% ทำงานประจำและเริ่มจากศูนย์เหมือนกัน เพราะที่นี่เราไม่ใช้การตื๊อขายของ แต่เรามีระบบเว็บไซต์และคลิป 15 นาทีทำงานอธิบายแทน 24 ชั่วโมงครับ แค่พิมพ์ 88 ใน LINE แล้วลงข้อมูลทิ้งไว้ สปอนเซอร์จะจัดวางสายงานให้ และดึงเข้าห้องเรียนรู้งานออนไลน์ทันที ไม่มีข้อผูกมัดใดๆ ครับ"
+                💬 <strong>ตอบ:</strong> "เข้าใจเลยครับ คนในทีมกว่า 90% ทำงานประจำและเริ่มจากศูนย์เหมือนกัน เพราะที่นี่เราไม่ใช้การตื๊อขายของ แต่เรามีระบบเว็บไซต์และคลิป 20 นาทีทำงานอธิบายแทน 24 ชั่วโมงครับ แค่พิมพ์ 88 ใน LINE แล้วลงข้อมูลทิ้งไว้ สปอนเซอร์จะจัดวางสายงานให้ และดึงเข้าห้องเรียนรู้งานออนไลน์ทันที ไม่มีข้อผูกมัดใดๆ ครับ"
               </div>
             )}
           </div>

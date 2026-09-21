@@ -184,63 +184,81 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                 </p>
               </div>
 
-              {/* Sponsor Mini Banner & Leads Inbox Button */}
-              <div className="mt-6 p-4 sm:p-5 bg-gradient-to-r from-blue-50/70 via-slate-50 to-emerald-50/40 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5 w-full sm:w-auto">
-                  <div className="relative shrink-0">
-                    <img
-                      src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
-                      alt={sponsor.sponsorName}
-                      className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-500 shadow-md shadow-blue-500/20"
-                    />
-                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white" title="พร้อมให้คำแนะนำ" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-base font-bold text-slate-900 truncate">
+              {/* Sponsor Mini Banner & Member-Only Tools */}
+              <div className="mt-6 p-4 sm:p-5 bg-gradient-to-r from-slate-50 via-blue-50/40 to-slate-50 rounded-2xl border border-slate-200/90 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Sponsor Identity Card */}
+                  <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                    <div className="relative shrink-0 mt-0.5 sm:mt-0">
+                      <img
+                        src={sponsor.avatarUrl || DEFAULT_SPONSOR.avatarUrl}
+                        alt={sponsor.sponsorName}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-blue-500/90 shadow-md shadow-blue-500/15"
+                      />
+                      <div
+                        className="absolute -bottom-1 -right-1 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white ring-1 ring-emerald-400"
+                        title="พร้อมให้คำแนะนำและดูแลตลอดชีพ"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-800 bg-blue-100/90 px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                          <span>ผู้แนะนำประจำสายงาน</span>
+                        </span>
+                      </div>
+
+                      {/* Full Sponsor Name - Never Truncated */}
+                      <h4 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug break-words">
                         {sponsor.sponsorName}
                       </h4>
-                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full">
-                        ผู้แนะนำ
-                      </span>
+
+                      {/* Position & Team Credentials */}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-600 mt-1 leading-normal">
+                        <span className="font-semibold text-slate-800">{sponsor.sponsorPosition}</span>
+                        {sponsor.teamName && (
+                          <>
+                            <span className="text-slate-300 hidden xs:inline">•</span>
+                            <span className="text-blue-700 font-medium">{sponsor.teamName}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      {sponsor.sponsorPosition} • {sponsor.teamName}
-                    </p>
                   </div>
-                </div>
 
-                {/* Member-Only Toolbar: Preview & Leads Box (Hidden from general public prospects) */}
-                {isAuthenticated && (
-                  <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto shrink-0">
-                    {/* Shortcut to preview Welcome View (Members only) */}
-                    <button
-                      type="button"
-                      id="btn-shortcut-preview-welcome"
-                      onClick={() => {
-                        setIsPreviewMode(true);
-                        setCurrentStep('welcome');
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
-                      title="คลิกเพื่อดูตัวอย่างหน้ายินดีต้อนรับและขั้นตอนส่งเลข 88 ที่ผู้มุ่งหวังจะเห็นหลังส่งฟอร์ม (แสดงเฉพาะสมาชิกในระบบ)"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>ตัวอย่างหน้ายินดีต้อนรับ (กด 88)</span>
-                    </button>
-
-                    {onOpenLeadsModal && (
+                  {/* Member-Only Toolbar: Preview & Leads Box (Hidden from general public prospects) */}
+                  {isAuthenticated && (
+                    <div className="flex items-center gap-2 flex-wrap pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200/80 shrink-0">
+                      {/* Shortcut to preview Welcome View (Members only) */}
                       <button
                         type="button"
-                        onClick={onOpenLeadsModal}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 shadow-2xs transition-colors cursor-pointer"
-                        title="กล่องรายชื่อผู้มุ่งหวังสำหรับสปอนเซอร์ (แสดงเฉพาะสมาชิกในระบบ)"
+                        id="btn-shortcut-preview-welcome"
+                        onClick={() => {
+                          setIsPreviewMode(true);
+                          setCurrentStep('welcome');
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-300 shadow-2xs transition-all cursor-pointer hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+                        title="คลิกเพื่อดูตัวอย่างหน้ายินดีต้อนรับและขั้นตอนส่งเลข 88 ที่ผู้มุ่งหวังจะเห็นหลังส่งฟอร์ม (แสดงเฉพาะสมาชิกในระบบ)"
                       >
-                        <Users className="w-3.5 h-3.5 text-blue-600" />
-                        <span>กล่องรายชื่อ (Leads)</span>
+                        <Eye className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>ตัวอย่างหน้าต้อนรับ</span>
                       </button>
-                    )}
-                  </div>
-                )}
+
+                      {onOpenLeadsModal && (
+                        <button
+                          type="button"
+                          onClick={onOpenLeadsModal}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 shadow-2xs transition-colors cursor-pointer whitespace-nowrap"
+                          title="กล่องรายชื่อผู้มุ่งหวังสำหรับสปอนเซอร์ (แสดงเฉพาะสมาชิกในระบบ)"
+                        >
+                          <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span>กล่องรายชื่อ (Leads)</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Form Card */}

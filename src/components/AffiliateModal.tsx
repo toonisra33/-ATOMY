@@ -569,7 +569,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                     {formData.sponsorName ? `${formData.sponsorName} - โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ` : 'โอกาสสร้างรายได้เสริมควบคู่กับงานประจำ/และโอกาสที่แสนเรียบง่าย'}
                   </div>
                   <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                    {formData.welcomeNote || 'ระบบเรียนรู้ออนไลน์ ดูฟรี 15 นาที พร้อมที่ปรึกษาคอยดูแล'}
+                    {formData.welcomeNote || 'ระบบเรียนรู้ออนไลน์ ดูฟรี 20 นาที พร้อมที่ปรึกษาคอยดูแล'}
                   </p>
 
                   <div className="mt-3 pt-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
