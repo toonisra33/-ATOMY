@@ -1,6 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink } from 'lucide-react';
+import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink, GraduationCap } from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
@@ -68,6 +68,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Links (Anchor Links) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+            <a href="/day1" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200">
+              <GraduationCap className="w-4 h-4 text-blue-600" />
+              <span>บทเรียน 7 วัน (Day 1)</span>
+              <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-bold">ใหม่</span>
+            </a>
             <a href="#video-15min" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
               วิดีโอ 20 นาที
@@ -85,6 +90,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* 7-Day Training Button for mobile */}
+            <a
+              id="nav-btn-day1-mobile"
+              href="/day1"
+              className="inline-flex md:hidden items-center gap-1 px-2 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
+              title="เข้าสู่บทเรียน 7 วัน (เริ่มต้นวันที่ 1)"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>บทเรียน Day 1</span>
+            </a>
             {/* Leads Inbox Button - Opens in dedicated new tab */}
             <a
               id="nav-btn-leads-inbox"

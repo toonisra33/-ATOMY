@@ -20,6 +20,7 @@ import { PixelStatusModal } from "./components/PixelStatusModal";
 import { DeployGuideModal } from "./components/DeployGuideModal";
 import { LeadsInboxModal } from "./components/LeadsInboxModal";
 import { LeadsPage } from "./components/LeadsPage";
+import { TrainingDay1Page } from "./components/TrainingDay1Page";
 import { LoginModal } from "./components/LoginModal";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
@@ -265,6 +266,39 @@ export default function App() {
 
   if (currentPath === "/privacy") {
     return <PrivacyPolicyPage />;
+  }
+
+  let targetDay = 1;
+  if (typeof window !== "undefined") {
+    const dayParam = new URLSearchParams(window.location.search).get("day");
+    if (dayParam && !isNaN(Number(dayParam))) {
+      const parsed = Number(dayParam);
+      if (parsed >= 1 && parsed <= 7) targetDay = parsed;
+    } else {
+      const match = currentPath.match(/\/day([1-7])/);
+      if (match) targetDay = Number(match[1]);
+    }
+  }
+
+  const isTrainingPage =
+    currentPath.startsWith("/day") ||
+    currentPath.startsWith("/training") ||
+    (typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("view")?.startsWith("day") ||
+        !!new URLSearchParams(window.location.search).get("day") ||
+        window.location.hash.startsWith("#day")));
+
+  if (isTrainingPage) {
+    return (
+      <TrainingDay1Page
+        sponsor={sponsor}
+        initialDay={targetDay}
+        onBackToHome={() => {
+          window.history.pushState({}, "", "/");
+          setCurrentPath("/");
+        }}
+      />
+    );
   }
 
   const isLeadsPage =
