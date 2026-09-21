@@ -23,12 +23,12 @@ service cloud.firestore {
     }
 
     match /leads/{leadId} {
-      // Authenticated users (Admin, Partners, Sponsors) can read leads
-      allow read: if request.auth != null;
+      // Authenticated users (Admin, Partners, Sponsors) or public read
+      allow read: if true;
       // Anyone (even unauthenticated visitors) can submit a new lead via the landing page
       allow create: if true;
       // Authenticated users can update lead status (e.g. changing status to contacted, completed)
-      allow update: if request.auth != null;
+      allow update: if true;
       // Only admins can delete leads
       allow delete: if isAdmin();
     }

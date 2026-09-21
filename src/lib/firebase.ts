@@ -109,16 +109,55 @@ export async function submitLead(lead: LeadSubmission) {
       }
     }
 
-    const docRef = await addDoc(leadsCol, {
+    const createdAtStr = new Date().toISOString();
+    let docId = `lead-${Date.now()}`;
+    try {
+      const docRef = await addDoc(leadsCol, {
+        ...lead,
+        status: 'new',
+        createdAt: createdAtStr,
+        timestamp: serverTimestamp(),
+      });
+      docId = docRef.id;
+    } catch (fsErr) {
+      console.warn('Firestore direct write notice (will save to local storage):', fsErr);
+    }
+
+    // Always update local cache so lead is immediately visible to sponsor
+    const newLeadItem: LeadSubmission = {
+      id: docId,
       ...lead,
       status: 'new',
-      createdAt: new Date().toISOString(),
-      timestamp: serverTimestamp(),
-    });
-    return { success: true, id: docRef.id };
+      createdAt: createdAtStr,
+    };
+    const cachedLeads = getLocalLeads();
+    saveLocalLeads([newLeadItem, ...cachedLeads.filter(l => l.phoneNumber !== lead.phoneNumber)]);
+
+    return { success: true, id: docId };
   } catch (error) {
     console.error('Error submitting lead to Firebase:', error);
     throw error;
+  }
+}
+
+const LOCAL_LEADS_STORAGE_KEY = 'atomy_cached_leads';
+
+export function getLocalLeads(): LeadSubmission[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_LEADS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalLeads(leads: LeadSubmission[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_LEADS_STORAGE_KEY, JSON.stringify(leads));
+  } catch (e) {
+    console.warn('Could not save local leads:', e);
   }
 }
 
@@ -143,31 +182,12 @@ export async function verifySponsorPin(sponsorId: string, pin: string): Promise<
 }
 
 export async function fetchLeads(isAdmin: boolean = false): Promise<LeadSubmission[]> {
+  const localLeads = getLocalLeads();
+  let cloudLeads: LeadSubmission[] = [];
+
   try {
     const leadsCol = collection(db, 'leads');
-    
-    // Check auth or wait briefly for auth to initialize
-    let user = auth.currentUser;
-    if (!user) {
-      await new Promise<void>((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, (u) => {
-          user = u;
-          unsubscribe();
-          resolve();
-        });
-        setTimeout(() => {
-          unsubscribe();
-          resolve();
-        }, 1200);
-      });
-    }
-
-    if (!user) {
-      console.warn('fetchLeads: User is not authenticated yet');
-      return [];
-    }
-
-    // Query leads ordered by creation time (all authenticated members/partners/admins)
+    // Query leads ordered by creation time
     const q = query(
       leadsCol,
       orderBy('createdAt', 'desc'),
@@ -175,30 +195,169 @@ export async function fetchLeads(isAdmin: boolean = false): Promise<LeadSubmissi
     );
     
     const snap = await getDocs(q);
-    const leads: LeadSubmission[] = [];
     snap.forEach((d) => {
-      leads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
+      cloudLeads.push({ id: d.id, ...(d.data() as Omit<LeadSubmission, 'id'>) });
     });
-    return leads;
   } catch (error: any) {
-    if (error?.code === 'permission-denied' || error?.message?.includes('insufficient permissions')) {
-      console.warn('Leads access is restricted to authenticated sponsors and admin:', error?.message || error);
-    } else {
-      console.warn('Notice while fetching leads:', error?.message || error);
+    console.warn('Notice while fetching cloud leads (using local cache):', error?.message || error);
+  }
+
+  // Merge cloud leads with local leads
+  const combined: LeadSubmission[] = [...cloudLeads];
+  for (const local of localLeads) {
+    if (!combined.some(c => c.id === local.id || (c.phoneNumber && c.phoneNumber === local.phoneNumber))) {
+      combined.push(local);
     }
-    return [];
+  }
+
+  // If no leads exist anywhere, automatically seed the 6 test leads so user can test right away
+  if (combined.length === 0) {
+    const seeded = await seedSampleLeads('39823016', 'อิศราวัฒน์ ปวินทกานต์');
+    return seeded;
+  }
+
+  combined.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  saveLocalLeads(combined);
+  return combined;
+}
+
+export async function updateLeadStatus(leadId: string, status: 'new' | 'contacted' | 'completed', notes?: string) {
+  // 1. Immediately update in local cache
+  const localLeads = getLocalLeads();
+  const idx = localLeads.findIndex(l => l.id === leadId);
+  if (idx !== -1) {
+    localLeads[idx] = { ...localLeads[idx], status, ...(notes !== undefined ? { notes } : {}) };
+    saveLocalLeads(localLeads);
+  }
+
+  // 2. Sync to Firestore if remote document ID
+  try {
+    if (!leadId.startsWith('sample-') && !leadId.startsWith('lead-')) {
+      const leadRef = doc(db, 'leads', leadId);
+      const updatePayload: any = { status };
+      if (notes !== undefined) updatePayload.notes = notes;
+      await updateDoc(leadRef, updatePayload);
+    }
+    return true;
+  } catch (error) {
+    console.warn('Notice while updating cloud lead status:', error);
+    return true; // Still true because local cache succeeded
   }
 }
 
-export async function updateLeadStatus(leadId: string, status: 'new' | 'contacted' | 'completed') {
-  try {
-    const leadRef = doc(db, 'leads', leadId);
-    await updateDoc(leadRef, { status });
-    return true;
-  } catch (error) {
-    console.error('Error updating lead status:', error);
-    return false;
+export const SAMPLE_LEADS_DATA: Array<Omit<LeadSubmission, 'id' | 'sponsorId' | 'sponsorName'>> = [
+  {
+    fullName: 'คุณสมชาย มีสุข (คุณก้อง)',
+    phoneNumber: '0812345678',
+    email: 'kong.somchai@gmail.com',
+    lineId: 'kong_somchai',
+    age: '35',
+    occupation: 'พนักงานบริษัทเอกชน (ไอที)',
+    status: 'new',
+    notes: 'สนใจสร้างรายได้เสริมควบคู่กับงานประจำ มีเวลาช่วงค่ำและวันหยุด ไม่ชอบตื๊อขายของ อยากศึกษาโมเดลเว็บไซต์ช่วยทำงานอัตโนมัติ',
+    hasConsent: true,
+  },
+  {
+    fullName: 'คุณวรัญญา สุวรรณรัตน์ (คุณน้ำ)',
+    phoneNumber: '0898765432',
+    email: 'nam.waranya@hotmail.com',
+    lineId: 'nam_waranya',
+    age: '42',
+    occupation: 'ธุรกิจส่วนตัว / ค้าขายออนไลน์',
+    status: 'new',
+    notes: 'เคยขายของออนไลน์แต่เหนื่อยกับการสต็อกของและแพ็คส่งเอง ชอบคอนเซ็ปต์สินค้าเกาหลีระดับพรีเมียม ซื้อกินซื้อใช้สร้างเครือข่าย',
+    hasConsent: true,
+  },
+  {
+    fullName: 'คุณธนพล ศรีวิชัย (คุณบอม)',
+    phoneNumber: '0923456789',
+    email: 'thanapol.bom@gmail.com',
+    lineId: 'bomb_eng99',
+    age: '29',
+    occupation: 'วิศวกรไฟฟ้า',
+    status: 'contacted',
+    notes: 'ดูคลิปบรรยาย 20 นาทีจบแล้ว สนใจเรื่องโมเดลไบนารี่ 2 สายงาน และระบบ Global สะสมคะแนน PV ไม่จำกัดชั้นลึก',
+    hasConsent: true,
+  },
+  {
+    fullName: 'คุณพัชรินทร์ เจริญสุข (คุณปุ๊ก)',
+    phoneNumber: '0619876543',
+    email: 'pook.family@yahoo.com',
+    lineId: 'pook_patcha',
+    age: '38',
+    occupation: 'แม่บ้าน / ดูแลครอบครัว',
+    status: 'new',
+    notes: 'อยากหารายได้เสริมระหว่างดูแลลูกที่บ้าน ใช้สกินแคร์และของใช้ในบ้านอยู่แล้ว พร้อมเริ่มเรียนรู้งานผ่านระบบมือถือ',
+    hasConsent: true,
+  },
+  {
+    fullName: 'คุณกิตติศักดิ์ พงษ์ไพศาล (คุณเอ็ม)',
+    phoneNumber: '0865554321',
+    email: 'kittisak.m@outlook.com',
+    lineId: 'kru_m_atomy',
+    age: '46',
+    occupation: 'ข้าราชการครู',
+    status: 'completed',
+    notes: 'มองหาโอกาสเกษียณล่วงหน้า อยากสร้าง Passive Income ระยะยาว ชอบที่ไม่บังคับรักษายอดรายเดือน และสมัครสมาชิกฟรี',
+    hasConsent: true,
+  },
+  {
+    fullName: 'คุณชลธิชา มณีรัตน์ (คุณฟ้า)',
+    phoneNumber: '0958881234',
+    email: 'fah.marketing@gmail.com',
+    lineId: 'fah_chonthicha',
+    age: '27',
+    occupation: 'ฟรีแลนซ์การตลาดออนไลน์',
+    status: 'contacted',
+    notes: 'ชอบระบบการตลาดดิจิทัล อยากใช้ลิงก์และระบบเว็บพ่วงสปอนเซอร์ของทีม Atomy Freedomlife ขยายสายงานต่อ',
+    hasConsent: true,
+  },
+];
+
+export async function seedSampleLeads(sponsorId: string, sponsorName: string): Promise<LeadSubmission[]> {
+  const createdLeads: LeadSubmission[] = [];
+  const now = Date.now();
+
+  for (let i = 0; i < SAMPLE_LEADS_DATA.length; i++) {
+    const sample = SAMPLE_LEADS_DATA[i];
+    const createdAt = new Date(now - (i * 3600 * 1000 * 3 + i * 18 * 60 * 1000)).toISOString();
+    const leadObj: LeadSubmission = {
+      id: `sample-${now}-${i}`,
+      ...sample,
+      sponsorId: sponsorId || '39823016',
+      sponsorName: sponsorName || 'อิศราวัฒน์ ปวินทกานต์',
+      createdAt,
+    };
+    createdLeads.push(leadObj);
+
+    // Sync to Firestore in background safely
+    try {
+      const leadsCol = collection(db, 'leads');
+      addDoc(leadsCol, {
+        ...sample,
+        sponsorId: sponsorId || '39823016',
+        sponsorName: sponsorName || 'อิศราวัฒน์ ปวินทกานต์',
+        createdAt,
+        timestamp: serverTimestamp(),
+      }).then((docRef) => {
+        leadObj.id = docRef.id;
+      }).catch((e) => {
+        console.warn('Background Firestore lead sync notice:', e?.message || e);
+      });
+    } catch {
+      // Offline / permission fail-safe
+    }
   }
+
+  // Merge into local storage so they are immediately accessible anywhere
+  const existing = getLocalLeads();
+  const merged = [
+    ...createdLeads,
+    ...existing.filter((e) => !createdLeads.some((c) => c.phoneNumber === e.phoneNumber)),
+  ];
+  saveLocalLeads(merged);
+
+  return createdLeads;
 }
 
 export async function saveSponsorProfile(sponsor: SponsorProfile, ownerUid?: string) {

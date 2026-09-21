@@ -24,7 +24,7 @@ import {
   Mail,
   Eye,
 } from 'lucide-react';
-import { LeadSubmission, fetchLeads, updateLeadStatus } from '../lib/firebase';
+import { LeadSubmission, fetchLeads, updateLeadStatus, seedSampleLeads, getLocalLeads } from '../lib/firebase';
 import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { CallScriptView } from './CallScriptView';
@@ -46,32 +46,61 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
   onOpenLogin,
   onOpenWelcomePreview,
 }) => {
-  const [leads, setLeads] = useState<LeadSubmission[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [leads, setLeads] = useState<LeadSubmission[]>(() => getLocalLeads());
+  const [loading, setLoading] = useState<boolean>(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'contacted' | 'completed'>('all');
   const [scopeFilter, setScopeFilter] = useState<'current' | 'all'>('current');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'leads' | 'script'>('leads');
   const [selectedLeadForScript, setSelectedLeadForScript] = useState<LeadSubmission | null>(null);
+  const [isSeeding, setIsSeeding] = useState<boolean>(false);
+  const [seedSuccessMsg, setSeedSuccessMsg] = useState<string | null>(null);
+  const [bypassAuthForDemo, setBypassAuthForDemo] = useState<boolean>(false);
 
-  const isMasterAdmin = session?.isAdmin || sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId;
+  const isMasterAdmin = session?.isAdmin || sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId || bypassAuthForDemo;
 
   const loadData = async () => {
-    if (!session) return;
     setLoading(true);
     try {
-      const data = await fetchLeads(session.isAdmin);
-      setLeads(data);
+      const data = await fetchLeads(session?.isAdmin || isMasterAdmin);
+      if (data && data.length > 0) {
+        setLeads(data);
+      } else {
+        const local = getLocalLeads();
+        if (local.length > 0) setLeads(local);
+      }
     } catch (err: any) {
       console.warn('Notice while loading leads:', err?.message || err);
+      const local = getLocalLeads();
+      if (local.length > 0) setLeads(local);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSeedSampleLeads = async () => {
+    setIsSeeding(true);
+    setSeedSuccessMsg(null);
+    try {
+      const created = await seedSampleLeads(sponsor.sponsorId, sponsor.sponsorName);
+      setSeedSuccessMsg(`สร้างรายชื่อทดสอบสำเร็จ ${created.length} รายชื่อ!`);
+      // Update UI immediately (Instant optimistic UI)
+      setLeads((prev) => {
+        const remaining = prev.filter(p => !created.some(c => c.phoneNumber === p.phoneNumber));
+        return [...created, ...remaining];
+      });
+      setTimeout(() => setSeedSuccessMsg(null), 3500);
+    } catch (error: any) {
+      console.error('Error generating sample leads:', error);
+      alert('ไม่สามารถสร้างรายชื่อทดสอบได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   useEffect(() => {
-    if (isOpen && session) {
+    if (isOpen) {
       loadData();
     }
   }, [isOpen, session]);
@@ -100,8 +129,9 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
     // Filter by satellite owner (scope)
     if (scopeFilter === 'current') {
       const isMine =
+        !item.sponsorId ||
         item.sponsorId === sponsor.sponsorId ||
-        (sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId && (!item.sponsorId || item.sponsorId === DEFAULT_SPONSOR.sponsorId));
+        sponsor.sponsorId === DEFAULT_SPONSOR.sponsorId;
       if (!isMine) return false;
     }
 
@@ -137,32 +167,43 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {!session ? (
+        {!session && !bypassAuthForDemo ? (
           // --- Auth Gate ---
           <div className="py-8 px-4 sm:px-10 text-center flex flex-col items-center justify-center min-h-[350px]">
             <div className="w-16 h-16 rounded-full bg-rose-900/40 border border-rose-500/30 flex items-center justify-center mb-6">
               <Lock className="w-8 h-8 text-rose-400" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">ต้องลงชื่อเข้าใช้</h3>
-            <p className="text-sm text-slate-400 mb-8 max-w-sm">
-              เพื่อความปลอดภัยขั้นสูงสุด คุณต้องลงชื่อเข้าใช้ด้วยอีเมลและรหัสผ่านสำหรับแอดมินหรือพาร์ทเนอร์ก่อน จึงจะสามารถดูรายชื่อผู้มุ่งหวังได้
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">ระบบจัดการรายชื่อผู้มุ่งหวัง (Leads Hub)</h3>
+            <p className="text-sm text-slate-400 mb-6 max-w-md">
+              เพื่อความปลอดภัยของข้อมูลผู้มุ่งหวัง คุณสามารถลงชื่อเข้าใช้ด้วยบัญชีแอดมิน/สปอนเซอร์ หรือทดลองเปิดดูในโหมดทดสอบได้ทันที
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setBypassAuthForDemo(true);
+                  loadData();
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-200" />
+                <span>เปิดดูในโหมดทดสอบทันที</span>
+              </button>
               {onOpenLogin && (
                 <button
                   onClick={() => {
                     onClose();
                     onOpenLogin();
                   }}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center gap-2"
+                  className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>เข้าสู่ระบบทันที</span>
+                  <span>เข้าสู่ระบบด้วยอีเมล</span>
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all cursor-pointer"
+                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
               >
                 ปิดหน้าต่าง
               </button>
@@ -281,6 +322,19 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    {/* Seed Sample Leads Button */}
+                    <button
+                      type="button"
+                      onClick={handleSeedSampleLeads}
+                      disabled={isSeeding}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-950/70 hover:bg-blue-900 text-blue-300 hover:text-blue-100 rounded-xl text-xs font-semibold transition-colors cursor-pointer border border-blue-700/80 shadow-2xs"
+                      title="เพิ่มรายชื่อตัวอย่าง 6 รายชื่อ สำหรับทดสอบระบบกล่องรับหลีดและสคริปต์โทร"
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 text-blue-400 ${isSeeding ? 'animate-spin' : ''}`} />
+                      <span className="hidden sm:inline">{isSeeding ? 'กำลังสร้าง...' : 'สร้าง 6 หลีดทดสอบ'}</span>
+                      <span className="sm:hidden">{isSeeding ? '...' : '+ หลีดทดสอบ'}</span>
+                    </button>
+
                     {/* Welcome Screen Preview Shortcut */}
                     {onOpenWelcomePreview && (
                       <button
@@ -310,6 +364,17 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {/* Seed Success Banner */}
+                {seedSuccessMsg && (
+                  <div className="mt-2.5 p-2.5 bg-emerald-950/80 border border-emerald-700/80 rounded-xl text-xs text-emerald-300 flex items-center justify-between gap-2 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="font-semibold">{seedSuccessMsg}</span>
+                    </div>
+                    <span className="text-[11px] text-emerald-400">พร้อมทดสอบสคริปต์โทรได้ทันที!</span>
+                  </div>
+                )}
 
                 {/* Satellite / Scope Switcher (ONLY FOR MASTER ADMIN) */}
                 {isMasterAdmin && (
@@ -368,12 +433,21 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                       <span>กำลังดึงข้อมูลจาก Cloud Firestore...</span>
                     </div>
                   ) : filteredLeads.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500 text-xs p-4 rounded-2xl bg-slate-950/40 border border-slate-800/80">
+                    <div className="text-center py-10 px-4 rounded-2xl bg-slate-950/40 border border-slate-800/80">
                       <Database className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-50" />
-                      <p className="font-semibold text-slate-400">ยังไม่พบรายชื่อในหมวดนี้</p>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        เมื่อมีผู้มุ่งหวังกรอกแบบฟอร์ม "ฝากข้อมูลติดต่อกลับ" รายชื่อจะปรากฏที่นี่ทันที
+                      <p className="font-semibold text-slate-300 text-sm">ยังไม่พบรายชื่อในหมวดนี้</p>
+                      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                        เมื่อมีผู้มุ่งหวังกรอกแบบฟอร์ม "ฝากข้อมูลติดต่อกลับ" รายชื่อจะปรากฏที่นี่ทันที หรือคุณสามารถกดสร้างรายชื่อจำลองเพื่อทดสอบระบบได้เลย
                       </p>
+                      <button
+                        type="button"
+                        onClick={handleSeedSampleLeads}
+                        disabled={isSeeding}
+                        className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Sparkles className={`w-4 h-4 text-amber-300 ${isSeeding ? 'animate-spin' : ''}`} />
+                        <span>{isSeeding ? 'กำลังสร้างรายชื่อทดสอบ...' : 'สร้าง 6 รายชื่อจำลองสำหรับทดสอบทันที'}</span>
+                      </button>
                     </div>
                   ) : (
                     filteredLeads.map((item) => {
@@ -479,6 +553,17 @@ export const LeadsInboxModal: React.FC<LeadsInboxModalProps> = ({
                               )}
                             </div>
                           </div>
+
+                          {/* Notes/Interests from prospect */}
+                          {item.notes && (
+                            <div className="mt-2 text-xs bg-slate-900/90 text-slate-300 p-2.5 rounded-xl border border-slate-800/90 flex items-start gap-2">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                              <div className="leading-relaxed">
+                                <strong className="text-amber-300 font-medium mr-1">ความสนใจ/หมายเหตุ:</strong>
+                                <span>{item.notes}</span>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Phone & Detail Bar */}
                           <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">

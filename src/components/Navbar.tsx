@@ -85,8 +85,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Leads Inbox Button (Only for authenticated members) */}
-            {isAuthenticated && onOpenLeadsModal && (
+            {/* Leads Inbox Button */}
+            {onOpenLeadsModal && (
               <button
                 id="nav-btn-leads-inbox"
                 onClick={onOpenLeadsModal}

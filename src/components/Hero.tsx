@@ -119,13 +119,16 @@ export const Hero: React.FC<HeroProps> = ({ sponsor, onScrollToVideo, onOpenLine
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug break-words">
+                  <h3
+                    className="text-sm xs:text-base sm:text-lg font-bold text-slate-900 leading-tight whitespace-nowrap truncate tracking-tight"
+                    title={sponsor.sponsorName}
+                  >
                     {sponsor.sponsorName}
                   </h3>
-                  <p className="text-xs sm:text-sm text-sky-700 font-semibold mt-0.5 break-words">
+                  <p className="text-xs sm:text-sm text-sky-700 font-semibold mt-0.5 whitespace-nowrap truncate">
                     {sponsor.sponsorPosition}
                   </p>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5 break-words">
+                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5 whitespace-nowrap truncate">
                     {sponsor.teamName}
                   </p>
                 </div>
