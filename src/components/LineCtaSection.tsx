@@ -30,7 +30,6 @@ import {
   saveProspectLearnerSession,
   recordEmailDispatch,
 } from "../lib/trainingProgress";
-import { TrainingEmailHubModal } from "./TrainingEmailHubModal";
 
 interface LineCtaSectionProps {
   sponsor: SponsorProfile;
@@ -82,7 +81,6 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
   const [hasConsent, setHasConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   // Post-submission / Welcome view states
   const [submittedData, setSubmittedData] = useState<SubmittedLeadData | null>(null);
@@ -817,29 +815,6 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                 <p className="text-slate-600 text-xs sm:text-[13px] leading-relaxed max-w-xl mx-auto">
                   ระบบได้บันทึกข้อมูลของคุณเรียบร้อยแล้ว และจะจัดส่ง <strong>อีเมลบทเรียนวันที่ 1</strong> ไปยังอีเมลที่คุณระบุไว้เมื่อครบกำหนด 24 ชั่วโมงหลังจากนี้ เพื่อให้คุณได้ศึกษาคู่มือและระบบอย่างเป็นขั้นตอน กรุณารอรับอีเมลและคลิกลิงก์เพื่อเข้าสู่ห้องเรียน
                 </p>
-
-                {/* Developer / Admin Testing Quick Link */}
-                {(isAuthenticated || isPreviewMode) && (
-                  <div className="mt-3 pt-2.5 border-t border-blue-200/60 flex items-center justify-center gap-3 text-xs">
-                    <span className="text-blue-800 font-bold text-[11px] bg-blue-100 px-2 py-0.5 rounded">โหมดผู้พัฒนา / Admin:</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsEmailModalOpen(true)}
-                      className="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Mail className="w-3 h-3" />
-                      <span>ดูเนื้อหาอีเมล 7 วัน</span>
-                    </button>
-                    <span className="text-slate-300">•</span>
-                    <a
-                      href="/day1"
-                      className="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline flex items-center gap-1"
-                    >
-                      <span>เข้าหน้า Day 1</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                )}
               </div>
 
               {/* Reset to edit form if needed */}
@@ -858,14 +833,6 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
           )}
         </div>
       </div>
-
-      {/* 7-Day Email Curriculum Hub Modal */}
-      <TrainingEmailHubModal
-        isOpen={isEmailModalOpen}
-        onClose={() => setIsEmailModalOpen(false)}
-        sponsor={sponsor}
-        currentDay={1}
-      />
     </section>
   );
 };

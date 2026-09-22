@@ -1,6 +1,6 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink, GraduationCap } from 'lucide-react';
+import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink, GraduationCap, Mail } from 'lucide-react';
 import { getStoredTrainingProgress } from '../lib/trainingProgress';
 
 interface NavbarProps {
@@ -16,6 +16,7 @@ interface NavbarProps {
   onOpenDeployGuide?: () => void;
   onOpenPixelModal?: () => void;
   onOpenLeadsModal?: () => void;
+  onOpenEmailHub?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenDeployGuide,
   onOpenPixelModal,
   onOpenLeadsModal,
+  onOpenEmailHub,
 }) => {
   const hasPixel = Boolean(sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId);
 
@@ -141,6 +143,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {hasPixel && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                 )}
+              </button>
+            )}
+
+            {/* 7-Day Email Hub (Admin Only) */}
+            {isAdmin && onOpenEmailHub && (
+              <button
+                id="btn-admin-email-hub"
+                onClick={onOpenEmailHub}
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-300/80 cursor-pointer shadow-2xs"
+                title="ศูนย์จัดการและทดสอบส่งอีเมล 7 วัน (เฉพาะ Admin)"
+              >
+                <Mail className="w-3.5 h-3.5 text-amber-600" />
+                <span>อีเมล 7 วัน</span>
               </button>
             )}
 

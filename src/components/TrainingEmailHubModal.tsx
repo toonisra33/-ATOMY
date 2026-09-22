@@ -132,13 +132,13 @@ export const TrainingEmailHubModal: React.FC<TrainingEmailHubModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white/90">
-                  Automated Email Hub
+                <span className="text-[11px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-xs">
+                  Admin Console
                 </span>
-                <span className="text-xs text-sky-200 font-medium">ระบบส่งจดหมาย 7 วัน</span>
+                <span className="text-xs text-amber-200 font-bold">ศูนย์ควบคุมอีเมล 7 วัน (เฉพาะผู้ดูแลระบบ)</span>
               </div>
               <h3 className="text-base sm:text-xl font-black text-white leading-tight">
-                ศูนย์จัดการเนื้อหาอีเมลและลำดับการเรียนรู้ 7 วัน
+                ศูนย์จัดการและทดสอบส่งอีเมลอัตโนมัติ 7 วัน
               </h3>
             </div>
           </div>

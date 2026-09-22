@@ -21,6 +21,7 @@ import { DeployGuideModal } from "./components/DeployGuideModal";
 import { LeadsInboxModal } from "./components/LeadsInboxModal";
 import { LeadsPage } from "./components/LeadsPage";
 import { TrainingDay1Page } from "./components/TrainingDay1Page";
+import { TrainingEmailHubModal } from "./components/TrainingEmailHubModal";
 import { TrainingAccessGate } from "./components/TrainingAccessGate";
 import { getProspectLearnerSession } from "./lib/trainingProgress";
 import { LoginModal } from "./components/LoginModal";
@@ -61,6 +62,7 @@ export default function App() {
   const [isPixelModalOpen, setIsPixelModalOpen] = useState<boolean>(false);
   const [isDeployGuideOpen, setIsDeployGuideOpen] = useState<boolean>(false);
   const [isLeadsModalOpen, setIsLeadsModalOpen] = useState<boolean>(false);
+  const [isAdminEmailHubOpen, setIsAdminEmailHubOpen] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [detectedDevice, setDetectedDevice] = useState<'desktop' | 'mobile'>(detectDeviceType);
@@ -366,7 +368,7 @@ export default function App() {
       <Navbar
         sponsor={sponsor}
         isAuthenticated={!!session}
-        isAdmin={session?.isAdmin ?? false}
+        isAdmin={isAdminDevMode}
         isOwner={session?.uid === sponsor.ownerUid}
         accountEmail={session?.email}
         onOpenLogin={() => setIsLoginModalOpen(true)}
@@ -376,6 +378,7 @@ export default function App() {
         onOpenDeployGuide={() => setIsDeployGuideOpen(true)}
         onOpenPixelModal={() => setIsPixelModalOpen(true)}
         onOpenLeadsModal={() => setIsLeadsModalOpen(true)}
+        onOpenEmailHub={() => setIsAdminEmailHubOpen(true)}
       />
 
       <main className="flex-grow">
@@ -672,6 +675,16 @@ export default function App() {
         isOpen={isDeployGuideOpen}
         onClose={() => setIsDeployGuideOpen(false)}
       />
+
+      {/* 7-Day Email Hub Modal (Admin Only) */}
+      {isAdminDevMode && (
+        <TrainingEmailHubModal
+          isOpen={isAdminEmailHubOpen}
+          onClose={() => setIsAdminEmailHubOpen(false)}
+          sponsor={sponsor}
+          currentDay={1}
+        />
+      )}
 
             <LoginModal
         isOpen={isLoginModalOpen}

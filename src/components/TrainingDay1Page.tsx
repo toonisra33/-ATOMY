@@ -663,16 +663,18 @@ export function TrainingDay1Page({
 
           {/* Sponsor Tag & Status & Email Hub */}
           <div className="flex items-center gap-2 sm:gap-3 text-right">
-            <button
-              type="button"
-              id="btn-open-email-hub"
-              onClick={() => setIsEmailHubOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-400/40 text-xs font-bold transition-colors cursor-pointer"
-              title="ดูเนื้อหาอีเมลและระบบนับเวลาถอยหลัง 24 ชม. ทั้ง 7 วัน"
-            >
-              <Mail className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden xs:inline">อีเมล 7 วัน</span>
-            </button>
+            {isAdminMode && (
+              <button
+                type="button"
+                id="btn-open-email-hub"
+                onClick={() => setIsEmailHubOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/40 text-xs font-bold transition-colors cursor-pointer"
+                title="ศูนย์จัดการอีเมล 7 วัน (แสดงเฉพาะ Admin ผู้ดูแลระบบ)"
+              >
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden xs:inline">อีเมล 7 วัน (Admin)</span>
+              </button>
+            )}
 
             <div className="hidden sm:flex flex-col text-xs">
               <span className="text-slate-400">สปอนเซอร์ผู้ดูแล:</span>
@@ -1758,18 +1760,20 @@ export function TrainingDay1Page({
                 <span>ส่งผลการเรียนรู้ให้สปอนเซอร์ทาง LINE</span>
               </button>
 
-              <button
-                type="button"
-                id="btn-modal-preview-email"
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  setIsEmailHubOpen(true);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold text-xs border border-blue-500/40 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Mail className="w-4 h-4 text-blue-400" />
-                <span>ดูตัวอย่างอีเมลบทเรียนวันที่ {nextDay || activeDay} ที่ระบบเตรียมส่ง</span>
-              </button>
+              {isAdminMode && (
+                <button
+                  type="button"
+                  id="btn-modal-preview-email"
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    setIsEmailHubOpen(true);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 font-bold text-xs border border-amber-500/40 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Mail className="w-4 h-4 text-amber-400" />
+                  <span>ดูตัวอย่างอีเมลบทเรียนวันที่ {nextDay || activeDay} ที่ระบบเตรียมส่ง (Admin)</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -1803,13 +1807,15 @@ export function TrainingDay1Page({
         />
       )}
 
-      {/* 7-Day Automated Email Curriculum Hub Modal */}
-      <TrainingEmailHubModal
-        isOpen={isEmailHubOpen}
-        onClose={() => setIsEmailHubOpen(false)}
-        sponsor={sponsor}
-        currentDay={activeDay}
-      />
+      {/* 7-Day Automated Email Curriculum Hub Modal (Admin Only) */}
+      {isAdminMode && (
+        <TrainingEmailHubModal
+          isOpen={isEmailHubOpen}
+          onClose={() => setIsEmailHubOpen(false)}
+          sponsor={sponsor}
+          currentDay={activeDay}
+        />
+      )}
 
       {/* Subtle Developer / Admin Mode Toggle in Footer */}
       <footer className="mt-16 text-center text-xs text-slate-500 pb-10">
