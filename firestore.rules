@@ -32,5 +32,12 @@ service cloud.firestore {
       // Only admins can delete leads
       allow delete: if isAdmin();
     }
+
+    match /gallery/{itemId} {
+      // Anyone can read gallery items to see them in the showcase
+      allow read: if true;
+      // Only authenticated admins can create, update, or delete gallery items
+      allow write: if isAdmin();
+    }
   }
 }

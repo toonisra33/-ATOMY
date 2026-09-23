@@ -97,6 +97,24 @@
         }
       },
       "required": ["sponsorId", "sponsorName", "ownerUid", "lineId", "updatedAt"]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Gallery images displayed in the interactive album carousel.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["products", "seminar", "company", "global"] },
+        "badge": { "type": "string", "maxLength": 80 },
+        "badgeColor": { "type": "string", "maxLength": 50 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "highlightPoints": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" },
+        "caption": { "type": "string", "maxLength": 300 },
+        "order": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "category", "badge", "badgeColor", "description", "highlightPoints", "imageUrl"]
     }
   },
   "firestore": {
@@ -107,6 +125,10 @@
     "/sponsors/{sponsorId}": {
       "schema": "SponsorProfile",
       "description": "Collection of sponsor landing profiles"
+    },
+    "/gallery/{itemId}": {
+      "schema": "GalleryItem",
+      "description": "Collection of interactive album showcase items"
     }
   }
 }

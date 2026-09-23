@@ -22,6 +22,7 @@ import { LeadsInboxModal } from "./components/LeadsInboxModal";
 import { LeadsPage } from "./components/LeadsPage";
 import { TrainingDay1Page } from "./components/TrainingDay1Page";
 import { TrainingEmailHubModal } from "./components/TrainingEmailHubModal";
+import { ImageGalleryAlbum } from "./components/ImageGalleryAlbum";
 import { TrainingAccessGate } from "./components/TrainingAccessGate";
 import { getProspectLearnerSession } from "./lib/trainingProgress";
 import { LoginModal } from "./components/LoginModal";
@@ -404,6 +405,13 @@ export default function App() {
 
         {/* Business Highlights (Why Atomy) */}
         <BusinessHighlights />
+
+        {/* Interactive Image Gallery Album */}
+        <ImageGalleryAlbum
+          sponsor={sponsor}
+          onOpenLineModal={scrollToLineSection}
+          isAdmin={isAdminDevMode}
+        />
 
         {/* Traffic Bridge to Official Atomy Web & 3-Step Registration */}
         <TrafficBridgeSection

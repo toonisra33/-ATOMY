@@ -107,6 +107,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <a href="#highlights" className="hover:text-blue-600 transition-colors">
               จุดเด่นธุรกิจ
             </a>
+            <a href="#gallery-album" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+              <span>อัลบั้มภาพ</span>
+              <span className="text-[10px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full font-bold">New</span>
+            </a>
             <a href="#line-official" className="hover:text-blue-600 transition-colors">
               ติดต่อ / ฝากข้อมูล
             </a>
