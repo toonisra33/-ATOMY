@@ -5,9 +5,10 @@ import { loginWithEmail, resetPassword, registerWithEmail } from '../lib/auth';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('toonisra33@gmail.com');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,19 +17,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  
-    const handleLogin = async (event: React.FormEvent) => {
+  const navigateToAdmin = () => {
+    if (onLoginSuccess) {
+      onLoginSuccess();
+    } else {
+      window.history.pushState({}, '', '/admin');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      onClose();
+    }
+  };
+
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setMessage('');
     try {
       if (isRegistering) {
         await registerWithEmail(email, password);
-        setMessage('สร้างบัญชีสำเร็จและเข้าสู่ระบบแล้ว!');
-        setTimeout(() => { onClose(); }, 1200);
+        setMessage('สร้างบัญชีสำเร็จ! กำลังพาท่านเข้าสู่ระบบหลังบ้าน...');
+        setTimeout(() => {
+          navigateToAdmin();
+        }, 1000);
       } else {
         await loginWithEmail(email, password);
-        onClose();
+        navigateToAdmin();
       }
     } catch (error: any) {
       if (isRegistering) {

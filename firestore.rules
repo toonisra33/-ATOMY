@@ -39,5 +39,13 @@ service cloud.firestore {
       // Only authenticated admins can create, update, or delete gallery items
       allow write: if isAdmin();
     }
+
+    match /training_learners/{learnerId} {
+      // Allow learners to register, login, and verify progress
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
   }
 }

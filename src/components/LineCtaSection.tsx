@@ -600,8 +600,47 @@ export const LineCtaSection: React.FC<LineCtaSectionProps> = ({
                 <p className="mt-2.5 text-xs sm:text-base text-slate-600 leading-relaxed text-pretty">
                   ขอแสดงความยินดีกับการเริ่มต้นก้าวสำคัญ! ข้อมูลของคุณถูกส่งถึงสปอนเซอร์{" "}
                   <strong className="text-slate-900 font-bold">{sponsor.sponsorName}</strong>{" "}
-                  เรียบร้อยแล้ว คัดลอกข้อมูลด้านล่าง แล้วกดแอด LINE สปอนเซอร์เพื่อรับรหัสสมาชิกได้ทันที:
+                  เรียบร้อยแล้ว กรุณาปฏิบัติตามคำแนะนำและแจ้งเตือนสำคัญด้านล่างนี้:
                 </p>
+              </div>
+
+              {/* IMPORTANT PROSPECT ALERT: 24-HOUR COUNTDOWN & LINE SPONSOR NOTIFICATION */}
+              <div className="mt-6 max-w-2xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-50 to-orange-50 border-2 border-amber-400 shadow-md">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md shadow-amber-500/30 mt-0.5">
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-slate-950 animate-pulse" />
+                  </div>
+                  <div className="space-y-3 text-left min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-wide">
+                        แจ้งเตือนสำคัญ • มี 2 สิ่งที่คุณต้องทำ
+                      </span>
+                      <span className="text-amber-900 text-xs font-bold inline-flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                        เริ่มนับถอยหลัง 24 ชั่วโมง
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">
+                        1. ภายใน 24 ชั่วโมงนี้ จะมี "อีเมลบทเรียนที่ 1" ส่งตรงถึงคุณ
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        ระบบกำลังเริ่มนับถอยหลัง 24 ชั่วโมงเพื่อจัดส่ง <strong className="text-blue-700 font-bold">อีเมลบทเรียนที่ 1</strong> ไปยังอีเมลที่คุณระบุไว้ กรุณาคอยตรวจสอบกล่องข้อความ (Inbox) หรือโฟลเดอร์อีเมลขยะ (Junk/Spam) เพื่อกดคลิกลิงก์เข้าเรียนบทเรียนออนไลน์
+                      </p>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-amber-300/80 space-y-1">
+                      <h3 className="text-sm sm:text-base font-black text-emerald-900 leading-snug flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>2. ฝากข้อมูลใน LINE สปอนเซอร์ให้เรียบร้อยเพื่อสมัครสมาชิก</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        กรุณากดปุ่ม <strong>"คัดลอกข้อมูลใบสมัคร"</strong> ด้านล่างนี้ แล้วกด <strong>"แอด LINE สปอนเซอร์"</strong> นำข้อมูลไปวางและส่งเลข <strong className="text-blue-700 font-bold">88</strong> เพื่อให้สปอนเซอร์ทำการเปิดรหัสสมาชิกฟรีและรับคู่มือเริ่มต้นทันที
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* CARD 1: DYNAMIC FORM DATA EXTRACTION & ONE-CLICK COPY BOX */}

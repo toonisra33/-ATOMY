@@ -17,6 +17,8 @@ import {
   DayLockInfo,
   recordEmailDispatch,
   getProspectLearnerSession,
+  clearProspectLearnerSession,
+  ProspectLearnerSession,
 } from "../lib/trainingProgress";
 import { TrainingDayModal } from "./TrainingDayModal";
 import { TrainingEmailHubModal } from "./TrainingEmailHubModal";
@@ -63,6 +65,8 @@ interface TrainingDay1PageProps {
   initialDay?: number;
   session?: AuthSession | null;
   isAdmin?: boolean;
+  learnerSession?: ProspectLearnerSession | null;
+  onLearnerLogout?: () => void;
 }
 
 export function TrainingDay1Page({
@@ -71,6 +75,8 @@ export function TrainingDay1Page({
   initialDay,
   session,
   isAdmin: propIsAdmin = false,
+  learnerSession,
+  onLearnerLogout,
 }: TrainingDay1PageProps) {
   // Check if current user is an Admin / Web Developer
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => {
@@ -132,6 +138,19 @@ export function TrainingDay1Page({
       setAdminPinError("รหัสผ่านผู้พัฒนาไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
     }
   };
+
+  // Learner Session State
+  const [learner, setLearner] = useState<ProspectLearnerSession | null>(() => {
+    return learnerSession || getProspectLearnerSession();
+  });
+
+  useEffect(() => {
+    if (learnerSession !== undefined) {
+      setLearner(learnerSession);
+    } else {
+      setLearner(getProspectLearnerSession());
+    }
+  }, [learnerSession]);
 
   // Active Day state (1 to 7)
   const [activeDay, setActiveDay] = useState<number>(() => {
@@ -518,9 +537,18 @@ export function TrainingDay1Page({
   // Generate copy text for LINE report to sponsor
   const getLineReportText = () => {
     const isQuiz = lessonData.questions && lessonData.questions.length > 0;
+    const learnerName = learner ? (learner.fullName || learner.name || "ผู้เรียน") : "";
+    const learnerLines = learner
+      ? [
+          `👤 ผู้เรียน: คุณ${learnerName}${learner.nickname ? ` (${learner.nickname})` : ""}`,
+          `📧 อีเมล: ${learner.email}`,
+        ]
+      : [];
+
     return [
       `🎓 รายงานผลการเรียนรู้: 7-Day Training Funnel`,
       `━━━━━━━━━━━━━━━━`,
+      ...learnerLines,
       `✅ บทเรียนวันที่ ${activeDay}: ${lessonData.title}`,
       `📌 หัวข้อ: "${lessonData.subtitle}"`,
       `⏱️ สถานะ: ศึกษาเนื้อหาและคลิปบรรยายครบถ้วนแล้ว`,
@@ -674,6 +702,28 @@ export function TrainingDay1Page({
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden xs:inline">อีเมล 7 วัน (Admin)</span>
               </button>
+            )}
+
+            {learner && (
+              <div className="flex items-center gap-2 bg-slate-800/90 px-2.5 py-1 rounded-xl border border-slate-700/80 text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <div className="text-left hidden xs:block">
+                  <div className="text-[10px] text-slate-400 leading-tight">ผู้เรียน:</div>
+                  <div className="font-bold text-white text-xs leading-tight truncate max-w-[120px]">
+                    {learner.fullName || learner.name} {learner.nickname ? `(${learner.nickname})` : ""}
+                  </div>
+                </div>
+                {onLearnerLogout && (
+                  <button
+                    type="button"
+                    onClick={onLearnerLogout}
+                    className="text-[10px] text-slate-400 hover:text-rose-400 underline cursor-pointer ml-1"
+                    title="ออกจากระบบผู้เรียน"
+                  >
+                    ออก
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="hidden sm:flex flex-col text-xs">

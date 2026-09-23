@@ -381,13 +381,28 @@ export const TrainingEmailHubModal: React.FC<TrainingEmailHubModalProps> = ({
                     href={emailData.trainingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all"
+                    className={`inline-flex items-center justify-center gap-2 px-6 py-3 font-black text-sm rounded-xl shadow-lg transition-all ${
+                      selectedDay === 1
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/25"
+                        : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-500/25"
+                    }`}
                   >
                     <span>{emailData.template.buttonText}</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                  <div className="text-[11px] text-slate-400 mt-1.5 font-mono">
-                    ลิงก์บทเรียน: {emailData.trainingLink}
+                  <div className="text-[11px] text-slate-500 mt-2 font-medium">
+                    {selectedDay === 1 ? (
+                      <span className="text-blue-700 font-semibold">
+                        ★ ปุ่มลงทะเบียนเพื่อเข้าเรียน จะมีเฉพาะอีเมลวันแรกฉบับแรกเท่านั้น
+                      </span>
+                    ) : (
+                      <span className="text-emerald-700 font-semibold">
+                        ★ ฉบับที่ {selectedDay}: ยืนยันตัวตนด้วยการเข้าสู่ระบบเพียงอย่างเดียว (ใช้อีเมลและรหัสผ่าน 6 ตัวที่ลงทะเบียนไว้ในวันแรก)
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                    ลิงก์: {emailData.trainingLink}
                   </div>
                 </div>
 

@@ -1,7 +1,20 @@
 import React from 'react';
 import { SponsorProfile } from '../types';
-import { Share2, MessageCircle, Sparkles, CloudUpload, Target, Users, LogIn, LogOut, ExternalLink, GraduationCap, Mail } from 'lucide-react';
-import { getStoredTrainingProgress } from '../lib/trainingProgress';
+import {
+  Share2,
+  MessageCircle,
+  Sparkles,
+  CloudUpload,
+  Target,
+  Users,
+  LogIn,
+  LogOut,
+  ExternalLink,
+  GraduationCap,
+  Mail,
+  LayoutDashboard,
+  Settings,
+} from 'lucide-react';
 
 interface NavbarProps {
   sponsor: SponsorProfile;
@@ -11,6 +24,7 @@ interface NavbarProps {
   accountEmail?: string;
   onOpenLogin: () => void;
   onLogout: () => void;
+  onNavigateAdmin?: () => void;
   onOpenLineModal?: () => void;
   onOpenAffiliateModal?: () => void;
   onOpenDeployGuide?: () => void;
@@ -27,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   accountEmail,
   onOpenLogin,
   onLogout,
+  onNavigateAdmin,
   onOpenLineModal,
   onOpenAffiliateModal,
   onOpenDeployGuide,
@@ -35,27 +50,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenEmailHub,
 }) => {
   const hasPixel = Boolean(sponsor.fbPixelId || sponsor.tiktokPixelId || sponsor.googleTagId);
-
-  const [isDay1Passed, setIsDay1Passed] = React.useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    const progress = getStoredTrainingProgress();
-    return progress[1]?.isQuizPassed === true || localStorage.getItem("atomy_training_day_1_passed") === "true";
-  });
-
-  React.useEffect(() => {
-    const checkStatus = () => {
-      const progress = getStoredTrainingProgress();
-      setIsDay1Passed(progress[1]?.isQuizPassed === true || localStorage.getItem("atomy_training_day_1_passed") === "true");
-    };
-    window.addEventListener("storage", checkStatus);
-    const interval = setInterval(checkStatus, 2000);
-    return () => {
-      window.removeEventListener("storage", checkStatus);
-      clearInterval(interval);
-    };
-  }, []);
-
-  const shouldShowTrainingTab = isDay1Passed || isAdmin;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -81,10 +75,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-none">
-                  ATOMY <span className="text-sky-600 font-medium text-xs sm:text-sm">GLOBAL</span>
+                  SPONSOR <span className="text-sky-600 font-medium text-xs sm:text-sm">ATOMY</span>
                 </span>
                 <span className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide">
-                  SATELLITE FUNNEL
+                  ระบบโปรโมท & ขยายสายงาน
                 </span>
               </div>
             </a>
@@ -92,14 +86,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Links (Anchor Links) */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            {/* Show 7-Day Training ONLY after Day 1 has been passed (or for Admin) */}
-            {shouldShowTrainingTab && (
-              <a href="/day1" className="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200">
-                <GraduationCap className="w-4 h-4 text-blue-600" />
-                <span>บทเรียน 7 วัน</span>
-                <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded-full font-bold">VIP</span>
-              </a>
-            )}
             <a href="#video-15min" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
               วิดีโอ 20 นาที
@@ -121,71 +107,31 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* 7-Day Training Button replaces Leads from top, shown for authenticated members only */}
+            {/* 7-Day Training Button (Accessible for everyone: prospects and members) */}
+            <a
+              id="nav-btn-training-top"
+              href="/day1"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
+              title="เข้าสู่ระบบบทเรียน 7 วัน (7-Day Leadership Onboarding)"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>บทเรียน 7 วัน</span>
+            </a>
+
+            {/* Dedicated Back-Office Admin Portal Button */}
             {isAuthenticated && (
-              <a
-                id="nav-btn-training-top"
-                href="/day1"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 cursor-pointer shadow-2xs"
-                title="เข้าสู่ระบบบทเรียน 7 วัน (7-Day Leadership Onboarding)"
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span>บทเรียน 7 วัน</span>
-              </a>
-            )}
-
-            {/* Install / Check Pixel Button */}
-            {isAuthenticated && onOpenPixelModal && (
               <button
-                id="nav-btn-pixel-modal"
-                onClick={onOpenPixelModal}
-                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200 cursor-pointer shadow-2xs"
-                title="ติดตั้ง Pixel (Meta / TikTok / Google GA4)"
+                id="nav-btn-admin-portal"
+                type="button"
+                onClick={onNavigateAdmin ? onNavigateAdmin : () => {
+                  window.history.pushState({}, '', '/admin');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-black text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-lg transition-all shadow-sm shadow-amber-500/20 active:scale-95 cursor-pointer"
+                title="เข้าระบบจัดการหลังบ้าน (Back-Office: Leads, สคริปต์ 2 นาที, ข้อมูลส่วนตัว, วัดผล)"
               >
-                <Target className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                <span className="hidden sm:inline">Pixel</span>
-                {hasPixel && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                )}
-              </button>
-            )}
-
-            {/* 7-Day Email Hub (Admin Only) */}
-            {isAdmin && onOpenEmailHub && (
-              <button
-                id="btn-admin-email-hub"
-                onClick={onOpenEmailHub}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-300/80 cursor-pointer shadow-2xs"
-                title="ศูนย์จัดการและทดสอบส่งอีเมล 7 วัน (เฉพาะ Admin)"
-              >
-                <Mail className="w-3.5 h-3.5 text-amber-600" />
-                <span>อีเมล 7 วัน</span>
-              </button>
-            )}
-
-            {/* Deploy Firebase Guide Button */}
-            {isAdmin && onOpenDeployGuide && (
-              <button
-                id="btn-deploy-guide"
-                onClick={onOpenDeployGuide}
-                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer shadow-2xs"
-                title="อัพเดตโค้ดขึ้น Firebase Hosting (เว็บไซต์จริงของคุณ)"
-              >
-                <CloudUpload className="w-3.5 h-3.5 text-amber-600" />
-                <span>อัพเดต</span>
-              </button>
-            )}
-
-            {/* Distributor Affiliate Generator Button */}
-            {isAuthenticated && onOpenAffiliateModal && (
-              <button
-                id="btn-replicate-affiliate"
-                onClick={onOpenAffiliateModal}
-                className="inline-flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-300/80 cursor-pointer shadow-2xs"
-                title="สำหรับสมาชิกทีมงาน: สร้างลิงก์เว็บพ่วงในชื่อของคุณ"
-              >
-                <Share2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span className="hidden sm:inline">เว็บพ่วง</span>
+                <LayoutDashboard className="w-3.5 h-3.5 text-slate-950 shrink-0" />
+                <span>ระบบหลังบ้าน</span>
               </button>
             )}
 

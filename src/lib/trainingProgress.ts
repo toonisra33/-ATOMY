@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from './firebase';
+
 export interface DayProgress {
   dayNumber: number;
   isVideoCompleted: boolean;
@@ -77,11 +80,17 @@ export const SEVEN_DAYS_OVERVIEW = [
 ];
 
 export interface ProspectLearnerSession {
+  id?: string;
   fullName: string;
-  phoneNumber: string;
-  email?: string;
+  name?: string; // alias for fullName
+  nickname?: string;
+  email: string;
+  password?: string;
+  phoneNumber?: string;
   lineId?: string;
+  sponsorId?: string;
   registeredAt: number;
+  lastLoginAt?: number;
 }
 
 export interface EmailDispatchRecord {
@@ -96,6 +105,7 @@ export interface EmailDispatchRecord {
 
 const STORAGE_KEY = "atomy_7day_training_progress_v1";
 const PROSPECT_LEARNER_KEY = "atomy_prospect_learner_session";
+const REGISTERED_LEARNERS_CACHE_KEY = "atomy_registered_learners_v1";
 const EMAIL_DISPATCHES_KEY = "atomy_email_dispatches_v1";
 
 export function getProspectLearnerSession(): ProspectLearnerSession | null {
@@ -121,6 +131,171 @@ export function saveProspectLearnerSession(session: ProspectLearnerSession): voi
 export function clearProspectLearnerSession(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(PROSPECT_LEARNER_KEY);
+}
+
+// Local cache helpers for instant lookup & offline resiliency
+function getCachedLearners(): Record<string, ProspectLearnerSession> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(REGISTERED_LEARNERS_CACHE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn("Failed to get cached learners", e);
+  }
+  return {};
+}
+
+function saveCachedLearner(learner: ProspectLearnerSession): void {
+  if (typeof window === "undefined") return;
+  try {
+    const cache = getCachedLearners();
+    cache[learner.email.toLowerCase().trim()] = learner;
+    localStorage.setItem(REGISTERED_LEARNERS_CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.warn("Failed to save cached learner", e);
+  }
+}
+
+/**
+ * Register a new learner account before entering 7-day training
+ * Requirements: email, fullName, nickname, 6-character password
+ */
+export async function registerLearnerAccount(params: {
+  email: string;
+  fullName: string;
+  nickname: string;
+  password: string;
+  sponsorId?: string;
+}): Promise<{ success: boolean; session?: ProspectLearnerSession; error?: string }> {
+  const emailClean = params.email.trim().toLowerCase();
+  const fullNameClean = params.fullName.trim();
+  const nicknameClean = params.nickname.trim();
+  const passwordClean = params.password.trim();
+
+  if (!emailClean || !emailClean.includes("@")) {
+    return { success: false, error: "กรุณาระบุที่อยู่อีเมลที่ถูกต้อง" };
+  }
+  if (!fullNameClean) {
+    return { success: false, error: "กรุณาระบุชื่อ-นามสกุลของคุณ" };
+  }
+  if (!nicknameClean) {
+    return { success: false, error: "กรุณาระบุชื่อเล่นของคุณ" };
+  }
+  if (!passwordClean || passwordClean.length !== 6) {
+    return { success: false, error: "กรุณากำหนดรหัสผ่าน 6 ตัวอักษร/ตัวเลข พอดี" };
+  }
+
+  const learnerDocId = emailClean.replace(/[.#$[\]/]/g, "_");
+  const now = Date.now();
+
+  const newSession: ProspectLearnerSession = {
+    id: learnerDocId,
+    email: emailClean,
+    fullName: fullNameClean,
+    nickname: nicknameClean,
+    password: passwordClean,
+    sponsorId: params.sponsorId || "",
+    registeredAt: now,
+    lastLoginAt: now,
+  };
+
+  // 1. Save to local storage for immediate access
+  saveCachedLearner(newSession);
+  saveProspectLearnerSession(newSession);
+
+  // 2. Persist to Firestore training_learners collection
+  try {
+    if (db) {
+      const learnerRef = doc(db, 'training_learners', learnerDocId);
+      await setDoc(learnerRef, {
+        email: emailClean,
+        fullName: fullNameClean,
+        nickname: nicknameClean,
+        password: passwordClean,
+        sponsorId: params.sponsorId || "",
+        registeredAt: now,
+        lastLoginAt: now,
+      }, { merge: true });
+    }
+  } catch (err) {
+    console.warn("Firestore learner save notice:", err);
+    // Non-blocking: local cache ensures smooth user onboarding
+  }
+
+  return { success: true, session: newSession };
+}
+
+/**
+ * Log in an existing learner using email and 6-character password
+ */
+export async function loginLearnerAccount(params: {
+  email: string;
+  password: string;
+}): Promise<{ success: boolean; session?: ProspectLearnerSession; error?: string }> {
+  const emailClean = params.email.trim().toLowerCase();
+  const passwordClean = params.password.trim();
+
+  if (!emailClean || !emailClean.includes("@")) {
+    return { success: false, error: "กรุณาระบุที่อยู่อีเมลของคุณ" };
+  }
+  if (!passwordClean) {
+    return { success: false, error: "กรุณาระบุรหัสผ่าน 6 ตัว" };
+  }
+
+  const learnerDocId = emailClean.replace(/[.#$[\]/]/g, "_");
+
+  // First check local cache
+  const cached = getCachedLearners()[emailClean];
+  if (cached && cached.password === passwordClean) {
+    const updated = { ...cached, lastLoginAt: Date.now() };
+    saveProspectLearnerSession(updated);
+    saveCachedLearner(updated);
+    return { success: true, session: updated };
+  }
+
+  // Next query Firestore
+  try {
+    if (db) {
+      const learnerRef = doc(db, 'training_learners', learnerDocId);
+      const snapshot = await getDoc(learnerRef);
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data.password === passwordClean) {
+          const session: ProspectLearnerSession = {
+            id: learnerDocId,
+            email: data.email || emailClean,
+            fullName: data.fullName || "ผู้เรียน",
+            nickname: data.nickname || data.fullName || "ผู้เรียน",
+            password: data.password,
+            sponsorId: data.sponsorId || "",
+            registeredAt: data.registeredAt || Date.now(),
+            lastLoginAt: Date.now(),
+          };
+          saveProspectLearnerSession(session);
+          saveCachedLearner(session);
+
+          // Update lastLoginAt in Firestore in background
+          updateDoc(learnerRef, { lastLoginAt: Date.now() }).catch(() => {});
+
+          return { success: true, session };
+        } else {
+          return { success: false, error: "รหัสผ่าน 6 ตัวไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง" };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Firestore learner login check notice:", err);
+  }
+
+  // If cached user exists but password didn't match:
+  if (cached && cached.password !== passwordClean) {
+    return { success: false, error: "รหัสผ่าน 6 ตัวไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง" };
+  }
+
+  return {
+    success: false,
+    error: "ไม่พบบัญชีผู้เรียนด้วยอีเมลนี้ กรุณาคลิก 'ลงทะเบียนบทเรียนวันที่ 1' เพื่อสร้างบัญชีใหม่"
+  };
 }
 
 export function getEmailDispatches(): EmailDispatchRecord[] {

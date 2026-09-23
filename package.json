@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:rules": "firebase emulators:exec --only firestore --project localhub-69fbe \"node tests/firestore-rules.mjs\"",
+    "test:rules": "firebase emulators:exec --only firestore --project sponsor-atomy \"node tests/firestore-rules.mjs\"",
     "start": "node dist/server.cjs"
   },
   "dependencies": {

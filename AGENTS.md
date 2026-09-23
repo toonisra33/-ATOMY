@@ -1,11 +1,18 @@
 # Project Context & AI Studio Agent Instructions
 
 ## Current Project Status:
-- **Project Name:** Atomy LocalHub (Team Building Platform)
+- **Project Name:** Sponsor Atomy (`sponsor-atomy` - Atomy Business & Sponsor Platform)
 - **Deployment Strategy:** The primary deployment method for this project is **via GitHub Actions** (`.github/workflows/firebase-hosting-merge.yml`).
 - **Core Technologies:** React, Vite, Tailwind CSS, Firebase (Firestore for database, Authentication), and GitHub Actions for CI/CD.
 
 ## Critical Rules for the Agent:
+
+1. **Project Identity (sponsor-atomy):**
+   - This project is strictly separate from localhub. The project is `sponsor-atomy`.
+   - Never mix or combine it with localhub again. Front-end is dedicated to promotion and lead capture.
+   - All management, 2-minute call scripts, lead inboxes, marketing pixels, and website galleries are located in the Back-Office (`/admin`).
+   - Logging in with credentials immediately redirects to the Back-Office (`/admin`).
+   - Super Admin (Admin หลัก) has full permissions to edit website galleries, marketing pixels, banners, etc. Satellite users (เว็บลูก) can only edit their personal profile information.
 
 1. **GitHub CI/CD First:** 
    - ALWAYS remember that the user deploys this application through GitHub Actions. 

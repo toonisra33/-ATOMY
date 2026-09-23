@@ -15,6 +15,7 @@ import {
   UserCheck,
   FileText,
   ArrowLeft,
+  Clock,
 } from 'lucide-react';
 import { SponsorProfile } from '../types';
 import { submitLead } from '../lib/firebase';
@@ -439,8 +440,46 @@ export const LeadRegistrationModal: React.FC<LeadRegistrationModalProps> = ({
                 ยินดีต้อนรับสู่ครอบครัว Atomy Global!
               </h3>
               <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed text-pretty">
-                ขอบคุณที่คุณให้ความสนใจร่วมสร้างรายได้กับเรา ข้อมูลของคุณถูกส่งถึง <strong className="text-slate-900 font-bold">{sponsor.sponsorName}</strong> เรียบร้อยแล้ว เพื่อความสะดวกรวดเร็วในการรับลิงก์สมัครสมาชิก กรุณาทำตามขั้นตอนด้านล่างนี้ได้เลยครับ
+                ขอบคุณที่คุณให้ความสนใจร่วมสร้างรายได้กับเรา ข้อมูลของคุณถูกส่งถึง <strong className="text-slate-900 font-bold">{sponsor.sponsorName}</strong> เรียบร้อยแล้ว กรุณาปฏิบัติตามคำแนะนำสำคัญด้านล่างนี้:
               </p>
+            </div>
+
+            {/* IMPORTANT PROSPECT ALERT: 24-HOUR COUNTDOWN & LINE SPONSOR NOTIFICATION */}
+            <div className="mt-4 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-50 to-orange-50 border-2 border-amber-400 text-left shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm mt-0.5">
+                  <Clock className="w-5 h-5 text-slate-950 animate-pulse" />
+                </div>
+                <div className="space-y-2 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[11px]">
+                      แจ้งเตือนสำคัญ • 2 สิ่งที่ต้องทำ
+                    </span>
+                    <span className="text-amber-900 text-[11px] font-bold">
+                      เริ่มนับถอยหลัง 24 ชั่วโมง
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug">
+                      1. ภายใน 24 ชม. จะมี "อีเมลบทเรียนที่ 1" ส่งหาคุณ
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed">
+                      ระบบเริ่มนับถอยหลัง 24 ชม. ส่งอีเมลบทเรียนที่ 1 ไปยังอีเมลที่คุณกรอกไว้ กรุณาคอยตรวจสอบกล่องข้อความ (Inbox / Junk) เพื่อคลิกลิงก์เข้าเรียน
+                    </p>
+                  </div>
+
+                  <div className="pt-1.5 border-t border-amber-300/80 space-y-0.5">
+                    <h4 className="text-xs sm:text-sm font-black text-emerald-900 leading-snug flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>2. ฝากข้อมูลใน LINE สปอนเซอร์เพื่อสมัครสมาชิก</span>
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-700 leading-relaxed">
+                      กดปุ่มคัดลอกข้อมูลด้านล่าง แล้วกดแอด LINE สปอนเซอร์ นำข้อมูลไปวางและส่งเลข <strong className="text-blue-700 font-bold">88</strong> เพื่อเปิดรหัสสมาชิกฟรีทันที
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* DYNAMIC FORM DATA EXTRACTION & ONE-CLICK COPY BOX */}
