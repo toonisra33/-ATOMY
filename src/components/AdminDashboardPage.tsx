@@ -1290,6 +1290,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
                   <button
                     type="button"
+                    onClick={() => {
+                      onNavigateHome();
+                      setTimeout(() => {
+                        const el = document.getElementById('gallery-album');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }, 150);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
+                    title="ไปที่แถบอัลบั้มภาพบนหน้าแรกเพื่ออัปโหลดภาพไม่จำกัด"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>แถบอัลบั้มหน้าแรก & อัปโหลดไม่จำกัด</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={handleStartCreateGallery}
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-blue-600/20"
                   >
@@ -1693,6 +1709,24 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
+              {isSuperAdmin && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    ลิงก์คลิปวิดีโอ 20 นาที หน้าหลัก (YouTube Video URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={sponsorForm.customVideoUrl || ''}
+                    onChange={(e) => setSponsorForm({ ...sponsorForm, customVideoUrl: e.target.value })}
+                    placeholder="https://youtu.be/xY6IqUkCljk?si=..."
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    คลิปวิดีโอเจาะลึก 20 นาทีที่แสดงผลบนหน้าแรก (รองรับทุกลิงก์ YouTube เช่น youtu.be/... หรือ watch?v=...)
+                  </p>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-slate-800 flex justify-end">
                 <button

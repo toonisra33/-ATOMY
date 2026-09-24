@@ -40,6 +40,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /albums/{albumId} {
+      // Anyone can read albums and their photos
+      allow read: if true;
+      // Allow creation/update/delete for album management
+      allow write: if true;
+    }
+
     match /training_learners/{learnerId} {
       // Allow learners to register, login, and verify progress
       allow read: if true;

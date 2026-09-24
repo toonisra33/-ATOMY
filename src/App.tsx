@@ -51,7 +51,11 @@ export default function App() {
       try {
         const saved = localStorage.getItem("atomy_custom_sponsor");
         if (saved) {
-          return { ...DEFAULT_SPONSOR, ...JSON.parse(saved) };
+          const parsed = JSON.parse(saved);
+          if (!parsed.customVideoUrl || parsed.customVideoUrl.includes('h9eRrJ0V5N8')) {
+            parsed.customVideoUrl = DEFAULT_SPONSOR.customVideoUrl;
+          }
+          return { ...DEFAULT_SPONSOR, ...parsed };
         }
       } catch (err) {
         console.warn("Could not read cached sponsor:", err);
