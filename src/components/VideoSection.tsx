@@ -48,10 +48,20 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [showSkipWarning, setShowSkipWarning] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showFullscreenControls, setShowFullscreenControls] = useState<boolean>(true);
 
   const timerRef = useRef<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const playerWrapperRef = useRef<HTMLDivElement | null>(null);
+  const controlsTimeoutRef = useRef<number | null>(null);
+
+  const handleFullscreenActivity = () => {
+    setShowFullscreenControls(true);
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = window.setTimeout(() => {
+      setShowFullscreenControls(false);
+    }, 3500);
+  };
 
   // Helper to send commands to the YouTube iframe via postMessage
   const postToPlayer = (command: string, args: any[] = []) => {
@@ -360,6 +370,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
             {/* The Video Container */}
             <div
               ref={playerWrapperRef}
+              onMouseMove={isFullscreen ? handleFullscreenActivity : undefined}
+              onTouchStart={isFullscreen ? handleFullscreenActivity : undefined}
+              onClick={isFullscreen ? handleFullscreenActivity : undefined}
               className={
                 isFullscreen
                   ? 'fixed inset-0 z-[99999] w-screen h-screen bg-black overflow-hidden select-none flex items-center justify-center'
@@ -416,7 +429,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
               {isFullscreen && (
                 <>
                   {/* Top Floating Controls Bar */}
-                  <div className="absolute top-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between pointer-events-none">
+                  <div
+                    className={`absolute top-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex items-center justify-between transition-opacity duration-300 ${
+                      showFullscreenControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
                     <div className="flex items-center gap-2 pointer-events-auto min-w-0">
                       <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/70 backdrop-blur-md text-amber-300 border border-amber-500/50 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-lg shrink-0">
                         <Lock className="w-3.5 h-3.5 text-amber-400" />
@@ -439,8 +456,25 @@ export const VideoSection: React.FC<VideoSectionProps> = ({ sponsor, onOpenLineM
                     </button>
                   </div>
 
+                  {/* Persistent Mini Exit Button in Fullscreen if overlay hidden */}
+                  {!showFullscreenControls && (
+                    <button
+                      type="button"
+                      onClick={exitFullscreen}
+                      className="absolute top-3 right-3 z-40 px-3 py-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-amber-300 text-xs font-bold flex items-center gap-1.5 border border-amber-500/40 backdrop-blur-xs transition-opacity cursor-pointer shadow-lg"
+                      title="ย่อหน้าจอปกติ"
+                    >
+                      <Minimize2 className="w-3.5 h-3.5" />
+                      <span>ย่อหน้าจอปกติ</span>
+                    </button>
+                  )}
+
                   {/* Bottom Floating Controls Bar (Sleek overlay directly on video) */}
-                  <div className="absolute bottom-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col gap-2 pointer-events-none">
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 z-30 p-3 sm:p-5 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col gap-2 transition-opacity duration-300 ${
+                      showFullscreenControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    }`}
+                  >
                     {/* Floating Progress Bar */}
                     <div className="w-full h-1.5 sm:h-2 bg-white/20 rounded-full overflow-hidden pointer-events-auto">
                       <div

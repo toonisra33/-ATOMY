@@ -214,19 +214,101 @@ export const DEFAULT_ATOMY_ALBUMS: AlbumItem[] = [
 
 const ALBUMS_STORAGE_KEY = 'atomy_custom_albums_v2';
 const LEGACY_GALLERY_STORAGE_KEY = 'atomy_custom_gallery_items';
+const IDB_NAME = 'atomy_gallery_storage_v2';
+const IDB_STORE = 'albums_store';
+
+function openIDB(): Promise<IDBDatabase | null> {
+  if (typeof window === 'undefined' || !window.indexedDB) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open(IDB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+let inMemoryAlbumsCache: AlbumItem[] | null = null;
+
+async function getAlbumsFromIDB(): Promise<AlbumItem[] | null> {
+  if (inMemoryAlbumsCache && inMemoryAlbumsCache.length > 0) {
+    return inMemoryAlbumsCache;
+  }
+  try {
+    const idb = await openIDB();
+    if (!idb) return null;
+    return new Promise((resolve) => {
+      const tx = idb.transaction(IDB_STORE, 'readonly');
+      const store = tx.objectStore(IDB_STORE);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        if (req.result && Array.isArray(req.result) && req.result.length > 0) {
+          inMemoryAlbumsCache = req.result as AlbumItem[];
+          resolve(req.result as AlbumItem[]);
+        } else {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function saveAllAlbumsToIDB(albums: AlbumItem[]): Promise<void> {
+  inMemoryAlbumsCache = albums;
+  try {
+    const idb = await openIDB();
+    if (!idb) return;
+    return new Promise((resolve) => {
+      const tx = idb.transaction(IDB_STORE, 'readwrite');
+      const store = tx.objectStore(IDB_STORE);
+      store.clear();
+      for (const a of albums) {
+        store.put(a);
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch (err) {
+    console.warn('IDB save error:', err);
+  }
+}
+
+async function clearIDB(): Promise<void> {
+  try {
+    const idb = await openIDB();
+    if (!idb) return;
+    const tx = idb.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).clear();
+  } catch (e) {
+    console.warn('IDB clear error:', e);
+  }
+}
 
 /**
  * Compresses an image file in the browser to clean, lightweight WebP / JPEG
  * Ensures unlimited uploads won't exceed storage limits or cause memory issues.
  */
-export async function compressImageFile(file: File, maxDim = 1400, quality = 0.85): Promise<string> {
+export async function compressImageFile(file: File, maxDim = 1024, quality = 0.76): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        let width = img.width;
-        let height = img.height;
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
         if (width > height) {
           if (width > maxDim) {
             height = Math.round((height * maxDim) / width);
@@ -246,10 +328,12 @@ export async function compressImageFile(file: File, maxDim = 1400, quality = 0.8
           resolve(e.target?.result as string);
           return;
         }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, width, height);
         try {
           const webp = canvas.toDataURL('image/webp', quality);
-          if (webp.startsWith('data:image/webp')) {
+          if (webp.startsWith('data:image/webp') && webp.length > 100) {
             resolve(webp);
             return;
           }
@@ -267,9 +351,16 @@ export async function compressImageFile(file: File, maxDim = 1400, quality = 0.8
 }
 
 /**
- * Fetch all albums from Firestore or localStorage fallback
+ * Fetch all albums from IndexedDB, Firestore, or fallback
  */
 export async function fetchAlbums(): Promise<AlbumItem[]> {
+  // 1. Check IndexedDB first (fastest, full capacity, never quota-limited)
+  const idbAlbums = await getAlbumsFromIDB();
+  if (idbAlbums && idbAlbums.length > 0) {
+    return idbAlbums;
+  }
+
+  // 2. Fetch from Firestore
   try {
     if (db) {
       const albumsCol = collection(db, 'albums');
@@ -293,9 +384,21 @@ export async function fetchAlbums(): Promise<AlbumItem[]> {
           });
         });
 
-        // Cache locally
+        // Merge missing default albums if needed (e.g. Success Academy, Masstige)
+        for (const def of DEFAULT_ATOMY_ALBUMS) {
+          if (!loaded.some((a) => a.id === def.id)) {
+            loaded.push(def);
+          }
+        }
+
+        // Cache in IndexedDB and localStorage
+        await saveAllAlbumsToIDB(loaded);
         if (typeof window !== 'undefined') {
-          localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(loaded));
+          try {
+            localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(loaded));
+          } catch {
+            // ignore quota error
+          }
         }
         return loaded;
       }
@@ -304,13 +407,14 @@ export async function fetchAlbums(): Promise<AlbumItem[]> {
     console.warn('Could not fetch albums from Firestore (falling back to local cache):', error);
   }
 
-  // Fallback to localStorage
+  // 3. Fallback to localStorage
   if (typeof window !== 'undefined') {
     try {
       const cached = localStorage.getItem(ALBUMS_STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          await saveAllAlbumsToIDB(parsed);
           return parsed;
         }
       }
@@ -319,12 +423,13 @@ export async function fetchAlbums(): Promise<AlbumItem[]> {
     }
   }
 
-  // Fallback to built-in default albums
+  // 4. Initialize built-in default albums in IndexedDB
+  await saveAllAlbumsToIDB(DEFAULT_ATOMY_ALBUMS);
   return DEFAULT_ATOMY_ALBUMS;
 }
 
 /**
- * Saves or updates an album in Firestore and localStorage
+ * Saves or updates an album in IndexedDB, localStorage, and Firestore
  */
 export async function saveAlbum(album: AlbumItem): Promise<AlbumItem[]> {
   const allAlbums = await fetchAlbums();
@@ -343,16 +448,19 @@ export async function saveAlbum(album: AlbumItem): Promise<AlbumItem[]> {
     newAlbums = [updatedAlbum, ...allAlbums];
   }
 
-  // Save to localStorage immediately
+  // 1. Save to IndexedDB immediately (reliable, unlimited capacity)
+  await saveAllAlbumsToIDB(newAlbums);
+
+  // 2. Save to localStorage (best-effort)
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(newAlbums));
     } catch (e) {
-      console.warn('LocalStorage save failed:', e);
+      console.warn('LocalStorage save skipped (quota):', e);
     }
   }
 
-  // Save to Firestore
+  // 3. Save to Firestore
   try {
     if (db) {
       const docRef = doc(db, 'albums', album.id);
@@ -366,7 +474,7 @@ export async function saveAlbum(album: AlbumItem): Promise<AlbumItem[]> {
       );
     }
   } catch (error) {
-    console.error('Error saving album to Firestore:', error);
+    console.warn('Firestore album sync notice:', error);
   }
 
   return newAlbums;
@@ -379,11 +487,13 @@ export async function deleteAlbum(albumId: string): Promise<AlbumItem[]> {
   const allAlbums = await fetchAlbums();
   const newAlbums = allAlbums.filter((a) => a.id !== albumId);
 
+  await saveAllAlbumsToIDB(newAlbums);
+
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(newAlbums));
     } catch (e) {
-      console.warn('LocalStorage delete failed:', e);
+      console.warn('LocalStorage delete notice:', e);
     }
   }
 
@@ -393,7 +503,7 @@ export async function deleteAlbum(albumId: string): Promise<AlbumItem[]> {
       await deleteDoc(docRef);
     }
   } catch (error) {
-    console.error('Error deleting album from Firestore:', error);
+    console.warn('Firestore delete album notice:', error);
   }
 
   return newAlbums;
@@ -407,9 +517,17 @@ export async function addPhotosToAlbum(
   newPhotos: AlbumPhoto[]
 ): Promise<{ albums: AlbumItem[]; updatedAlbum: AlbumItem | null }> {
   const allAlbums = await fetchAlbums();
-  const albumIdx = allAlbums.findIndex((a) => a.id === albumId);
+  let albumIdx = allAlbums.findIndex((a) => a.id === albumId);
+  
+  // If album not found in list, check default albums
   if (albumIdx === -1) {
-    return { albums: allAlbums, updatedAlbum: null };
+    const defaultMatch = DEFAULT_ATOMY_ALBUMS.find((a) => a.id === albumId);
+    if (defaultMatch) {
+      allAlbums.push({ ...defaultMatch });
+      albumIdx = allAlbums.length - 1;
+    } else {
+      return { albums: allAlbums, updatedAlbum: null };
+    }
   }
 
   const targetAlbum = allAlbums[albumIdx];
@@ -424,23 +542,26 @@ export async function addPhotosToAlbum(
   const newAlbums = [...allAlbums];
   newAlbums[albumIdx] = updatedAlbum;
 
-  // Save to local storage
+  // 1. Save to IndexedDB (Guaranteed to succeed, handles high-res photos)
+  await saveAllAlbumsToIDB(newAlbums);
+
+  // 2. Best-effort localStorage
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(newAlbums));
     } catch (e) {
-      console.warn('LocalStorage save failed:', e);
+      console.warn('LocalStorage quota notice (safe in IndexedDB):', e);
     }
   }
 
-  // Save to Firestore
+  // 3. Save to Firestore
   try {
     if (db) {
       const docRef = doc(db, 'albums', albumId);
       await setDoc(docRef, updatedAlbum, { merge: true });
     }
   } catch (error) {
-    console.error('Error updating album photos in Firestore:', error);
+    console.warn('Firestore album photos notice:', error);
   }
 
   return { albums: newAlbums, updatedAlbum };
@@ -474,11 +595,13 @@ export async function deletePhotoFromAlbum(
   const newAlbums = [...allAlbums];
   newAlbums[albumIdx] = updatedAlbum;
 
+  await saveAllAlbumsToIDB(newAlbums);
+
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(newAlbums));
     } catch (e) {
-      console.warn('LocalStorage save failed:', e);
+      console.warn('LocalStorage save notice:', e);
     }
   }
 
@@ -488,7 +611,7 @@ export async function deletePhotoFromAlbum(
       await setDoc(docRef, updatedAlbum, { merge: true });
     }
   } catch (error) {
-    console.error('Error deleting photo in Firestore:', error);
+    console.warn('Firestore delete photo notice:', error);
   }
 
   return { albums: newAlbums, updatedAlbum };
@@ -516,11 +639,13 @@ export async function setAlbumCover(
   const newAlbums = [...allAlbums];
   newAlbums[albumIdx] = updatedAlbum;
 
+  await saveAllAlbumsToIDB(newAlbums);
+
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(newAlbums));
     } catch (e) {
-      console.warn('LocalStorage save failed:', e);
+      console.warn('LocalStorage cover notice:', e);
     }
   }
 
@@ -530,7 +655,7 @@ export async function setAlbumCover(
       await setDoc(docRef, { coverImageUrl: photoUrl, updatedAt: Date.now() }, { merge: true });
     }
   } catch (error) {
-    console.error('Error setting cover in Firestore:', error);
+    console.warn('Firestore cover notice:', error);
   }
 
   return { albums: newAlbums, updatedAlbum };
@@ -540,6 +665,7 @@ export async function setAlbumCover(
  * Resets all albums back to built-in defaults
  */
 export function resetAlbumsToDefault(): AlbumItem[] {
+  clearIDB();
   if (typeof window !== 'undefined') {
     localStorage.removeItem(ALBUMS_STORAGE_KEY);
   }

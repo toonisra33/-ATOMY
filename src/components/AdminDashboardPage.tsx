@@ -34,7 +34,10 @@ import {
   Upload,
   Link as LinkIcon,
   Eye,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Layers,
+  X,
+  Loader2
 } from 'lucide-react';
 import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
@@ -47,14 +50,17 @@ import {
   LeadSubmission,
 } from '../lib/firebase';
 import {
-  GalleryItem,
-  ATOMY_GALLERY_ITEMS,
-} from './ImageGalleryAlbum';
-import {
-  fetchGalleryItems,
-  saveGalleryItem,
-  deleteGalleryItem,
-  resetGalleryToDefault,
+  AlbumItem,
+  AlbumPhoto,
+  DEFAULT_ATOMY_ALBUMS,
+  fetchAlbums,
+  saveAlbum,
+  deleteAlbum,
+  addPhotosToAlbum,
+  deletePhotoFromAlbum,
+  setAlbumCover,
+  resetAlbumsToDefault,
+  compressImageFile,
 } from '../lib/galleryService';
 import { setupAllPixels } from '../lib/pixel';
 import { detectDeviceType } from '../lib/device';
@@ -202,114 +208,210 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   });
 
   // ------------------------------
-  // GALLERY STATE
+  // ALBUM & GALLERY STATE (SEPARATED PER ALBUM)
   // ------------------------------
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(ATOMY_GALLERY_ITEMS);
-  const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
-  const [isGalleryFormOpen, setIsGalleryFormOpen] = useState(false);
-  const [gallerySaveLoading, setGallerySaveLoading] = useState(false);
-  const [galleryMessage, setGalleryMessage] = useState<string | null>(null);
+  const [albums, setAlbums] = useState<AlbumItem[]>(DEFAULT_ATOMY_ALBUMS);
+  const [activeAlbumIdForManage, setActiveAlbumIdForManage] = useState<string>(DEFAULT_ATOMY_ALBUMS[0]?.id || '');
+  const [isAlbumUploadModalOpen, setIsAlbumUploadModalOpen] = useState(false);
+  const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+  const [albumUploadTargetId, setAlbumUploadTargetId] = useState<string>('');
+  const [expandedAlbumIds, setExpandedAlbumIds] = useState<string[]>([DEFAULT_ATOMY_ALBUMS[0]?.id || '']);
 
-  // Gallery form fields
-  const [gTitle, setGTitle] = useState('');
-  const [gCategory, setGCategory] = useState<'products' | 'seminar' | 'company' | 'global'>('products');
-  const [gBadge, setGBadge] = useState('');
-  const [gBadgeColor, setGBadgeColor] = useState('bg-blue-600 text-white');
-  const [gDescription, setGDescription] = useState('');
-  const [gImageUrl, setGImageUrl] = useState('');
-  const [gCaption, setGCaption] = useState('');
-  const [gPoints, setGPoints] = useState<string[]>(['']);
+  // Upload modal inputs
+  const [uploadFiles, setUploadFiles] = useState<{ file: File; preview: string; caption: string }[]>([]);
+  const [urlInput, setUrlInput] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const loadGallery = async () => {
-    const items = await fetchGalleryItems();
-    if (items && items.length > 0) {
-      setGalleryItems(items);
+  // New Album form inputs
+  const [newAlbumTitle, setNewAlbumTitle] = useState('');
+  const [newAlbumCategory, setNewAlbumCategory] = useState<'products' | 'seminar' | 'company' | 'global' | 'team'>('products');
+  const [newAlbumBadge, setNewAlbumBadge] = useState('Atomy Showcase');
+  const [newAlbumBadgeColor, setNewAlbumBadgeColor] = useState('bg-blue-600 text-white');
+  const [newAlbumDescription, setNewAlbumDescription] = useState('');
+  const [newAlbumCoverUrl, setNewAlbumCoverUrl] = useState('');
+
+  const loadAlbums = async () => {
+    try {
+      const loaded = await fetchAlbums();
+      if (loaded && loaded.length > 0) {
+        setAlbums(loaded);
+        if (!activeAlbumIdForManage) {
+          setActiveAlbumIdForManage(loaded[0].id);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load albums in admin:', err);
     }
   };
 
   useEffect(() => {
     if (isAuthorized) {
-      loadGallery();
+      loadAlbums();
     }
   }, [isAuthorized]);
 
-  const handleStartEditGallery = (item: GalleryItem) => {
-    setEditingItem(item);
-    setGTitle(item.title);
-    setGCategory(item.category);
-    setGBadge(item.badge);
-    setGBadgeColor(item.badgeColor || 'bg-blue-600 text-white');
-    setGDescription(item.description);
-    setGImageUrl(item.imageUrl);
-    setGCaption(item.caption);
-    setGPoints(item.highlightPoints.length > 0 ? [...item.highlightPoints] : ['']);
-    setIsGalleryFormOpen(true);
-    setGalleryMessage(null);
+  const handleOpenUploadForAlbum = (albumId: string) => {
+    setAlbumUploadTargetId(albumId);
+    setUploadFiles([]);
+    setUrlInput('');
+    setUploadError('');
+    setUploadProgress('');
+    setUploadSuccess(false);
+    setIsAlbumUploadModalOpen(true);
   };
 
-  const handleStartCreateGallery = () => {
-    setEditingItem(null);
-    setGTitle('');
-    setGCategory('products');
-    setGBadge('Mass Prestige Products');
-    setGBadgeColor('bg-blue-600 text-white');
-    setGDescription('');
-    setGImageUrl('');
-    setGCaption('');
-    setGPoints(['', '']);
-    setIsGalleryFormOpen(true);
-    setGalleryMessage(null);
+  const handleSelectUploadFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const newItems = files.map((f) => ({
+      file: f,
+      preview: URL.createObjectURL(f),
+      caption: f.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+    }));
+    setUploadFiles((prev) => [...prev, ...newItems]);
+    e.target.value = '';
   };
 
-  const handleSaveGallery = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gTitle.trim() || !gImageUrl.trim()) {
-      alert('กรุณาระบุหัวข้อและรูปภาพ');
+  const handleAddUrl = () => {
+    if (!urlInput.trim()) return;
+    const urls = urlInput
+      .split(/[\n,]/)
+      .map((u) => u.trim())
+      .filter((u) => u.startsWith('http') || u.startsWith('/'));
+    const newItems = urls.map((url, i) => ({
+      file: new File([], `url-photo-${i}`),
+      preview: url,
+      caption: '',
+    }));
+    setUploadFiles((prev) => [...prev, ...newItems]);
+    setUrlInput('');
+  };
+
+  const handleExecuteUpload = async () => {
+    if (!albumUploadTargetId) {
+      setUploadError('กรุณาเลือกอัลบั้มปลายทางที่ต้องการนำรูปเข้า');
       return;
     }
-    setGallerySaveLoading(true);
+    if (uploadFiles.length === 0) {
+      setUploadError('กรุณาเลือกรูปภาพอย่างน้อย 1 รูป');
+      return;
+    }
+    setIsUploading(true);
+    setUploadError('');
+    const targetAlbum = albums.find((a) => a.id === albumUploadTargetId);
+    const targetAlbumTitle = targetAlbum?.title || 'อัลบั้มที่เลือก';
+    setUploadProgress(`กำลังจัดเตรียม ${uploadFiles.length} รูปภาพ เพื่อบันทึกเข้าอัลบั้ม "${targetAlbumTitle}"...`);
     try {
-      const newItem: GalleryItem = {
-        id: editingItem?.id || `item-${Date.now()}`,
-        title: gTitle.trim(),
-        category: gCategory,
-        badge: gBadge.trim() || 'Atomy Showcase',
-        badgeColor: gBadgeColor,
-        description: gDescription.trim(),
-        highlightPoints: gPoints.filter((p) => p.trim().length > 0),
-        imageUrl: gImageUrl.trim(),
-        caption: gCaption.trim() || gTitle.trim(),
-      };
-      await saveGalleryItem(newItem);
-      await loadGallery();
-      setGalleryMessage('บันทึกรูปภาพเรียบร้อยแล้ว!');
+      const photosToAdd: AlbumPhoto[] = [];
+      for (let i = 0; i < uploadFiles.length; i++) {
+        const item = uploadFiles[i];
+        setUploadProgress(`กำลังประมวลผลและย่อรูปที่ ${i + 1}/${uploadFiles.length}...`);
+        const photoId = 'photo-' + Date.now() + '-' + i + '-' + Math.random().toString(36).substring(2, 7);
+        if (item.file.size > 0) {
+          const compressed = await compressImageFile(item.file);
+          photosToAdd.push({ id: photoId, url: compressed, caption: item.caption, uploadedAt: Date.now() });
+        } else {
+          photosToAdd.push({ id: photoId, url: item.preview, caption: item.caption, uploadedAt: Date.now() });
+        }
+      }
+      setUploadProgress(`กำลังบันทึก ${photosToAdd.length} รูปลงในอัลบั้ม "${targetAlbumTitle}"...`);
+      const result = await addPhotosToAlbum(albumUploadTargetId, photosToAdd);
+      if (result?.albums && result.albums.length > 0) {
+        setAlbums(result.albums);
+      } else {
+        await loadAlbums();
+      }
+      setActiveAlbumIdForManage(albumUploadTargetId);
+      setExpandedAlbumIds((prev) => [...new Set([...prev, albumUploadTargetId])]);
+      setUploadSuccess(true);
+      setUploadProgress(`บันทึกเข้าอัลบั้ม "${targetAlbumTitle}" เสร็จสมบูรณ์แล้ว (${photosToAdd.length} รูป)!`);
       setTimeout(() => {
-        setIsGalleryFormOpen(false);
-        setGalleryMessage(null);
-      }, 1000);
+        setIsAlbumUploadModalOpen(false);
+        setUploadFiles([]);
+        setUploadSuccess(false);
+      }, 1400);
     } catch (err: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึก: ' + (err?.message || ''));
+      setUploadError(err?.message || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
-      setGallerySaveLoading(false);
+      setIsUploading(false);
     }
   };
 
-  const handleDeleteGallery = async (id: string) => {
-    if (!window.confirm('คุณต้องการลบรูปภาพนี้ออกจากอัลบั้มหน้าเว็บใช่หรือไม่?')) return;
+  const handleDeletePhoto = async (albumId: string, photoId: string) => {
+    if (!window.confirm('คุณต้องการลบรูปภาพนี้ออกจากอัลบั้มใช่หรือไม่?')) return;
     try {
-      await deleteGalleryItem(id);
-      await loadGallery();
+      await deletePhotoFromAlbum(albumId, photoId);
+      await loadAlbums();
     } catch (err: any) {
-      alert('ไม่สามารถลบได้: ' + (err?.message || ''));
+      alert('ไม่สามารถลบรูปได้: ' + (err?.message || ''));
     }
   };
 
-  const handleResetGalleryDefaults = () => {
-    if (window.confirm('ต้องการคืนค่าอัลบั้มภาพหน้าเว็บเป็นค่าเริ่มต้นทั้งหมดหรือไม่?')) {
-      const defaults = resetGalleryToDefault();
-      setGalleryItems(defaults);
-      setIsGalleryFormOpen(false);
+  const handleSetCover = async (albumId: string, photoUrl: string) => {
+    try {
+      await setAlbumCover(albumId, photoUrl);
+      await loadAlbums();
+    } catch (err: any) {
+      alert('ไม่สามารถตั้งเป็นรูปหน้าปกได้: ' + (err?.message || ''));
     }
+  };
+
+  const handleDeleteAlbum = async (albumId: string, title: string) => {
+    if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบอัลบั้ม "${title}" และรูปภาพทั้งหมดในอัลบั้มนี้?`)) return;
+    try {
+      await deleteAlbum(albumId);
+      await loadAlbums();
+    } catch (err: any) {
+      alert('ไม่สามารถลบอัลบั้มได้: ' + (err?.message || ''));
+    }
+  };
+
+  const handleCreateAlbum = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAlbumTitle.trim()) {
+      alert('กรุณาระบุชื่ออัลบั้ม');
+      return;
+    }
+    try {
+      const album: AlbumItem = {
+        id: `album-${Date.now()}`,
+        title: newAlbumTitle.trim(),
+        category: newAlbumCategory,
+        badge: newAlbumBadge.trim() || 'Atomy',
+        badgeColor: newAlbumBadgeColor,
+        description: newAlbumDescription.trim(),
+        highlightPoints: [],
+        coverImageUrl: newAlbumCoverUrl.trim() || '/images/atomy-flagship-products.png',
+        photos: [],
+        updatedAt: Date.now(),
+      };
+      await saveAlbum(album);
+      await loadAlbums();
+      setIsCreateAlbumModalOpen(false);
+      setNewAlbumTitle('');
+      setNewAlbumDescription('');
+      setNewAlbumCoverUrl('');
+      setActiveAlbumIdForManage(album.id);
+      setExpandedAlbumIds((prev) => [...prev, album.id]);
+    } catch (err: any) {
+      alert('เกิดข้อผิดพลาด: ' + (err?.message || ''));
+    }
+  };
+
+  const handleResetAlbums = async () => {
+    if (window.confirm('ต้องการคืนค่าอัลบั้มภาพของเว็บไซต์เป็นค่าเริ่มต้นทั้งหมดหรือไม่?')) {
+      resetAlbumsToDefault();
+      await loadAlbums();
+    }
+  };
+
+  const toggleExpandAlbum = (albumId: string) => {
+    setExpandedAlbumIds((prev) =>
+      prev.includes(albumId) ? prev.filter((id) => id !== albumId) : [...prev, albumId]
+    );
   };
 
   // ------------------------------
@@ -380,6 +482,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         googleTagId: pixelForm.googleTagId.trim(),
       };
       await saveSponsorProfile(updatedSponsor, session?.uid || 'custom-sponsor');
+      try {
+        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(updatedSponsor));
+      } catch (lsErr) {
+        console.warn('LocalStorage save sponsor error:', lsErr);
+      }
       onUpdateSponsor(updatedSponsor);
       setSponsorForm(updatedSponsor);
       setupAllPixels({
@@ -682,7 +789,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             }`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
-            <span>อัลบั้มภาพ ({galleryItems.length})</span>
+            <span>อัลบั้มภาพ ({albums.length} อัลบั้ม)</span>
             {!isSuperAdmin && <Lock className="w-3 h-3 text-amber-400/80" />}
           </button>
 
@@ -794,7 +901,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             )}
 
             {/* Quick Action Shortcuts */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <button
                 type="button"
                 onClick={() => setActiveTab('script')}
@@ -830,10 +937,24 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               >
                 <div className="flex items-center gap-2 text-amber-400 font-black text-sm mb-1">
                   <UserCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span>{isSuperAdmin ? 'ตั้งค่าสปอนเซอร์หลัก' : 'แก้ไขข้อมูลส่วนตัวของคุณ'}</span>
+                  <span>{isSuperAdmin ? 'ตั้งค่าสปอนเซอร์หลัก' : 'ข้อมูลส่วนตัวของคุณ'}</span>
                 </div>
                 <p className="text-xs text-slate-400">
                   {isSuperAdmin ? 'ตั้งค่าสปอนเซอร์ส่วนกลางของระบบ' : 'ปรับเปลี่ยนชื่อ, เบอร์โทร, LINE ID ในเว็บพ่วง'}
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('pixels')}
+                className="p-4 rounded-2xl bg-gradient-to-r from-purple-600/20 to-purple-700/10 border border-purple-500/30 hover:border-purple-400 text-left transition-all group cursor-pointer"
+              >
+                <div className="flex items-center gap-2 text-purple-400 font-black text-sm mb-1">
+                  <Target className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span>พิกเซลการตลาดของคุณ</span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  ตั้งค่า Meta Pixel, TikTok Pixel ประจำเว็บ เพื่อยิงแอดสร้าง Conversion
                 </p>
               </button>
             </div>
@@ -857,8 +978,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-400">รูปภาพในอัลบั้มหน้าเว็บ</p>
-                  <h3 className="text-2xl font-black text-white mt-1">{galleryItems.length} ภาพ</h3>
-                  <p className="text-[11px] text-sky-400 mt-1">แสดงผลในหน้าแรก</p>
+                  <h3 className="text-2xl font-black text-white mt-1">
+                    {albums.reduce((acc, a) => acc + (a.photos?.length || 0), 0)} ภาพ
+                  </h3>
+                  <p className="text-[11px] text-sky-400 mt-1">{albums.length} อัลบั้มแยกเฉพาะ</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center">
                   <ImageIcon className="w-6 h-6" />
@@ -1266,22 +1389,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {/* ========================================================= */}
         {activeTab === 'gallery' && (
           <div className="space-y-6">
+            {/* Tab Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
               <div>
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-blue-400" />
-                  <span>จัดการอัลบั้มภาพหน้าเว็บ (Interactive Album Hub)</span>
+                  <span>จัดการอัลบั้มภาพหน้าเว็บ (แยกตามอัลบั้ม ไม่ปะปนกัน)</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  รูปภาพที่ปรากฏใน Carousel อัลบั้มความสำเร็จหน้าหลัก ({galleryItems.length} ภาพ)
+                  ทั้งหมด {albums.length} อัลบั้ม รวม {albums.reduce((acc, a) => acc + (a.photos?.length || 0), 0)} รูปภาพ (อัปโหลดและจัดเก็บแยกเฉพาะอัลบั้ม)
                 </p>
               </div>
 
               {isSuperAdmin ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
-                    onClick={handleResetGalleryDefaults}
+                    onClick={handleResetAlbums}
                     className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
@@ -1297,20 +1421,29 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         el?.scrollIntoView({ behavior: 'smooth' });
                       }, 150);
                     }}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
-                    title="ไปที่แถบอัลบั้มภาพบนหน้าแรกเพื่ออัปโหลดภาพไม่จำกัด"
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="ไปที่แถบอัลบั้มภาพบนหน้าหลัก"
                   >
-                    <Upload className="w-4 h-4" />
-                    <span>แถบอัลบั้มหน้าแรก & อัปโหลดไม่จำกัด</span>
+                    <Layers className="w-3.5 h-3.5 text-sky-400" />
+                    <span>ดูหน้าแรก</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={handleStartCreateGallery}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-blue-600/20"
+                    onClick={() => setIsCreateAlbumModalOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Plus className="w-4 h-4" />
-                    <span>เพิ่มรูปภาพใหม่</span>
+                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    <span>สร้างอัลบั้มใหม่</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenUploadForAlbum(activeAlbumIdForManage || 'album-success-academy')}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-600/20"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>อัปโหลดรูปภาพ</span>
                   </button>
                 </div>
               ) : (
@@ -1321,129 +1454,552 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               )}
             </div>
 
-            {/* Lock Notice for Satellite User */}
-            {!isSuperAdmin && (
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm flex items-start gap-3">
-                <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">สิทธิ์เฉพาะ Admin หลักเท่านั้น (เว็บลูกดูตัวอย่างได้เท่านั้น)</p>
-                  <p className="text-amber-300/80 text-xs mt-0.5">
-                    อัลบั้มภาพหน้าเว็บเป็นสื่อกลางของระบบเพื่อรักษามาตรฐานเดียวกันของเว็บไซต์ สมาชิกเว็บลูกสามารถเปิดดูได้ แต่ไม่สามารถเพิ่ม ลบ หรือแก้ไขได้
-                  </p>
+            {/* Lock Notice for Satellite Member */}
+            {!isSuperAdmin ? (
+              <div className="bg-slate-900 border border-amber-500/30 rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-xl">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-4 text-3xl">
+                  🔒
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white">สงวนสิทธิ์เฉพาะ Admin หลัก (คุณทูน)</h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-3 leading-relaxed">
+                  ข้อมูลทุกอย่างของเว็บไซต์นี้ สมาชิกเว็บลูกจะไม่สามารถสร้าง เพิ่ม ลบ หรือเปลี่ยนแปลงข้อมูลอัลบั้มภาพได้ 
+                  ยกเว้นข้อมูลส่วนตัวของคุณในแท็บ <strong className="text-amber-300">"ข้อมูลส่วนตัวของคุณ"</strong> เท่านั้น 
+                  การปรับแต่งและอัปเดตรูปภาพอัลบั้มถูกควบคุมจากส่วนกลางโดย Admin หลัก เพื่อรักษามาตรฐานความน่าเชื่อถือระดับสากลของระบบ
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sponsor')}
+                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm transition-all cursor-pointer shadow-lg shadow-amber-500/20"
+                  >
+                    ไปที่หน้าแก้ไขข้อมูลส่วนตัวของคุณ
+                  </button>
                 </div>
               </div>
-            )}
-
-            {/* Gallery Item Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {galleryItems.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col group hover:border-blue-500/50 transition-all shadow-md"
-                >
-                  <div className="relative h-44 bg-slate-950 flex items-center justify-center p-2 overflow-hidden">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover rounded-xl"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                    <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-black shadow-md ${item.badgeColor}`}>
-                      {item.badge}
+            ) : (
+              /* Super Admin Album List (Separated By Album) */
+              <div className="space-y-6">
+                {/* Quick Album Upload Strip */}
+                <div className="bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                        เลือกอัลบั้มสำหรับนำรูปเข้า (แยกตามอัลบั้ม ไม่ปะปนกัน):
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-emerald-300/80">
+                      ✓ กดเลือกอัลบั้มเพื่อเปิดฟอร์มอัปโหลดตรงสู่อัลบั้มนั้น 100%
                     </span>
                   </div>
 
-                  <div className="p-4 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-2 mb-1">
-                        {item.title}
-                      </h4>
-                      <p className="text-[11px] text-slate-400 line-clamp-2">
-                        {item.description}
-                      </p>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {albums.map((alb) => {
+                      const isTarget = albumUploadTargetId === alb.id;
+                      return (
+                        <button
+                          key={alb.id}
+                          type="button"
+                          onClick={() => handleOpenUploadForAlbum(alb.id)}
+                          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer relative ${
+                            isTarget
+                              ? 'bg-emerald-950/70 border-emerald-500 shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-500'
+                              : 'bg-slate-950 hover:bg-slate-800/90 border-slate-800 hover:border-emerald-500/60'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-2">
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black truncate max-w-[120px] ${alb.badgeColor || 'bg-blue-600 text-white'}`}>
+                                {alb.badge || 'Atomy'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                                {alb.photos?.length || 0} รูป
+                              </span>
+                            </div>
+                            <div className="text-xs font-black text-white line-clamp-2 group-hover:text-emerald-300 leading-snug">
+                              {alb.title}
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-black text-emerald-400">
+                            <span className="flex items-center gap-1 group-hover:underline">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>+ อัปโหลดเข้าอัลบั้มนี้</span>
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {albums.map((album, idx) => {
+                  const isExpanded = expandedAlbumIds.includes(album.id);
+                  const photoCount = album.photos?.length || 0;
+                  const coverImg = album.coverImageUrl || album.photos?.[0]?.url || '/images/atomy-flagship-products.png';
 
-                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        ลำดับ {idx + 1}
-                      </span>
-                      {isSuperAdmin ? (
-                        <div className="flex items-center gap-1.5">
+                  return (
+                    <div
+                      key={album.id}
+                      className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-lg"
+                    >
+                      {/* Album Header Bar */}
+                      <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950/40 border-b border-slate-800/80">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={coverImg}
+                            alt=""
+                            className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-slate-700 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${album.badgeColor || 'bg-blue-600 text-white'}`}>
+                                {album.badge || 'Atomy'}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-950 text-blue-300 border border-blue-800">
+                                📷 {photoCount} รูปภาพ
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                            <h4 className="text-sm sm:text-base font-black text-white truncate">
+                              {album.title}
+                            </h4>
+                            <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">
+                              {album.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Album Action Controls */}
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => handleStartEditGallery(item)}
-                            className="p-1.5 rounded-lg bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
-                            title="แก้ไขข้อมูลรูปภาพ"
+                            onClick={() => handleOpenUploadForAlbum(album.id)}
+                            className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="อัปโหลดรูปภาพเข้าอัลบั้มนี้โดยเฉพาะ"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>อัปโหลดเข้าอัลบั้มนี้</span>
                           </button>
+
                           <button
                             type="button"
-                            onClick={() => handleDeleteGallery(item.id)}
-                            className="p-1.5 rounded-lg bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
-                            title="ลบรูปภาพนี้"
+                            onClick={() => toggleExpandAlbum(album.id)}
+                            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
+                            <span>{isExpanded ? 'ซ่อนรูปภาพ' : `ดูรูปภาพ (${photoCount})`}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAlbum(album.id, album.title)}
+                            className="p-2 rounded-xl bg-rose-950/40 hover:bg-rose-900 text-rose-300 border border-rose-800/40 transition-colors cursor-pointer"
+                            title="ลบอัลบั้มนี้"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      ) : (
-                        <span className="text-[10px] text-slate-500">คงที่ตามระบบ</span>
+                      </div>
+
+                      {/* Photo Grid inside this Album (Separated) */}
+                      {isExpanded && (
+                        <div className="p-4 sm:p-6 bg-slate-900/60">
+                          {photoCount === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed border-slate-800 rounded-xl">
+                              <ImageIcon className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                              <p className="text-xs text-slate-400 font-medium">
+                                ยังไม่มีรูปภาพในอัลบั้มนี้
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenUploadForAlbum(album.id)}
+                                className="mt-3 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>อัปโหลดรูปแรกของอัลบั้มนี้</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                              {album.photos?.map((photo, pIdx) => {
+                                const isCover = album.coverImageUrl === photo.url;
+                                return (
+                                  <div
+                                    key={photo.id || pIdx}
+                                    className="relative bg-slate-950 rounded-xl border border-slate-800 overflow-hidden group hover:border-blue-500/50 transition-all flex flex-col"
+                                  >
+                                    <div className="relative aspect-4/3 w-full overflow-hidden bg-black">
+                                      <img
+                                        src={photo.url}
+                                        alt={photo.caption || ''}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                        loading="lazy"
+                                      />
+                                      {isCover && (
+                                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-black shadow-xs">
+                                          หน้าปก
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="p-2 flex-1 flex flex-col justify-between">
+                                      <p className="text-[11px] text-slate-300 truncate" title={photo.caption}>
+                                        {photo.caption || `รูปที่ ${pIdx + 1}`}
+                                      </p>
+
+                                      <div className="mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between gap-1">
+                                        {!isCover && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSetCover(album.id, photo.url)}
+                                            className="text-[10px] text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
+                                            title="ตั้งรูปนี้เป็นรูปหน้าปกอัลบั้ม"
+                                          >
+                                            เป็นหน้าปก
+                                          </button>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeletePhoto(album.id, photo.id)}
+                                          className="text-[10px] text-rose-400 hover:text-rose-300 ml-auto p-1 cursor-pointer"
+                                          title="ลบรูปภาพนี้ออกจากอัลบั้ม"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Gallery Edit/Create Modal */}
-            {isGalleryFormOpen && (
+            {/* ==================================================================== */}
+            {/* UPLOAD MODAL: STRICTLY SCOPED PER ALBUM */}
+            {/* ==================================================================== */}
+            {isAlbumUploadModalOpen && (
               <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto relative shadow-2xl">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                      <ImageIcon className="w-5 h-5 text-blue-400" />
-                      <span>{editingItem ? 'แก้ไขรูปภาพอัลบั้ม' : 'เพิ่มรูปภาพใหม่ในอัลบั้ม'}</span>
-                    </h3>
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto relative shadow-2xl">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-emerald-400" />
+                        <span>อัปโหลดรูปภาพแยกตามอัลบั้ม</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        รูปภาพจะถูกจัดเก็บเข้าสู่อัลบั้มที่เลือก ไม่ปะปนกับอัลบั้มอื่น
+                      </p>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setIsGalleryFormOpen(false)}
+                      onClick={() => !isUploading && setIsAlbumUploadModalOpen(false)}
                       className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
                     >
-                      ✕
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  {galleryMessage && (
-                    <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      <span>{galleryMessage}</span>
+                  {/* Album Selector (Cards + Dropdown with Clear Confirmation) */}
+                  <div className="mb-5 p-4 rounded-2xl bg-slate-950 border border-emerald-500/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-xs font-black text-emerald-400">
+                        <Layers className="w-4 h-4" />
+                        <span>ขั้นตอนที่ 1: เลือกอัลบั้มเป้าหมายที่ต้องการนำรูปเข้า (เลือกก่อนอัปโหลด)</span>
+                      </span>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">
+                        จัดเก็บแยกอัลบั้ม 100%
+                      </span>
+                    </div>
+
+                    {/* Quick Visual Album Selectors */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {albums.map((a) => {
+                        const isSelected = albumUploadTargetId === a.id;
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => !isUploading && setAlbumUploadTargetId(a.id)}
+                            disabled={isUploading}
+                            className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                              isSelected
+                                ? 'bg-emerald-900/40 border-emerald-400 ring-2 ring-emerald-500/60 shadow-md'
+                                : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80 opacity-80'
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black ${a.badgeColor || 'bg-blue-600 text-white'}`}>
+                                  {a.badge || 'Atomy'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {a.photos?.length || 0} รูป
+                                </span>
+                              </div>
+                              <div className="text-xs font-bold text-white truncate max-w-[170px]">
+                                {a.title}
+                              </div>
+                            </div>
+                            <div className="shrink-0">
+                              {isSelected ? (
+                                <div className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-xs">
+                                  ✓
+                                </div>
+                              ) : (
+                                <div className="w-5 h-5 rounded-full border border-slate-700" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Dropdown Alternative */}
+                    <div className="pt-1">
+                      <select
+                        value={albumUploadTargetId}
+                        onChange={(e) => setAlbumUploadTargetId(e.target.value)}
+                        disabled={isUploading}
+                        className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
+                      >
+                        {albums.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            📁 {a.title} ({a.photos?.length || 0} รูป)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Confirmed Target Album Banner */}
+                    {(() => {
+                      const selectedAlbum = albums.find((a) => a.id === albumUploadTargetId);
+                      return (
+                        <div className="p-3 bg-emerald-950/80 border border-emerald-500/60 rounded-xl flex items-center justify-between text-xs text-emerald-300">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <div className="truncate">
+                              เป้าหมาย: <strong className="text-white font-black">{selectedAlbum?.title || 'ยังไม่ได้เลือก'}</strong>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-200 shrink-0 ml-2">
+                            มีอยู่ {selectedAlbum?.photos?.length || 0} รูป
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {uploadError && (
+                    <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span>{uploadError}</span>
                     </div>
                   )}
 
-                  <form onSubmit={handleSaveGallery} className="space-y-4">
+                  {uploadProgress && (
+                    <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                      {isUploading && <Loader2 className="w-4 h-4 shrink-0 animate-spin text-emerald-400" />}
+                      {uploadSuccess && <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />}
+                      <span>{uploadProgress}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {/* File selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                        1. เลือกไฟล์จากคอมพิวเตอร์ / มือถือ (เลือกได้หลายไฟล์พร้อมกัน)
+                      </label>
+                      <div className="relative border-2 border-dashed border-slate-700 hover:border-emerald-500/70 rounded-2xl p-6 text-center bg-slate-950/60 transition-colors">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleSelectUploadFiles}
+                          disabled={isUploading}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <ImageIcon className="w-8 h-8 text-slate-500 mx-auto mb-1.5" />
+                        <div className="text-xs sm:text-sm font-bold text-white mb-0.5">
+                          คลิกเพื่อเลือกไฟล์รูปภาพ หรือลากรูปมาวางที่นี่
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          รองรับไฟล์ JPG, PNG, WebP (เลือกหลายรูปพร้อมกันได้)
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* URL Input */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                        2. หรือใส่ลิงก์รูปภาพ (Image URL)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={urlInput}
+                          onChange={(e) => setUrlInput(e.target.value)}
+                          placeholder="https://... หรือ /images/photo.jpg"
+                          disabled={isUploading}
+                          className="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddUrl}
+                          disabled={isUploading || !urlInput.trim()}
+                          className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 disabled:opacity-50 cursor-pointer"
+                        >
+                          เพิ่มลิงก์
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Queued Photos */}
+                    {uploadFiles.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2">
+                          <span>รายการรูปภาพที่รออัปโหลด ({uploadFiles.length} รูป):</span>
+                          <button
+                            type="button"
+                            onClick={() => setUploadFiles([])}
+                            disabled={isUploading}
+                            className="text-rose-400 hover:underline cursor-pointer"
+                          >
+                            ล้างทั้งหมด
+                          </button>
+                        </div>
+
+                        <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
+                          {uploadFiles.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-3 p-2 bg-slate-950 rounded-xl border border-slate-800 text-xs"
+                            >
+                              <img
+                                src={item.preview}
+                                alt=""
+                                className="w-12 h-10 object-cover rounded-lg shrink-0 border border-slate-700"
+                              />
+                              <input
+                                type="text"
+                                value={item.caption}
+                                disabled={isUploading}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setUploadFiles((prev) =>
+                                    prev.map((f, i) => (i === idx ? { ...f, caption: val } : f))
+                                  );
+                                }}
+                                placeholder="คำอธิบายรูปภาพ..."
+                                className="flex-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded text-white text-xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setUploadFiles((prev) => prev.filter((_, i) => i !== idx))}
+                                disabled={isUploading}
+                                className="p-1 rounded text-slate-500 hover:text-rose-400 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsAlbumUploadModalOpen(false)}
+                      disabled={isUploading}
+                      className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 cursor-pointer"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExecuteUpload}
+                      disabled={isUploading || uploadFiles.length === 0}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-lg shadow-emerald-600/20"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>กำลังบันทึก...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>บันทึก {uploadFiles.length} รูปลงอัลบั้ม</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ==================================================================== */}
+            {/* CREATE NEW ALBUM MODAL */}
+            {/* ==================================================================== */}
+            {isCreateAlbumModalOpen && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 relative shadow-2xl">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      <Plus className="w-5 h-5 text-amber-400" />
+                      <span>สร้างอัลบั้มภาพใหม่</span>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreateAlbumModalOpen(false)}
+                      className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCreateAlbum} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">
+                        ชื่ออัลบั้ม <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newAlbumTitle}
+                        onChange={(e) => setNewAlbumTitle(e.target.value)}
+                        placeholder="เช่น งานสัมมนา Success Academy กรุงเทพฯ"
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-300 mb-1">
-                          หมวดหมู่
+                          หมวดหมู่อัลบั้ม
                         </label>
                         <select
-                          value={gCategory}
-                          onChange={(e) => {
-                            const val = e.target.value as any;
-                            setGCategory(val);
-                            if (val === 'products') setGBadgeColor('bg-blue-600 text-white');
-                            if (val === 'seminar') setGBadgeColor('bg-emerald-600 text-white');
-                            if (val === 'company') setGBadgeColor('bg-indigo-600 text-white');
-                            if (val === 'global') setGBadgeColor('bg-amber-600 text-white');
-                          }}
-                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
+                          value={newAlbumCategory}
+                          onChange={(e) => setNewAlbumCategory(e.target.value as any)}
+                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white cursor-pointer"
                         >
                           <option value="products">สินค้าและนวัตกรรม (Products)</option>
                           <option value="seminar">สัมมนา Success Academy</option>
                           <option value="company">สถาบันวิจัย & นวัตกรรม</option>
                           <option value="global">เครือข่าย 26+ ประเทศ</option>
+                          <option value="team">กิจกรรมทีมงานและสายงาน</option>
                         </select>
                       </div>
 
@@ -1453,9 +2009,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         </label>
                         <input
                           type="text"
-                          value={gBadge}
-                          onChange={(e) => setGBadge(e.target.value)}
-                          placeholder="เช่น Mass Prestige Products"
+                          value={newAlbumBadge}
+                          onChange={(e) => setNewAlbumBadge(e.target.value)}
+                          placeholder="เช่น Atomy Showcase"
                           className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
                         />
                       </div>
@@ -1463,104 +2019,44 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
                     <div>
                       <label className="block text-xs font-bold text-slate-300 mb-1">
-                        หัวข้อรูปภาพ <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={gTitle}
-                        onChange={(e) => setGTitle(e.target.value)}
-                        placeholder="ระบุหัวข้อเด่นที่ดึงดูดใจ..."
-                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300 mb-1">
-                        URL รูปภาพ (ลิงก์เว็บ หรือ /images/...) <span className="text-rose-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={gImageUrl}
-                        onChange={(e) => setGImageUrl(e.target.value)}
-                        placeholder="https://... หรือ /images/gallery-success-academy.jpg"
-                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300 mb-1">
-                        รายละเอียดคำอธิบาย
+                        รายละเอียดอัลบั้ม
                       </label>
                       <textarea
-                        rows={2}
-                        value={gDescription}
-                        onChange={(e) => setGDescription(e.target.value)}
-                        placeholder="คำอธิบายสรุปสั้นๆ..."
+                        rows={3}
+                        value={newAlbumDescription}
+                        onChange={(e) => setNewAlbumDescription(e.target.value)}
+                        placeholder="คำอธิบายสรุปสั้นๆ เกี่ยวกับภาพในอัลบั้มนี้..."
                         className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white resize-none"
                       />
                     </div>
 
-                    {/* Highlight Points */}
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-bold text-slate-300">
-                          จุดเด่น / หลักฐานเชิงประจักษ์
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setGPoints([...gPoints, ''])}
-                          className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>เพิ่มจุดเด่น</span>
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        {gPoints.map((point, pIdx) => (
-                          <div key={pIdx} className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={point}
-                              onChange={(e) => {
-                                const up = [...gPoints];
-                                up[pIdx] = e.target.value;
-                                setGPoints(up);
-                              }}
-                              placeholder={`จุดเด่นข้อที่ ${pIdx + 1}`}
-                              className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white"
-                            />
-                            {gPoints.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => setGPoints(gPoints.filter((_, i) => i !== pIdx))}
-                                className="text-slate-500 hover:text-rose-400 p-1"
-                              >
-                                ✕
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">
+                        URL รูปภาพหน้าปกอัลบั้ม (ไม่บังคับ)
+                      </label>
+                      <input
+                        type="text"
+                        value={newAlbumCoverUrl}
+                        onChange={(e) => setNewAlbumCoverUrl(e.target.value)}
+                        placeholder="https://... หรือ /images/..."
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono"
+                      />
                     </div>
 
                     <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
                       <button
                         type="button"
-                        onClick={() => setIsGalleryFormOpen(false)}
+                        onClick={() => setIsCreateAlbumModalOpen(false)}
                         className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 cursor-pointer"
                       >
                         ยกเลิก
                       </button>
                       <button
                         type="submit"
-                        disabled={gallerySaveLoading}
-                        className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/20"
                       >
-                        <Save className="w-4 h-4" />
-                        <span>{gallerySaveLoading ? 'กำลังบันทึก...' : 'บันทึกรูปภาพ'}</span>
+                        <Plus className="w-4 h-4" />
+                        <span>สร้างอัลบั้ม</span>
                       </button>
                     </div>
                   </form>

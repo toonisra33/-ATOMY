@@ -965,11 +965,42 @@ export const ImageGalleryAlbum: React.FC<ImageGalleryAlbumProps> = ({
               </button>
             </div>
 
+            {/* Target Album Selector Dropdown (Strictly Separated By Album) */}
+            <div className="mb-5 p-3.5 rounded-2xl bg-slate-950 border border-emerald-500/40 space-y-2">
+              <label className="block text-xs font-bold text-slate-200 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <Layers className="w-4 h-4" />
+                  <span>เลือกอัลบั้มปลายทาง (รูปภาพจะถูกจัดเก็บแยกเฉพาะอัลบั้มนี้ ไม่ปะปนกับอัลบั้มอื่น):</span>
+                </span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                  แยกตามอัลบั้ม
+                </span>
+              </label>
+
+              <select
+                value={selectedAlbumId}
+                onChange={(e) => setSelectedAlbumId(e.target.value)}
+                disabled={isUploading}
+                className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
+              >
+                {albums.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    📁 {a.title} ({a.photos?.length || 0} รูปภาพ)
+                  </option>
+                ))}
+              </select>
+
+              <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                <span>กำลังบันทึกภาพเข้าสู่:</span>
+                <strong className="text-sky-300">{activeAlbum.title}</strong>
+              </div>
+            </div>
+
             {/* Notice info banner */}
             <div className="mb-5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs flex items-start gap-2.5">
               <Info className="w-4 h-4 shrink-0 text-blue-400 mt-0.5" />
               <div>
-                <strong>สิทธิ์ผู้พัฒนา (Developer Unlimited Upload):</strong> คุณสามารถเลือกไฟล์พร้อมกันได้หลายไฟล์ (Batch Upload) หรือใส่ URL ของรูปภาพ ระบบจะทำการบีบอัดรูปภาพให้สวยงาม คมชัด และโหลดเร็วโดยอัตโนมัติ
+                <strong>สิทธิ์ Admin หลัก (Developer Unlimited Upload):</strong> คุณสามารถเลือกไฟล์พร้อมกันได้หลายไฟล์ (Batch Upload) หรือใส่ URL ของรูปภาพ ระบบจะทำการจัดเก็บลงในอัลบั้มที่เลือกไว้โดยเฉพาะ ไม่ปะปนกับอัลบั้มอื่น
               </div>
             </div>
 

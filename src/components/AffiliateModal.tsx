@@ -72,28 +72,35 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Initialize empty fields for new users
+  // Initialize empty fields for satellite creation (clean slate except the 2 default fields: teamName & sponsorPosition)
   useEffect(() => {
     if (isOpen) {
       if (!ownerUid) {
         setFormData({
-          ...currentSponsor,
           sponsorId: '',
           sponsorName: '',
           lineId: '',
           lineUrl: '',
           phoneNumber: '',
+          teamName: currentSponsor.teamName || 'Atomy Thailand Team freedomlife',
+          sponsorPosition: currentSponsor.sponsorPosition || 'ที่ปรึกษาธุรกิจ Atomy Thailand',
+          welcomeNote: '',
           avatarUrl: '',
+          customVideoUrl: '',
           fbPixelId: '',
           tiktokPixelId: '',
-          googleTagId: ''
+          googleTagId: '',
         });
         setEmail('');
         setPassword('');
         setConfirmPassword('');
         setAuthError('');
       } else {
-        setFormData({ ...currentSponsor });
+        setFormData({
+          ...currentSponsor,
+          teamName: currentSponsor.teamName || 'Atomy Thailand Team freedomlife',
+          sponsorPosition: currentSponsor.sponsorPosition || 'ที่ปรึกษาธุรกิจ Atomy Thailand',
+        });
       }
     }
   }, [isOpen, currentSponsor, ownerUid]);
@@ -164,23 +171,29 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
           return;
       }
 
-      onApplySponsor(formData);
+      const resolvedSponsorId = formData.sponsorId?.trim() || ('atomy-' + Math.random().toString(36).substring(2, 8));
+      const payload: SponsorProfile = {
+        ...formData,
+        sponsorId: resolvedSponsorId,
+      };
+
+      onApplySponsor(payload);
 
       try {
-        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(formData));
+        localStorage.setItem('atomy_custom_sponsor', JSON.stringify(payload));
       } catch (lsErr) {
         console.warn('LocalStorage save error:', lsErr);
       }
 
-      window.history.pushState({}, '', generatedAffiliateUrl);
+      window.history.pushState({}, '', `${window.location.origin}${window.location.pathname}?ref=${resolvedSponsorId}`);
 
       setupAllPixels({
-        fbPixelId: formData.fbPixelId,
-        tiktokPixelId: formData.tiktokPixelId,
-        googleTagId: formData.googleTagId,
+        fbPixelId: payload.fbPixelId,
+        tiktokPixelId: payload.tiktokPixelId,
+        googleTagId: payload.googleTagId,
       });
 
-      await saveSponsorProfile(formData, finalOwnerUid);
+      await saveSponsorProfile(payload, finalOwnerUid);
       onClose();
     } catch (err) {
       console.warn('Sync error:', err);
@@ -210,7 +223,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
               สร้างเว็บพ่วงของคุณ (Satellite Link)
             </h3>
             <p className="text-[11px] sm:text-xs text-slate-500 text-pretty">
-              ระบบขยายสายงาน Atomy: ใส่ข้อมูลเพื่อรับลิงก์เว็บพ่วงในชื่อและรูปภาพของคุณ
+              ระบบขยายสายงาน Atomy: กรอกข้อมูลของคุณเพื่อรับลิงก์เว็บพ่วงและพิกเซลยิงแอดส่วนตัว
             </p>
           </div>
         </div>
@@ -226,8 +239,20 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 required
                 value={formData.sponsorName}
                 onChange={(e) => setFormData({ ...formData, sponsorName: e.target.value })}
-                placeholder="เช่น อิศราวัฒน์ ปวินทกานต์ (คุณทูน)"
+                placeholder="กรอกชื่อ-นามสกุลของคุณ"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                รหัสสมาชิก Atomy (Member ID) <span className="text-slate-400 font-normal">(เว้นว่างได้)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.sponsorId || ''}
+                onChange={(e) => setFormData({ ...formData, sponsorId: e.target.value.trim() })}
+                placeholder="เช่น 39823016 (เว้นว่างระบบจะตั้งรหัสให้อัตโนมัติ)"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
             <div>
@@ -239,7 +264,7 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 required
                 value={formData.lineId}
                 onChange={(e) => setFormData({ ...formData, lineId: e.target.value, lineUrl: `https://lin.ee/${e.target.value.replace('@', '')}` })}
-                placeholder="เช่น @atomyth"
+                placeholder="เช่น @yourline หรือ line_id"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
@@ -257,41 +282,43 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ชื่อทีม / สายงาน (Team Name)
-              </label>
-              <input
-                type="text"
-                value={formData.teamName || ''}
-                onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                placeholder="เช่น Atomy Thailand Team"
-                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 เบอร์โทรศัพท์ติดต่อ
               </label>
               <input
                 type="tel"
                 value={formData.phoneNumber || ''}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                placeholder="เช่น 093-XXX-XXXX"
+                placeholder="เช่น 08X-XXX-XXXX"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ตำแหน่ง
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                <span>ชื่อทีม / สายงาน (ค่าเริ่มต้นระบบ)</span>
+                <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">มาตรฐานสายงาน</span>
+              </label>
+              <input
+                type="text"
+                value={formData.teamName || ''}
+                onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
+                placeholder="เช่น Atomy Thailand Team freedomlife"
+                className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                <span>ตำแหน่ง (ค่าเริ่มต้นระบบ)</span>
+                <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">มาตรฐานสายงาน</span>
               </label>
               <input
                 type="text"
                 value={formData.sponsorPosition || ''}
                 onChange={(e) => setFormData({ ...formData, sponsorPosition: e.target.value })}
-                placeholder="เช่น ที่ปรึกษาธุรกิจ"
+                placeholder="เช่น ที่ปรึกษาธุรกิจ Atomy Thailand"
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
             </div>
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 ข้อความต้อนรับ / สโลแกนที่จะแสดงในพรีวิวการแชร์
               </label>
@@ -299,9 +326,65 @@ export const AffiliateModal: React.FC<AffiliateModalProps> = ({
                 type="text"
                 value={formData.welcomeNote || ''}
                 onChange={(e) => setFormData({ ...formData, welcomeNote: e.target.value })}
-                placeholder="เช่น ยินดีต้อนรับสู่ทีมงาน Atomy ร่วมสร้าง passive income ด้วยกันครับ"
+                placeholder="พิมพ์ข้อความต้อนรับผู้มุ่งหวังของคุณ..."
                 className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[42px]"
               />
+            </div>
+
+            {/* Custom Pixel Settings for Satellite Site */}
+            <div className="sm:col-span-2 p-3.5 sm:p-4 bg-purple-50/50 rounded-xl sm:rounded-2xl border border-purple-200">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-800">
+                    รหัสพิกเซลยิงแอดของคุณ (Marketing Pixels สำหรับเว็บลูก)
+                  </h4>
+                </div>
+                <span className="text-[10px] text-purple-700 font-semibold bg-purple-100 px-2 py-0.5 rounded-full">
+                  ยิงแอดแยกเว็บของตนเองได้ 100%
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 mb-3">
+                ใส่รหัสพิกเซลของคุณเพื่อนำลิงก์เว็บนี้ไปยิงแอดใน Facebook / TikTok โดยระบบจะบันทึกข้อมูล Conversion ส่งตรงเข้าบัญชีพิกเซลของคุณ
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Meta (FB) Pixel ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.fbPixelId || ''}
+                    onChange={(e) => setFormData({ ...formData, fbPixelId: e.target.value.trim() })}
+                    placeholder="เช่น 1673256503238517"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    TikTok Pixel ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tiktokPixelId || ''}
+                    onChange={(e) => setFormData({ ...formData, tiktokPixelId: e.target.value.trim() })}
+                    placeholder="เช่น CRIJ9QBC77UDCNKERUHG"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Google Tag ID (GA4 / Ads)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.googleTagId || ''}
+                    onChange={(e) => setFormData({ ...formData, googleTagId: e.target.value.trim() })}
+                    placeholder="เช่น 377178012 หรือ G-XXXX"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-purple-500 transition-all min-h-[38px]"
+                  />
+                </div>
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
