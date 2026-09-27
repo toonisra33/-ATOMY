@@ -37,7 +37,13 @@ import {
   FileSpreadsheet,
   Layers,
   X,
-  Loader2
+  Loader2,
+  Calendar,
+  Clock,
+  Briefcase,
+  Grid,
+  List,
+  PhoneCall
 } from 'lucide-react';
 import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
@@ -47,6 +53,7 @@ import {
   updateLeadStatus,
   getLocalLeads,
   exportLeadsToExcelCSV,
+  seedSampleLeads,
   LeadSubmission,
 } from '../lib/firebase';
 import {
@@ -159,6 +166,49 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [leadsSearch, setLeadsSearch] = useState('');
   const [leadsStatusFilter, setLeadsStatusFilter] = useState<'all' | 'new' | 'contacted' | 'completed'>('all');
   const [selectedLeadForScript, setSelectedLeadForScript] = useState<LeadSubmission | null>(null);
+  const [leadsViewMode, setLeadsViewMode] = useState<'cards' | 'table'>('cards');
+  const [copiedLeadPhone, setCopiedLeadPhone] = useState<string | null>(null);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
+
+  const handleCopyLeadPhone = (phone: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(phone);
+    setCopiedLeadPhone(phone);
+    setTimeout(() => setCopiedLeadPhone(null), 2000);
+  };
+
+  const handleSeedLeads = async () => {
+    setSeedLoading(true);
+    setSeedMessage(null);
+    try {
+      const created = await seedSampleLeads(sponsor.sponsorId, sponsor.sponsorName);
+      setSeedMessage(`เพิ่มรายชื่อทดสอบ ${created.length} รายการเรียบร้อยแล้ว!`);
+      await loadLeads();
+      setTimeout(() => setSeedMessage(null), 3500);
+    } catch (err: any) {
+      alert('ไม่สามารถสร้างรายชื่อทดสอบได้: ' + (err?.message || 'ข้อผิดพลาด'));
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
+  const formatLeadDateTime = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const loadLeads = async () => {
     setLeadsLoading(true);
@@ -233,9 +283,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [newAlbumDescription, setNewAlbumDescription] = useState('');
   const [newAlbumCoverUrl, setNewAlbumCoverUrl] = useState('');
 
-  const loadAlbums = async () => {
+  const loadAlbums = async (forceSync = false) => {
     try {
-      const loaded = await fetchAlbums();
+      const loaded = await fetchAlbums(forceSync);
       if (loaded && loaded.length > 0) {
         setAlbums(loaded);
         if (!activeAlbumIdForManage) {
@@ -249,9 +299,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   useEffect(() => {
     if (isAuthorized) {
-      loadAlbums();
+      loadAlbums(activeTab === 'gallery');
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, activeTab]);
 
   const handleOpenUploadForAlbum = (albumId: string) => {
     setAlbumUploadTargetId(albumId);
@@ -1145,24 +1195,77 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {/* ========================================================= */}
         {activeTab === 'leads' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+            {/* Seed / Action Notification Alert */}
+            {seedMessage && (
+              <div className="p-4 bg-emerald-950/90 border border-emerald-600/80 rounded-2xl text-emerald-200 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span className="font-bold">{seedMessage}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSeedMessage(null)}
+                  className="p-1 rounded-lg hover:bg-emerald-900/60 text-emerald-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Header Box */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-xl">
               <div>
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-amber-400" />
-                  <span>กล่องรับรายชื่อผู้มุ่งหวัง (Leads Inbox)</span>
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  พบข้อมูลผู้ลงทะเบียนทั้งหมด {leads.length} รายการ
-                </p>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                      <span>กล่องรับรายชื่อผู้มุ่งหวัง (Leads Inbox)</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      รายชื่อผู้ลงทะเบียนสนใจร่วมธุรกิจ พร้อมเครื่องมือโทรเปิดใจใน 2 นาที
+                    </p>
+                  </div>
+                </div>
+
+                {/* Status Badges Summary */}
+                <div className="flex items-center gap-2 mt-3 flex-wrap text-xs">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 font-bold">
+                    ทั้งหมด {leads.length} รายการ
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 font-bold flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    รอติดต่อ {leads.filter((l) => l.status === 'new' || !l.status).length} ราย
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold">
+                    ติดต่อแล้ว {leads.filter((l) => l.status === 'contacted').length} ราย
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">
+                    ปิดการขาย {leads.filter((l) => l.status === 'completed').length} ราย
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={handleSeedLeads}
+                  disabled={seedLoading}
+                  className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20 cursor-pointer disabled:opacity-50"
+                  title="สร้าง 6 รายชื่อจำลองสำหรับทดสอบระบบ"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 text-amber-300 ${seedLoading ? 'animate-spin' : ''}`} />
+                  <span>{seedLoading ? 'กำลังสร้าง...' : 'สร้างรายชื่อทดสอบ'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={loadLeads}
                   disabled={leadsLoading}
-                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="รีเฟรชข้อมูล"
+                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="รีเฟรชข้อมูลจากระบบ"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${leadsLoading ? 'animate-spin' : ''}`} />
                   <span>รีเฟรช</span>
@@ -1171,8 +1274,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <button
                   type="button"
                   onClick={() => exportLeadsToExcelCSV(leads)}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-                  title="ดาวน์โหลดรายชื่อเป็นไฟล์ Excel/CSV"
+                  className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                  title="ดาวน์โหลดรายชื่อเป็นไฟล์ Excel/CSV ภาษาไทย"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                   <span>ส่งออก Excel</span>
@@ -1180,158 +1283,500 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
             </div>
 
-            {/* Filter and Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="relative flex-1 w-full">
+            {/* Filter and Search Bar + View Switcher */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              {/* Search Bar */}
+              <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={leadsSearch}
                   onChange={(e) => setLeadsSearch(e.target.value)}
                   placeholder="ค้นหาชื่อ, เบอร์โทร, LINE ID หรืออาชีพ..."
-                  className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full pl-10 pr-9 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
                 />
+                {leadsSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setLeadsSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-1.5 self-start sm:self-auto overflow-x-auto w-full sm:w-auto">
-                {(['all', 'new', 'contacted', 'completed'] as const).map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setLeadsStatusFilter(st)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                      leadsStatusFilter === st
-                        ? 'bg-amber-500 text-slate-950 font-black'
-                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {st === 'all' && `ทั้งหมด (${leads.length})`}
-                    {st === 'new' && `รอติดต่อ (${leads.filter((l) => l.status === 'new').length})`}
-                    {st === 'contacted' && `ติดต่อแล้ว (${leads.filter((l) => l.status === 'contacted').length})`}
-                    {st === 'completed' && `ปิดการขาย (${leads.filter((l) => l.status === 'completed').length})`}
-                  </button>
-                ))}
+              {/* Status Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+                {(['all', 'new', 'contacted', 'completed'] as const).map((st) => {
+                  const count =
+                    st === 'all'
+                      ? leads.length
+                      : st === 'new'
+                      ? leads.filter((l) => l.status === 'new' || !l.status).length
+                      : leads.filter((l) => l.status === st).length;
+
+                  return (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setLeadsStatusFilter(st)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                        leadsStatusFilter === st
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                          : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      {st === 'all' && `ทั้งหมด (${count})`}
+                      {st === 'new' && `รอติดต่อ (${count})`}
+                      {st === 'contacted' && `ติดต่อแล้ว (${count})`}
+                      {st === 'completed' && `ปิดการขาย (${count})`}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* View Switcher: Cards vs Table */}
+              <div className="flex items-center gap-1 p-1 bg-slate-900 rounded-xl border border-slate-800 shrink-0 self-end md:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setLeadsViewMode('cards')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    leadsViewMode === 'cards'
+                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="มุมมองการ์ด (อ่านง่ายบนมือถือ)"
+                >
+                  <Grid className="w-3.5 h-3.5" />
+                  <span>การ์ด</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeadsViewMode('table')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    leadsViewMode === 'table'
+                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="มุมมองตาราง"
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>ตาราง</span>
+                </button>
               </div>
             </div>
 
-            {/* Leads Table */}
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
-                    <tr>
-                      <th className="py-3 px-4">วันที่ / เวลา</th>
-                      <th className="py-3 px-4">ชื่อผู้มุ่งหวัง</th>
-                      <th className="py-3 px-4">ช่องทางติดต่อ</th>
-                      <th className="py-3 px-4">อาชีพ / เป้าหมาย</th>
-                      <th className="py-3 px-4">สถานะ</th>
-                      <th className="py-3 px-4 text-right">ดำเนินการ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 font-medium">
-                    {filteredLeads.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-500">
-                          ไม่พบข้อมูลผู้ลงทะเบียนตามเงื่อนไขที่เลือก
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredLeads.map((lead) => (
-                        <tr key={lead.id} className="hover:bg-slate-850 transition-colors">
-                          <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400">
-                            {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('th-TH') : '-'}
-                          </td>
-                          <td className="py-3.5 px-4 font-bold text-white">
-                            <div>{lead.fullName}</div>
-                            {lead.age && (
-                              <div className="text-[10px] text-slate-400 font-normal">
-                                อายุ: {lead.age} ปี
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2">
-                              {lead.phoneNumber && (
-                                <a
-                                  href={`tel:${lead.phoneNumber}`}
-                                  className="text-sky-400 hover:underline flex items-center gap-1"
-                                >
-                                  <Phone className="w-3 h-3" />
-                                  <span>{lead.phoneNumber}</span>
-                                </a>
+            {/* ========================================================= */}
+            {/* LEADS LIST: EMPTY STATE */}
+            {/* ========================================================= */}
+            {filteredLeads.length === 0 ? (
+              <div className="text-center py-16 px-4 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-xl space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-slate-800 text-slate-500 mx-auto flex items-center justify-center">
+                  <Users className="w-8 h-8 opacity-60" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">ไม่พบข้อมูลผู้ลงทะเบียนตามเงื่อนไขที่เลือก</h4>
+                  <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                    {leadsSearch
+                      ? `ไม่พบผลลัพธ์สำหรับการค้นหา "${leadsSearch}" ลองเปลี่ยนคำค้นหาหรือตัวกรอง`
+                      : 'ยังไม่มีรายชื่อผู้มุ่งหวังในหมวดนี้ คุณสามารถกดปุ่มด้านล่างเพื่อสร้างรายชื่อทดสอบ 6 ท่านได้ทันที'}
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  {leadsSearch && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLeadsSearch('');
+                        setLeadsStatusFilter('all');
+                      }}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    >
+                      ล้างตัวกรองทั้งหมด
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSeedLeads}
+                    disabled={seedLoading}
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center gap-2"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>สร้าง 6 รายชื่อจำลองเพื่อทดสอบทันที</span>
+                  </button>
+                </div>
+              </div>
+            ) : leadsViewMode === 'cards' ? (
+              /* ========================================================= */
+              /* VIEW MODE 1: MODERN RESPONSIVE CARDS (MOBILE OPTIMIZED)   */
+              /* ========================================================= */
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredLeads.map((lead) => {
+                  const leadStatus = lead.status || 'new';
+                  const isNew = leadStatus === 'new';
+                  const isContacted = leadStatus === 'contacted';
+                  const isCompleted = leadStatus === 'completed';
+
+                  return (
+                    <div
+                      key={lead.id}
+                      className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl sm:rounded-3xl p-5 shadow-xl transition-all flex flex-col justify-between space-y-4 group"
+                    >
+                      {/* Top Row: Name, Age, Status Pill */}
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="text-base sm:text-lg font-black text-white group-hover:text-amber-300 transition-colors leading-snug">
+                              {lead.fullName}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {lead.age && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/80">
+                                  <Calendar className="w-3 h-3 text-slate-400" />
+                                  <span>อายุ {lead.age} ปี</span>
+                                </span>
                               )}
-                              {lead.lineId && (
-                                <a
-                                  href={`https://line.me/ti/p/~${lead.lineId}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-emerald-400 hover:underline flex items-center gap-1 ml-2"
-                                >
-                                  <MessageCircle className="w-3 h-3" />
-                                  <span>{lead.lineId}</span>
-                                </a>
-                              )}
+                              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+                                <Clock className="w-3 h-3 text-slate-500" />
+                                <span>{formatLeadDateTime(lead.createdAt)}</span>
+                              </span>
                             </div>
-                          </td>
-                          <td className="py-3.5 px-4 text-slate-300">
-                            {lead.occupation || lead.interest || '-'}
-                          </td>
-                          <td className="py-3.5 px-4">
+                          </div>
+
+                          {/* Status Badge */}
+                          <span
+                            className={`shrink-0 text-[11px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
+                              isNew
+                                ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 shadow-sm shadow-rose-500/20'
+                                : isContacted
+                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                                : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isNew ? 'bg-rose-400 animate-pulse' : isContacted ? 'bg-amber-400' : 'bg-emerald-400'
+                              }`}
+                            />
+                            <span>{isNew ? 'รอติดต่อ' : isContacted ? 'ติดต่อแล้ว' : 'ปิดการขาย'}</span>
+                          </span>
+                        </div>
+
+                        {/* Occupation & Interest Details */}
+                        <div className="p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-1.5 text-xs">
+                          {lead.occupation && (
+                            <div className="flex items-center gap-2 text-slate-300">
+                              <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              <span className="font-semibold text-slate-400">อาชีพ:</span>
+                              <span className="text-white font-medium truncate">{lead.occupation}</span>
+                            </div>
+                          )}
+                          {lead.interest && (
+                            <div className="flex items-center gap-2 text-slate-300">
+                              <Target className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                              <span className="font-semibold text-slate-400">เป้าหมาย:</span>
+                              <span className="text-white font-medium truncate">{lead.interest}</span>
+                            </div>
+                          )}
+                          {!lead.occupation && !lead.interest && (
+                            <div className="text-slate-500 italic text-[11px]">ไม่ได้ระบุข้อมูลอาชีพเพิ่มเติม</div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Big One-Touch Communication Buttons */}
+                      <div className="space-y-2 pt-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Phone Call Link */}
+                          {lead.phoneNumber ? (
+                            <a
+                              href={`tel:${lead.phoneNumber}`}
+                              className="px-3 py-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                              title={`โทรออกไปที่ ${lead.phoneNumber}`}
+                            >
+                              <PhoneCall className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                              <span className="truncate">{lead.phoneNumber}</span>
+                            </a>
+                          ) : (
+                            <div className="px-3 py-2.5 rounded-xl bg-slate-800/40 border border-slate-800 text-slate-500 text-xs text-center">
+                              ไม่มีเบอร์โทร
+                            </div>
+                          )}
+
+                          {/* LINE Link */}
+                          {lead.lineId ? (
+                            <a
+                              href={`https://line.me/ti/p/~${lead.lineId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                              title={`เปิดแชท LINE ID: ${lead.lineId}`}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                              <span className="truncate">LINE: {lead.lineId}</span>
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => lead.phoneNumber && handleCopyLeadPhone(lead.phoneNumber, e)}
+                              disabled={!lead.phoneNumber}
+                              className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                              title="คัดลอกเบอร์โทรศัพท์"
+                            >
+                              {copiedLeadPhone === lead.phoneNumber ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="text-emerald-300">คัดลอกแล้ว</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>คัดลอกเบอร์</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Status Change Selector & 2-Min Script Button */}
+                        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] text-slate-400 font-bold">สถานะ:</span>
                             <select
-                              value={lead.status || 'new'}
+                              value={leadStatus}
                               onChange={(e) => lead.id && handleUpdateStatus(lead.id, e.target.value as any)}
-                              className={`text-[11px] font-bold px-2 py-1 rounded-lg border focus:outline-none cursor-pointer ${
-                                lead.status === 'new'
+                              className={`text-[11px] font-black px-2.5 py-1.5 rounded-xl border focus:outline-none cursor-pointer ${
+                                isNew
                                   ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                  : lead.status === 'contacted'
+                                  : isContacted
                                   ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                                   : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                               }`}
                             >
-                              <option value="new" className="bg-slate-900 text-white">รอติดต่อ</option>
-                              <option value="contacted" className="bg-slate-900 text-white">ติดต่อแล้ว</option>
-                              <option value="completed" className="bg-slate-900 text-white">ปิดการขาย</option>
+                              <option value="new" className="bg-slate-900 text-white">
+                                รอติดต่อ
+                              </option>
+                              <option value="contacted" className="bg-slate-900 text-white">
+                                ติดต่อแล้ว
+                              </option>
+                              <option value="completed" className="bg-slate-900 text-white">
+                                ปิดการขาย
+                              </option>
                             </select>
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedLeadForScript(lead);
-                                setActiveTab('script');
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-500/30 text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 ml-auto"
-                            >
-                              <Phone className="w-3 h-3" />
-                              <span>สคริปต์ 2 นาที</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLeadForScript(lead)}
+                            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all shadow-md shadow-emerald-600/25 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                            title="เปิดบทสนทนาโทรคุย 2 นาทีสำหรับรายชื่อนี้"
+                          >
+                            <Phone className="w-3.5 h-3.5 text-amber-300" />
+                            <span>สคริปต์ 2 นาที</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            ) : (
+              /* ========================================================= */
+              /* VIEW MODE 2: DESKTOP WIDE TABLE WITH SAFE MIN-WIDTH       */
+              /* ========================================================= */
+              <div className="bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-300 min-w-[880px]">
+                    <thead className="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
+                      <tr>
+                        <th className="py-3.5 px-4 w-36 whitespace-nowrap">วันที่ / เวลา</th>
+                        <th className="py-3.5 px-4 w-52 whitespace-nowrap">ชื่อผู้มุ่งหวัง</th>
+                        <th className="py-3.5 px-4 w-60 whitespace-nowrap">ช่องทางติดต่อ</th>
+                        <th className="py-3.5 px-4 w-52">อาชีพ / เป้าหมาย</th>
+                        <th className="py-3.5 px-4 w-36 whitespace-nowrap">สถานะ</th>
+                        <th className="py-3.5 px-4 w-40 text-right whitespace-nowrap">เครื่องมือโทร</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60 font-medium">
+                      {filteredLeads.map((lead) => {
+                        const leadStatus = lead.status || 'new';
+                        const isNew = leadStatus === 'new';
+                        const isContacted = leadStatus === 'contacted';
+
+                        return (
+                          <tr key={lead.id} className="hover:bg-slate-850/60 transition-colors">
+                            {/* Date & Time */}
+                            <td className="py-3.5 px-4 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                              {formatLeadDateTime(lead.createdAt)}
+                            </td>
+
+                            {/* Full Name & Age */}
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-white text-sm">{lead.fullName}</div>
+                              {lead.age && (
+                                <div className="text-[11px] text-slate-400 font-normal mt-0.5 flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-slate-500" />
+                                  <span>อายุ {lead.age} ปี</span>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Contact: Phone & LINE */}
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {lead.phoneNumber && (
+                                  <a
+                                    href={`tel:${lead.phoneNumber}`}
+                                    className="px-2 py-1 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/20 flex items-center gap-1 font-bold font-mono transition-colors"
+                                  >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{lead.phoneNumber}</span>
+                                  </a>
+                                )}
+                                {lead.lineId && (
+                                  <a
+                                    href={`https://line.me/ti/p/~${lead.lineId}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1 font-bold transition-colors"
+                                  >
+                                    <MessageCircle className="w-3 h-3" />
+                                    <span>{lead.lineId}</span>
+                                  </a>
+                                )}
+                                {lead.phoneNumber && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleCopyLeadPhone(lead.phoneNumber, e)}
+                                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
+                                    title="คัดลอกเบอร์โทร"
+                                  >
+                                    {copiedLeadPhone === lead.phoneNumber ? (
+                                      <Check className="w-3 h-3 text-emerald-400" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Occupation / Target */}
+                            <td className="py-3.5 px-4 text-slate-300 text-xs">
+                              {lead.occupation ? (
+                                <div>
+                                  <span className="font-semibold text-white">{lead.occupation}</span>
+                                  {lead.interest && (
+                                    <div className="text-[11px] text-slate-400 truncate max-w-xs mt-0.5">
+                                      {lead.interest}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : lead.interest ? (
+                                <span>{lead.interest}</span>
+                              ) : (
+                                <span className="text-slate-500">-</span>
+                              )}
+                            </td>
+
+                            {/* Status Dropdown */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <select
+                                value={leadStatus}
+                                onChange={(e) => lead.id && handleUpdateStatus(lead.id, e.target.value as any)}
+                                className={`text-[11px] font-black px-2.5 py-1.5 rounded-xl border focus:outline-none cursor-pointer ${
+                                  isNew
+                                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                    : isContacted
+                                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                }`}
+                              >
+                                <option value="new" className="bg-slate-900 text-white">
+                                  รอติดต่อ
+                                </option>
+                                <option value="contacted" className="bg-slate-900 text-white">
+                                  ติดต่อแล้ว
+                                </option>
+                                <option value="completed" className="bg-slate-900 text-white">
+                                  ปิดการขาย
+                                </option>
+                              </select>
+                            </td>
+
+                            {/* Action: 2-Minute Call Script */}
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedLeadForScript(lead)}
+                                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5 ml-auto cursor-pointer"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-amber-300" />
+                                <span>สคริปต์ 2 นาที</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Quick Call Script Modal Overlay if selected directly from leads */}
             {selectedLeadForScript && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 max-h-[85vh] overflow-y-auto">
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <div
+                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+                onClick={() => setSelectedLeadForScript(null)}
+              >
+                <div
+                  className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto shadow-2xl space-y-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                     <div>
-                      <h4 className="text-base font-bold text-white">
-                        บทสนทนาโทรคุยสำหรับ: {selectedLeadForScript.fullName}
-                      </h4>
-                      <p className="text-xs text-slate-400">เบอร์โทร: {selectedLeadForScript.phoneNumber || '-'}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400">
+                          <Phone className="w-4 h-4" />
+                        </span>
+                        <h4 className="text-base sm:text-lg font-black text-white">
+                          สคริปต์โทร 2 นาที: {selectedLeadForScript.fullName}
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                        <span>เบอร์โทร: <strong className="text-white">{selectedLeadForScript.phoneNumber || '-'}</strong></span>
+                        {selectedLeadForScript.lineId && (
+                          <span>| LINE: <strong className="text-emerald-400">{selectedLeadForScript.lineId}</strong></span>
+                        )}
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedLeadForScript(null)}
-                      className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white"
-                    >
-                      ✕
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('script');
+                          setSelectedLeadForScript(null);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer hidden sm:flex items-center gap-1"
+                        title="เปิดในแท็บสคริปต์เต็มจอ"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>เปิดเต็มจอ</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLeadForScript(null)}
+                        className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        title="ปิดหน้าต่างนี้"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
+
                   <CallScriptView
                     leads={leads}
                     sponsor={sponsor}
@@ -1403,6 +1848,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
               {isSuperAdmin ? (
                 <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await loadAlbums(true);
+                      alert('ตรวจเช็คและซิงค์ข้อมูลกับฐานข้อมูล Cloud สำเร็จแล้ว!');
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-sky-950/70 hover:bg-sky-900 text-sky-300 text-xs font-bold border border-sky-500/40 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="ตรวจเช็คและดึงข้อมูลอัลบั้มล่าสุดจาก Cloud Firestore"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-sky-400" />
+                    <span>ซิงค์กับฐานข้อมูล</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleResetAlbums}

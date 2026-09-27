@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
+import firebaseConfigData from './firebase-applet-config.json';
 
 const app = express();
 const PORT = 3000;
@@ -13,8 +14,8 @@ const DEFAULT_MOBILE_IMAGE = 'https://sponsor-atomy.web.app/og-image-mobile.jpg'
 
 async function fetchSponsorProfile(sponsorId: string) {
   try {
-    const projectId = 'localhub-69fbe';
-    const databaseId = 'ai-studio-atomy-8c095ab7-7361-4880-9af8-2d105a37ebb2';
+    const projectId = firebaseConfigData.projectId || 'atomy-sponserweb';
+    const databaseId = firebaseConfigData.firestoreDatabaseId || '(default)';
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/sponsors/${sponsorId}`;
     
     const response = await fetch(url);

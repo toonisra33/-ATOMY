@@ -115,6 +115,23 @@
         "updatedAt": { "type": "string" }
       },
       "required": ["title", "category", "badge", "badgeColor", "description", "highlightPoints", "imageUrl"]
+    },
+    "Album": {
+      "title": "Album",
+      "description": "Multi-photo album with unlimited photo uploads and cover management.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["products", "seminar", "company", "global", "team"] },
+        "badge": { "type": "string", "maxLength": 80 },
+        "badgeColor": { "type": "string", "maxLength": 50 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "coverImageUrl": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "object" } },
+        "highlightPoints": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["title", "category", "badge", "badgeColor", "description"]
     }
   },
   "firestore": {
@@ -129,6 +146,10 @@
     "/gallery/{itemId}": {
       "schema": "GalleryItem",
       "description": "Collection of interactive album showcase items"
+    },
+    "/albums/{albumId}": {
+      "schema": "Album",
+      "description": "Collection of business photo albums and event pictures"
     }
   }
 }

@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   deleteDoc,
@@ -351,38 +352,106 @@ export async function compressImageFile(file: File, maxDim = 1024, quality = 0.7
 }
 
 /**
+ * Helper to sync albums into sponsors/39823016 customAlbums (safe against missing rules)
+ */
+async function syncAlbumsToSponsorDoc(albums: AlbumItem[]): Promise<void> {
+  try {
+    if (db) {
+      const sponsorDocRef = doc(db, 'sponsors', '39823016');
+      const sanitized = albums.map((a) => ({
+        id: a.id,
+        title: a.title,
+        category: a.category,
+        badge: a.badge,
+        badgeColor: a.badgeColor,
+        description: a.description,
+        coverImageUrl: a.coverImageUrl,
+        photos: (a.photos || []).slice(0, 50), // Keep within safe document size
+        highlightPoints: a.highlightPoints || [],
+        updatedAt: a.updatedAt || Date.now(),
+      }));
+      await setDoc(sponsorDocRef, { customAlbums: sanitized }, { merge: true });
+    }
+  } catch (err) {
+    console.warn('Sponsor document customAlbums sync notice:', err);
+  }
+}
+
+/**
  * Fetch all albums from IndexedDB, Firestore, or fallback
  */
-export async function fetchAlbums(): Promise<AlbumItem[]> {
-  // 1. Check IndexedDB first (fastest, full capacity, never quota-limited)
-  const idbAlbums = await getAlbumsFromIDB();
-  if (idbAlbums && idbAlbums.length > 0) {
-    return idbAlbums;
+export async function fetchAlbums(forceSync = false): Promise<AlbumItem[]> {
+  // 1. Check IndexedDB first (unless forceSync requested)
+  if (!forceSync) {
+    const idbAlbums = await getAlbumsFromIDB();
+    if (idbAlbums && idbAlbums.length > 0) {
+      return idbAlbums;
+    }
   }
 
   // 2. Fetch from Firestore
   try {
     if (db) {
-      const albumsCol = collection(db, 'albums');
-      const snapshot = await getDocs(albumsCol);
+      const loadedMap = new Map<string, AlbumItem>();
 
-      if (!snapshot.empty) {
-        const loaded: AlbumItem[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          loaded.push({
-            id: docSnap.id,
-            title: data.title || '',
-            category: data.category || 'products',
-            badge: data.badge || '',
-            badgeColor: data.badgeColor || 'bg-blue-600 text-white',
-            description: data.description || '',
-            coverImageUrl: data.coverImageUrl || (Array.isArray(data.photos) && data.photos[0]?.url) || '',
-            photos: Array.isArray(data.photos) ? data.photos : [],
-            highlightPoints: Array.isArray(data.highlightPoints) ? data.highlightPoints : [],
-            updatedAt: data.updatedAt || Date.now(),
+      // A. Try loading from collection 'albums'
+      try {
+        const albumsCol = collection(db, 'albums');
+        const snapshot = await getDocs(albumsCol);
+        if (!snapshot.empty) {
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            loadedMap.set(docSnap.id, {
+              id: docSnap.id,
+              title: data.title || '',
+              category: data.category || 'products',
+              badge: data.badge || '',
+              badgeColor: data.badgeColor || 'bg-blue-600 text-white',
+              description: data.description || '',
+              coverImageUrl: data.coverImageUrl || (Array.isArray(data.photos) && data.photos[0]?.url) || '',
+              photos: Array.isArray(data.photos) ? data.photos : [],
+              highlightPoints: Array.isArray(data.highlightPoints) ? data.highlightPoints : [],
+              updatedAt: data.updatedAt || Date.now(),
+            });
           });
-        });
+        }
+      } catch (albumsErr) {
+        console.warn('Direct albums collection query notice:', albumsErr);
+      }
+
+      // B. Also check sponsors/39823016 for customAlbums field (works with user-level security rules)
+      try {
+        const sponsorDocRef = doc(db, 'sponsors', '39823016');
+        const sponsorSnap = await getDoc(sponsorDocRef);
+        if (sponsorSnap.exists()) {
+          const sponsorData = sponsorSnap.data();
+          if (Array.isArray(sponsorData.customAlbums) && sponsorData.customAlbums.length > 0) {
+            for (const ca of sponsorData.customAlbums as AlbumItem[]) {
+              if (loadedMap.has(ca.id)) {
+                // Merge photos
+                const existing = loadedMap.get(ca.id)!;
+                const photoMap = new Map();
+                for (const p of [...(existing.photos || []), ...(ca.photos || [])]) {
+                  if (p?.id) photoMap.set(p.id, p);
+                }
+                loadedMap.set(ca.id, {
+                  ...existing,
+                  ...ca,
+                  photos: Array.from(photoMap.values()),
+                  updatedAt: Math.max(existing.updatedAt || 0, ca.updatedAt || 0),
+                });
+              } else {
+                loadedMap.set(ca.id, ca);
+              }
+            }
+          }
+        }
+      } catch (sponsorErr) {
+        console.warn('Sponsor document customAlbums query notice:', sponsorErr);
+      }
+
+      if (loadedMap.size > 0) {
+        const loaded = Array.from(loadedMap.values());
 
         // Merge missing default albums if needed (e.g. Success Academy, Masstige)
         for (const def of DEFAULT_ATOMY_ALBUMS) {
@@ -460,7 +529,7 @@ export async function saveAlbum(album: AlbumItem): Promise<AlbumItem[]> {
     }
   }
 
-  // 3. Save to Firestore
+  // 3. Save to Firestore (both collection 'albums' and 'sponsors/39823016')
   try {
     if (db) {
       const docRef = doc(db, 'albums', album.id);
@@ -476,6 +545,9 @@ export async function saveAlbum(album: AlbumItem): Promise<AlbumItem[]> {
   } catch (error) {
     console.warn('Firestore album sync notice:', error);
   }
+
+  // 4. Dual-sync into sponsor document
+  await syncAlbumsToSponsorDoc(newAlbums);
 
   return newAlbums;
 }
@@ -505,6 +577,8 @@ export async function deleteAlbum(albumId: string): Promise<AlbumItem[]> {
   } catch (error) {
     console.warn('Firestore delete album notice:', error);
   }
+
+  await syncAlbumsToSponsorDoc(newAlbums);
 
   return newAlbums;
 }
@@ -564,6 +638,9 @@ export async function addPhotosToAlbum(
     console.warn('Firestore album photos notice:', error);
   }
 
+  // 4. Dual-sync into sponsor document
+  await syncAlbumsToSponsorDoc(newAlbums);
+
   return { albums: newAlbums, updatedAlbum };
 }
 
@@ -614,6 +691,8 @@ export async function deletePhotoFromAlbum(
     console.warn('Firestore delete photo notice:', error);
   }
 
+  await syncAlbumsToSponsorDoc(newAlbums);
+
   return { albums: newAlbums, updatedAlbum };
 }
 
@@ -657,6 +736,8 @@ export async function setAlbumCover(
   } catch (error) {
     console.warn('Firestore cover notice:', error);
   }
+
+  await syncAlbumsToSponsorDoc(newAlbums);
 
   return { albums: newAlbums, updatedAlbum };
 }

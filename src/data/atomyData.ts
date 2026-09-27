@@ -6,7 +6,7 @@ export const DEFAULT_SPONSOR: SponsorProfile = {
   sponsorId: '39823016',
   sponsorName: 'อิศราวัฒน์ ปวินทกานต์ (คุณทูน)',
   sponsorPosition: 'ที่ปรึกษาธุรกิจ Atomy Thailand',
-  lineId: 'sj7FVdJ',
+  lineId: 'Tooncrub',
   lineUrl: 'https://lin.ee/sj7FVdJ',
   phoneNumber: '093-065-2881',
   teamName: 'Atomy Thailand Team freedomlife',
