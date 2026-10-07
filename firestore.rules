@@ -22,6 +22,13 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    match /admin_settings/{settingId} {
+      // Anyone can read site settings or branding configured by admin
+      allow read: if true;
+      // Admin can update global site settings
+      allow write: if isAdmin();
+    }
+
     match /leads/{leadId} {
       // Authenticated users (Admin, Partners, Sponsors) or public read
       allow read: if true;

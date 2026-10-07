@@ -6,6 +6,7 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -495,6 +496,76 @@ export async function fetchAlbums(forceSync = false): Promise<AlbumItem[]> {
   // 4. Initialize built-in default albums in IndexedDB
   await saveAllAlbumsToIDB(DEFAULT_ATOMY_ALBUMS);
   return DEFAULT_ATOMY_ALBUMS;
+}
+
+/**
+ * Real-time listener for albums collection and customAlbums in Firestore
+ */
+export function watchAlbums(onUpdate: (albums: AlbumItem[]) => void): () => void {
+  const unsubs: Array<() => void> = [];
+  try {
+    if (db) {
+      // 1. Listen to albums collection
+      const albumsCol = collection(db, 'albums');
+      const u1 = onSnapshot(
+        albumsCol,
+        async (snap) => {
+          if (!snap.empty) {
+            const list: AlbumItem[] = [];
+            snap.forEach((docSnap) => {
+              const data = docSnap.data();
+              list.push({
+                id: docSnap.id,
+                title: data.title || '',
+                category: data.category || 'products',
+                badge: data.badge || '',
+                badgeColor: data.badgeColor || 'bg-blue-600 text-white',
+                description: data.description || '',
+                coverImageUrl: data.coverImageUrl || '',
+                photos: Array.isArray(data.photos) ? data.photos : [],
+                highlightPoints: Array.isArray(data.highlightPoints) ? data.highlightPoints : [],
+                updatedAt: data.updatedAt || Date.now(),
+              });
+            });
+            inMemoryAlbumsCache = list;
+            await saveAllAlbumsToIDB(list);
+            onUpdate(list);
+          }
+        },
+        (err) => console.warn('Albums real-time listener notice:', err?.message || err)
+      );
+      unsubs.push(u1);
+
+      // 2. Listen to sponsors/39823016 customAlbums
+      const sponsorRef = doc(db, 'sponsors', '39823016');
+      const u2 = onSnapshot(
+        sponsorRef,
+        async (snap) => {
+          if (snap.exists()) {
+            const sData = snap.data();
+            if (Array.isArray(sData.customAlbums) && sData.customAlbums.length > 0) {
+              const list = sData.customAlbums as AlbumItem[];
+              inMemoryAlbumsCache = list;
+              await saveAllAlbumsToIDB(list);
+              onUpdate(list);
+            }
+          }
+        },
+        (err) => console.warn('Sponsor customAlbums listener notice:', err?.message || err)
+      );
+      unsubs.push(u2);
+    }
+  } catch (err) {
+    console.warn('Could not initialize watchAlbums:', err);
+  }
+
+  return () => {
+    unsubs.forEach((u) => {
+      try {
+        u();
+      } catch {}
+    });
+  };
 }
 
 /**

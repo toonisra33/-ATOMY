@@ -29,7 +29,7 @@ import { getProspectLearnerSession, clearProspectLearnerSession, ProspectLearner
 import { LoginModal } from "./components/LoginModal";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { setupAllPixels } from "./lib/pixel";
-import { loadSponsorProfile } from "./lib/firebase";
+import { loadSponsorProfile, watchSponsorProfile } from "./lib/firebase";
 import { watchAuthSession, logout } from "./lib/auth";
 import { Target, Link as LinkIcon, QrCode, Copy, Check, Share2, Monitor, Smartphone, Download, Upload, Image as ImageIcon, RefreshCw, SmartphoneNfc, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
 import { AuthSession } from "./types";
@@ -237,6 +237,40 @@ export default function App() {
       }
     }
   }, []);
+
+  // Live Real-Time Listener: Automatically sync with external changes when admin email updates data outside
+  useEffect(() => {
+    const adminEmail = session?.email || "toonisra33@gmail.com";
+    const targetId = sponsor.sponsorId || DEFAULT_SPONSOR.sponsorId;
+
+    const unsub = watchSponsorProfile(
+      targetId,
+      (updatedProfile) => {
+        setSponsor((prev) => ({
+          ...prev,
+          ...updatedProfile,
+          avatarUrl: updatedProfile.avatarUrl || prev.avatarUrl,
+        }));
+      },
+      adminEmail
+    );
+
+    // Cross-tab synchronization via storage event
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "atomy_custom_sponsor" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setSponsor((prev) => ({ ...prev, ...parsed }));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      unsub();
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [sponsor.sponsorId, session?.email]);
 
   // Initialize and update pixels whenever sponsor pixel IDs change
   useEffect(() => {

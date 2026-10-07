@@ -2,6 +2,8 @@ export interface SponsorProfile {
   sponsorId: string;
   sponsorName: string;
   ownerUid?: string;
+  email?: string;
+  adminEmail?: string;
   sponsorPosition: string;
   lineId: string;
   lineUrl: string;
@@ -19,6 +21,9 @@ export interface SponsorProfile {
   customVideoMinutes?: number; // e.g. 20 minutes
   pinHash?: string; // 4-6 digit PIN for sponsor authentication
   updatedAt?: string;
+  desktopBannerUrl?: string;
+  mobileBannerUrl?: string;
+  announcement?: string;
 }
 
 export interface LeadAttribution {

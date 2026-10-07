@@ -50,6 +50,8 @@ import { DEFAULT_SPONSOR } from '../data/atomyData';
 import {
   saveSponsorProfile,
   fetchLeads,
+  watchLeads,
+  syncAdminExternalData,
   updateLeadStatus,
   getLocalLeads,
   exportLeadsToExcelCSV,
@@ -61,6 +63,7 @@ import {
   AlbumPhoto,
   DEFAULT_ATOMY_ALBUMS,
   fetchAlbums,
+  watchAlbums,
   saveAlbum,
   deleteAlbum,
   addPhotosToAlbum,
@@ -210,6 +213,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     }
   };
 
+  const [manualSyncLoading, setManualSyncLoading] = useState(false);
+  const [manualSyncNotice, setManualSyncNotice] = useState<string | null>(null);
+
+  const handleManualExternalSync = async () => {
+    setManualSyncLoading(true);
+    setManualSyncNotice(null);
+    try {
+      const res = await syncAdminExternalData(session?.email || 'toonisra33@gmail.com');
+      setManualSyncNotice(res.message);
+      setTimeout(() => setManualSyncNotice(null), 4000);
+    } catch (err: any) {
+      alert('ไม่สามารถซิงค์ข้อมูลได้: ' + (err?.message || ''));
+    } finally {
+      setManualSyncLoading(false);
+    }
+  };
+
   const loadLeads = async () => {
     setLeadsLoading(true);
     try {
@@ -227,10 +247,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     }
   };
 
+  // Real-time synchronization: when admin email or external system updates leads in Firestore
   useEffect(() => {
-    if (isAuthorized) {
-      loadLeads();
-    }
+    if (!isAuthorized) return;
+    setLeadsLoading(true);
+    const unsub = watchLeads((liveLeads) => {
+      setLeads(liveLeads);
+      setLeadsLoading(false);
+    });
+    return () => {
+      unsub();
+    };
   }, [isAuthorized]);
 
   const handleUpdateStatus = async (leadId: string, newStatus: 'new' | 'contacted' | 'completed') => {
@@ -300,6 +327,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   useEffect(() => {
     if (isAuthorized) {
       loadAlbums(activeTab === 'gallery');
+      if (activeTab === 'gallery') {
+        const unsub = watchAlbums((liveAlbums) => {
+          if (liveAlbums && liveAlbums.length > 0) {
+            setAlbums(liveAlbums);
+          }
+        });
+        return () => {
+          unsub();
+        };
+      }
     }
   }, [isAuthorized, activeTab]);
 
@@ -470,6 +507,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [sponsorForm, setSponsorForm] = useState<SponsorProfile>({ ...sponsor });
   const [sponsorSaveLoading, setSponsorSaveLoading] = useState(false);
   const [sponsorSaveSuccess, setSponsorSaveSuccess] = useState(false);
+
+  // Automatically update form when external updates arrive from Firestore
+  useEffect(() => {
+    setSponsorForm((prev) => ({
+      ...prev,
+      ...sponsor,
+    }));
+  }, [sponsor]);
 
   const handleSaveSponsor = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -752,8 +797,26 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
           </div>
 
-          {/* Quick Actions (Switch to Public Web, Logout) */}
+          {/* Quick Actions (Sync, Switch to Public Web, Logout) */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Real-time external sync badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold" title="เชื่อมต่อ Real-time อัพเดตอัตโนมัติเมื่อระบบภายนอกมีการแก้ไข">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>ซิงค์ตรงภายนอก Real-time</span>
+            </div>
+
+            {/* Instant sync button */}
+            <button
+              type="button"
+              onClick={handleManualExternalSync}
+              disabled={manualSyncLoading}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-slate-600 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="ดึงข้อมูลอัพเดตล่าสุดจากระบบภายนอกทันที"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${manualSyncLoading ? 'animate-spin text-amber-400' : 'text-slate-400'}`} />
+              <span className="hidden sm:inline">ซิงค์ด่วน</span>
+            </button>
+
             <button
               type="button"
               onClick={onNavigateHome}
@@ -779,6 +842,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </button>
           </div>
         </div>
+
+        {manualSyncNotice && (
+          <div className="bg-emerald-600/90 text-white text-xs py-1.5 px-4 text-center font-bold flex items-center justify-center gap-2 animate-fadeIn border-t border-emerald-500/50">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{manualSyncNotice}</span>
+          </div>
+        )}
 
         {/* Tab Navigation Menu */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto scrollbar-thin border-t border-slate-800/80 py-1.5">

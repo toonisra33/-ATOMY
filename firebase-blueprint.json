@@ -150,6 +150,10 @@
     "/albums/{albumId}": {
       "schema": "Album",
       "description": "Collection of business photo albums and event pictures"
+    },
+    "/admin_settings/{settingId}": {
+      "schema": "SponsorProfile",
+      "description": "Global administrative configurations and external synced parameters"
     }
   }
 }

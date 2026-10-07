@@ -25,7 +25,7 @@ import {
   Home,
   RotateCcw,
 } from 'lucide-react';
-import { LeadSubmission, fetchLeads, updateLeadStatus, seedSampleLeads, getLocalLeads, exportLeadsToExcelCSV } from '../lib/firebase';
+import { LeadSubmission, fetchLeads, watchLeads, updateLeadStatus, seedSampleLeads, getLocalLeads, exportLeadsToExcelCSV } from '../lib/firebase';
 import { SponsorProfile, AuthSession } from '../types';
 import { DEFAULT_SPONSOR } from '../data/atomyData';
 import { CallScriptView } from './CallScriptView';
@@ -76,6 +76,13 @@ export const LeadsPage: React.FC<LeadsPageProps> = ({
 
   useEffect(() => {
     loadData();
+    // Real-time synchronization when external updates happen
+    const unsub = watchLeads((liveLeads) => {
+      setLeads(liveLeads);
+    });
+    return () => {
+      unsub();
+    };
   }, [sponsor.sponsorId, session?.isAdmin, bypassAuthForDemo]);
 
   const handleSeedSampleLeads = async () => {
