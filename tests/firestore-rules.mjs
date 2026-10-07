@@ -16,7 +16,7 @@ import {
   where,
 } from 'firebase/firestore';
 
-const projectId = 'localhub-69fbe';
+const projectId = 'atomy-sponserweb';
 const rules = fs.readFileSync('firestore.rules', 'utf8');
 const env = await initializeTestEnvironment({
   projectId,

@@ -8,7 +8,7 @@ const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1557804506-669a67965ba0
 
 async function fetchSponsorProfile(sponsorId) {
   try {
-    const projectId = 'localhub-69fbe';
+    const projectId = 'atomy-sponserweb';
     const databaseId = 'ai-studio-atomy-8c095ab7-7361-4880-9af8-2d105a37ebb2';
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/sponsors/${sponsorId}`;
     

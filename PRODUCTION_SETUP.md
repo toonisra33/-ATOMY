@@ -6,7 +6,7 @@ account-level settings before accepting leads:
 1. In Firebase Authentication, enable Email/Password and create the first admin account.
 2. Run the **Manage Firebase user role** workflow with that email, role **admin**, and sponsor
    ID **39823016**. Sign out and back in after claims change.
-3. Create a Web reCAPTCHA Enterprise key for localhub-atomy.web.app, add its public site key
+3. Create a Web reCAPTCHA Enterprise key for atomy-sponserweb.web.app, add its public site key
    to the GitHub Actions secret RECAPTCHA_ENTERPRISE_SITE_KEY, then enable App Check
    enforcement for the named Firestore database after verifying valid requests.
 4. Merge only after npm run lint, npm run build, and npm run test:rules pass.

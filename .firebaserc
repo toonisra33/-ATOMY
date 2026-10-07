@@ -1,17 +1,5 @@
 {
   "projects": {
-    "default": "localhub-69fbe"
-  },
-  "targets": {
-    "localhub-69fbe": {
-      "hosting": {
-        "atomy": [
-          "localhub-atomy"
-        ],
-        "sponsor-atomy": [
-          "sponsor-atomy"
-        ]
-      }
-    }
+    "default": "atomy-sponserweb"
   }
 }

@@ -13,7 +13,7 @@ jobs:
           node-version: 24
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_ATOMY_SPONSERWEB || secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
       - uses: google-github-actions/setup-gcloud@v3
       - run: npm install
       - run: npm run lint
@@ -21,12 +21,12 @@ jobs:
       - name: Grant the owner Admin access
         run: node scripts/set-user-role.mjs
         env:
+          FIREBASE_PROJECT_ID: 'atomy-sponserweb'
           ROLE_EMAIL: 'toonisra33@gmail.com'
           ROLE: admin
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_ATOMY_SPONSERWEB || secrets.FIREBASE_SERVICE_ACCOUNT_LOCALHUB_69FBE }}'
           channelId: live
-          projectId: localhub-69fbe
-          target: sponsor-atomy
+          projectId: atomy-sponserweb
